@@ -1,15 +1,26 @@
 import sys
 from PyQt5.QtCore import QSize, pyqtSignal, Qt
 from PyQt5.QtGui import QImage, QPalette, QBrush, QIcon, QPixmap
-from PyQt5.QtWidgets import QWidget, QApplication, QPushButton, QLabel
+from PyQt5.QtWidgets import QWidget, QApplication, QPushButton, QLabel, QMainWindow
 
 
 class MainWindow(QWidget):
 
     def __init__(self):
-        QWidget.__init__(self)
+        QMainWindow.__init__(self)
         self.initUI()
-        self.show()
+        self.setFocusPolicy(Qt.StrongFocus)
+
+    def keyPressEvent(self, event):
+        key = event.key()
+        if key == Qt.Key_Right:
+            self.simulate_ros_command("right")
+        elif key == Qt.Key_Left:
+            self.simulate_ros_command("left")
+        elif key == Qt.Key_Up:
+            self.simulate_ros_command("left")
+        elif key == Qt.Key_Down:
+            self.simulate_ros_command("down")
 
     def initUI(self):
         self.setGeometry(100,100,300,200)
@@ -68,5 +79,6 @@ class MainWindow(QWidget):
 if __name__ == "__main__":
 
     app = QApplication(sys.argv)
-    oMainwindow = MainWindow()
+    m = MainWindow()
+    m.show()
     sys.exit(app.exec_())
