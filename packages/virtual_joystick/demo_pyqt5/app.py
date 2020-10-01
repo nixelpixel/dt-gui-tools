@@ -1,14 +1,79 @@
 import sys
 from PyQt5.QtCore import QSize, pyqtSignal, Qt
+from PyQt5.QtCore import QThread
 from PyQt5.QtGui import QImage, QPalette, QBrush, QIcon, QPixmap, QKeyEvent
 from PyQt5.QtWidgets import QWidget, QApplication, QPushButton, QLabel, QMainWindow, QVBoxLayout
+from pynput.keyboard import Key, Listener
+from time import sleep
 
+HZ = 30
+
+Keys = {
+   'Key.up': 'up',
+   'Key.down': 'down',
+   'Key.left': 'left',
+   'Key.right': 'right' 
+}
+
+commands = set()
+
+class ROSSimulator(QThread):
+
+    ros_print = pyqtSignal(object)
+    
+    def __init__(self, parent):
+        QThread.__init__(self, parent)
+
+    def add_printer(self,  listener):
+        self.ros_print.connect(listener)
+
+    def run(self):
+        while True:
+            for command in commands:
+                self.ros_print.emit(command) 
+            sleep(1/HZ)
+
+
+class MyKeyBoardThread(QThread):
+
+    key_board_event  = pyqtSignal(object)
+
+    def __init__(self, parent):
+        QThread.__init__(self, parent)
+
+    def add_listener(self, listener):
+        self.key_board_event.connect(listener)
+
+    def on_press(self, key):
+        key_val = str(key)
+        if key_val in Keys.keys():
+            commands.add(Keys[key_val])
+        for command in commands:
+            self.key_board_event.emit(command)
+
+    def on_release(self, key):
+        key_val = str(key)
+        if key_val in Keys.keys():
+            commands.remove(Keys[key_val])
+
+    def run(self):
+        with Listener(on_press=self.on_press, on_release=self.on_release) as listener:
+            listener.join()
 
 
 class MainWindow(QMainWindow):
 
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
+        # Key board
+        self.key_board_event = MyKeyBoardThread(self)
+        self.key_board_event.add_listener(self.simulate_ros_command)
+        self.key_board_event.start()
+        # PRINT
+        self.ros_printer = ROSSimulator(self)
+        self.ros_printer.add_printer(self.simulate_ros_command)
+        self.ros_printer.start()
+        ##
         widget = Joystick()
         widget.ros_fun.connect(self.simulate_ros_command)
         self.resize(widget.pixmap.width(), widget.pixmap.height())
@@ -16,40 +81,14 @@ class MainWindow(QMainWindow):
         self.ros_commands = set()
         self.was_added_new_key = False
 
-    def eventFilter(self, source, event):
-        if isinstance(event, QKeyEvent) and self.ros_commands:
-            self.simulate_ros_command(" - ".join(list(self.ros_commands)))   
-            return False
-        return super(MainWindow, self).eventFilter(source, event)
-    
-    def keyPressEvent(self, event):
-        key = event.key()
-        if key == Qt.Key_Right:
-            self.ros_commands.add("right")
-        elif key == Qt.Key_Left:
-            self.ros_commands.add("left")
-        elif key == Qt.Key_Up:
-            self.ros_commands.add("up")
-        elif key == Qt.Key_Down:
-            self.ros_commands.add("down") 
-
-    def keyReleaseEvent(self, event):
-        if self.was_added_new_key:
-            self.was_added_new_key = False
-            return
-        key = event.key()
-        if key == Qt.Key_Right:
-            self.ros_commands.remove("right")
-        elif key == Qt.Key_Left:
-            self.ros_commands.remove("left")
-        elif key == Qt.Key_Up:
-            self.ros_commands.remove("up")
-        elif key == Qt.Key_Down:
-            self.ros_commands.remove("down")
-
+    def loop(self):
+        while True:
+            print('sleep')
+            sleep(1/HZ)
 
     def simulate_ros_command(self, command):
-        print('Command: {}'.format(command))
+        if self.isActiveWindow():
+            print('Command: {}'.format(command))
 
 class Joystick(QWidget):
     ros_fun = pyqtSignal(str)
@@ -115,6 +154,5 @@ if __name__ == "__main__":
 
     app = QApplication(sys.argv)
     m = MainWindow()
-    m.installEventFilter(m)
     m.show()
     sys.exit(app.exec_())
