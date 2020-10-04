@@ -5,6 +5,9 @@ from PyQt5.QtGui import QImage, QPalette, QBrush, QIcon, QPixmap, QKeyEvent
 from PyQt5.QtWidgets import QWidget, QApplication, QPushButton, QLabel, QMainWindow, QVBoxLayout
 from pynput.keyboard import Key, Listener
 from time import sleep
+import rospy
+from sensor_msgs.msg import Joy
+from duckietown_msgs.msg import BoolStamped
 
 HZ = 30
 
@@ -16,6 +19,19 @@ Keys = {
 }
 
 commands = set()
+
+def cbEStop(msg):
+    pass
+
+class ROSManager():
+
+    def __init__():
+        rospy.init_node('virtual_joy', anonymous=False)
+        self.sub_estop = rospy.Subscriber("~emergency_stop", BoolStamped, cbEStop, queue_size=1)
+        self.pub_joystick = rospy.Publisher("~joy", Joy, queue_size=1)
+        self.pub_int = rospy.Publisher("~intersection_go", BoolStamped, queue_size=1)
+
+
 
 class ROSSimulator(QThread):
 
@@ -81,11 +97,6 @@ class MainWindow(QMainWindow):
         self.ros_commands = set()
         self.was_added_new_key = False
 
-    def loop(self):
-        while True:
-            print('sleep')
-            sleep(1/HZ)
-
     def simulate_ros_command(self, command):
         if self.isActiveWindow():
             print('Command: {}'.format(command))
@@ -150,9 +161,25 @@ class Joystick(QWidget):
         button.clicked.connect(lambda _ : self.ros_fun.emit('down'))
 
 
+def print_hint():
+    print("\n\n\n")
+    print("Virtual Joystick for your Duckiebot")
+    print("-----------------------------------")
+    print("\n")
+    print("[ARROW_KEYS]:    Use them to steer your Duckiebot")
+    print("         [q]:    Quit the program")
+    print("         [a]:    Start lane-following a.k.a. autopilot")
+    print("         [s]:    Stop lane-following")
+    print("         [i]:    Toggle anti-instagram")
+    print("         [e]:    Toggle emergency stop")
+    print("\n")
+
 if __name__ == "__main__":
 
+    print_hint()
+    
     app = QApplication(sys.argv)
     m = MainWindow()
     m.show()
-    sys.exit(app.exec_())
+    exit_code = app.exec_()
+    sys.exit(exit_code)
