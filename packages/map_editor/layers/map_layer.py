@@ -19,7 +19,7 @@ class MapLayer:
         yield from {
             'type': str(self.type),
             'name': self.name,
-            'data': self.get_processed_layer_data(),
+            '{}'.format(self.type): self.get_processed_layer_data()
         }.items()
 
     def add_elem(self, elem):
@@ -52,8 +52,11 @@ class MapLayer:
 
         if self.type == LayerType.TILES:
             layer_data = []
-            for row in self.data:
-                layer_data.append(process_data(row, process_method=str))
+            for i, row in enumerate(self.data):
+                for j, tile in enumerate(row):
+                    tile_data = dict(tile)
+                    tile_data.update({'pose': [i, j, tile.k]})
+                    layer_data.append(tile_data)
             return layer_data
         else:
             return process_data(self.data)
@@ -76,4 +79,4 @@ class MapLayer:
 
     @staticmethod
     def create_layer_object(object_type, object_data):
-        return get_class_by_object_type(object_type)(object_data)
+        return get_class_by_object_type(object_type)(**object_data)

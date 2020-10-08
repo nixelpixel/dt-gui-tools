@@ -430,7 +430,7 @@ class duck_window(QtWidgets.QMainWindow):
             elif layer.type in (LayerType.TRAFFIC_SIGNS, LayerType.GROUND_APRILTAG):
                 layer_elements = utils.count_elements(['{}{}'.format(elem.kind, elem.tag_id) for elem in layer.data])
             else:
-                layer_elements = utils.count_elements([elem.kind for elem in layer.data])
+                layer_elements = utils.count_elements([elem.kind for elem in layer.data])   # TODO BAD
             for kind, counter in layer_elements.most_common():
                 item = QtGui.QStandardItem("{} ({})".format(kind, counter))
                 layer_item.appendRow(item)
@@ -507,7 +507,7 @@ class duck_window(QtWidgets.QMainWindow):
                 # save map before adding object
                 self.editor.save(self.map)
                 # adding object
-                self.map.add_objects_to_map([dict(kind=item_name,pos=(.0, .0), rotate=0, height=1,
+                self.map.add_objects_to_map([dict(kind=item_name,pose=(.0, .0), rotate=0, height=1,
                                                   optional=False, static=True)], self.info_json['info'])
                 # TODO: need to understand what's the type and create desired class, not general
                 # also https://github.com/moevm/mse_visual_map_editor_for_duckietown/issues/122
@@ -546,10 +546,10 @@ class duck_window(QtWidgets.QMainWindow):
         self.editor.save(self.map)
         if self.drawState == 'copy':
             self.editor.copySelection(self.copyBuffer, self.mapviewer.tileSelection[0], self.mapviewer.tileSelection[1],
-                                      MapTile(self.ui.delete_fill.currentData()))
+                                      MapTile(type=self.ui.delete_fill.currentData()))
         elif self.drawState == 'cut':
             self.editor.moveSelection(self.copyBuffer, self.mapviewer.tileSelection[0], self.mapviewer.tileSelection[1],
-                                      MapTile(self.ui.delete_fill.currentData()))
+                                      MapTile(type=self.ui.delete_fill.currentData()))
         self.mapviewer.scene().update()
         self.update_layer_tree()
 
@@ -558,7 +558,7 @@ class duck_window(QtWidgets.QMainWindow):
         if not self.map.get_tile_layer().visible:
             return 
         self.editor.save(self.map)
-        self.editor.deleteSelection(self.mapviewer.tileSelection, MapTile(self.ui.delete_fill.currentData()))
+        self.editor.deleteSelection(self.mapviewer.tileSelection, MapTile(type=self.ui.delete_fill.currentData()))
         self.mapviewer.scene().update()
         self.update_layer_tree()
 
@@ -580,7 +580,7 @@ class duck_window(QtWidgets.QMainWindow):
         item_layer = self.map.get_objects_from_layers() # TODO: add self.current_layer for editing only it's objects?
         new_selected_obj = False
         for item in item_layer:
-            x, y = item.position
+            x, y = item.get_pose_xy()
             if x > selection[0] and x < selection[2] and y > selection[1] and y < selection[3]:
                 if item not in self.active_items:
                     self.active_items.append(item)
@@ -610,15 +610,15 @@ class duck_window(QtWidgets.QMainWindow):
                     self.update_layer_tree()
                 return
             for item in self.active_items:
-                logger.debug("Name of item: {}; X - {}; Y - {};".format(item.kind, item.position[0], item.position[1]))
+                logger.debug("Name of item: {}; X - {}; Y - {};".format(item.kind, item.pose[0], item.pose[1]))
                 if key == QtCore.Qt.Key_W:
-                    item.position[1] -= EPS
+                    item.pose[1] -= EPS
                 elif key == QtCore.Qt.Key_S:
-                    item.position[1] += EPS
+                    item.pose[1] += EPS
                 elif key == QtCore.Qt.Key_A:
-                    item.position[0] -= EPS
+                    item.pose[0] -= EPS
                 elif key == QtCore.Qt.Key_D:
-                    item.position[0] += EPS
+                    item.pose[0] += EPS
                 elif key == QtCore.Qt.Key_E:
                     if len(self.active_items) == 1:
                         self.create_form(self.active_items[0])
@@ -648,8 +648,8 @@ class duck_window(QtWidgets.QMainWindow):
                     return  
             for attr_name, attr in editable_attrs.items():
                 if attr_name == 'pos':
-                    active_object.position[0] = float(edit_obj['x'].text())
-                    active_object.position[1] = float(edit_obj['y'].text())
+                    active_object.pose[0] = float(edit_obj['x'].text())
+                    active_object.pose[1] = float(edit_obj['y'].text())
                     continue
                 if type(attr) == bool:
                     active_object.__setattr__(attr_name, edit_obj[attr_name].isChecked())
@@ -746,7 +746,7 @@ class duck_window(QtWidgets.QMainWindow):
         if selection:
             for i in range(max(selection[1], 0), min(selection[3], len(tile_layer))):
                 for j in range(max(selection[0], 0), min(selection[2], len(tile_layer[0]))):
-                    tile_layer[i][j].rotation = (tile_layer[i][j].rotation + 90) % 360
+                    tile_layer[i][j].set_rotation((tile_layer[i][j].get_rotation() + 90) % 360)
             self.mapviewer.scene().update()
 
     def add_apriltag(self, apriltag: GroundAprilTagObject):
@@ -768,11 +768,11 @@ class duck_window(QtWidgets.QMainWindow):
 
     def selectionUpdate(self):
         selection = self.mapviewer.tileSelection
-        filler = MapTile(self.ui.default_fill.currentData())
+        filler = MapTile(type=self.ui.default_fill.currentData())
         tile_layer = self.map.get_tile_layer().data
         if self.drawState == 'brush':
             self.editor.save(self.map)
-            self.editor.extendToFit(selection, selection[0], selection[1], MapTile(self.ui.delete_fill.currentData()))
+            self.editor.extendToFit(selection, selection[0], selection[1], filler)
             if selection[0] < 0:
                 delta = -selection[0]
                 selection[0] = 0
