@@ -1,16 +1,16 @@
-import sys
 from PyQt5.QtCore import QSize, pyqtSignal, Qt
-from PyQt5.QtCore import QThread
+from PyQt5.QtCore import QThread, QTimer
 from PyQt5.QtGui import QImage, QPalette, QBrush, QIcon, QPixmap, QKeyEvent, QTransform
 from PyQt5.QtWidgets import QWidget, QApplication, QPushButton, QLabel, QMainWindow, QVBoxLayout
 from pynput.keyboard import Key, Listener, KeyCode
-from time import sleep
-import rospy
-from sensor_msgs.msg import Joy
 from duckietown_msgs.msg import BoolStamped
+from sensor_msgs.msg import Joy
+from time import sleep
 import socket
-import re
+import rospy
 import time
+import sys
+import re
 
 HZ = 30
 
@@ -43,7 +43,7 @@ speed_tang = 1.0
 speed_norm = 1.0
 time_to_wait = 10000
 estop_deadzone_secs = 0.5
-
+e_stop = False
 commands = set()
 
 class ROSManager(QThread):
@@ -67,18 +67,14 @@ class ROSManager(QThread):
             estop_msg (:obj:`BoolStamped`): the emergency_stop message to process.
         """
         self.emergency_stop = estop_msg.data
-        #if self.emergency_stop:
-        #    pass
-            # some stop
+        if self.emergency_stop:
+            global e_stop
+            e_stop = self.emergency_stop
     
     def run(self):
         veh_standing = True
 
         while True:
-            #if self.commands:
-            #    for command in self.commands:
-            #        if command in list(Keys.keys())[:3]:
-            #            print(command)
             ms_now = int(round(time.time() * 1000))
             
             try:
@@ -181,8 +177,11 @@ class MyKeyBoardThread(QThread):
 
     def run(self):
         with Listener(on_press=self.on_press, on_release=self.on_release) as listener:
-            listener.join()
+            self.listener = listener
+            self.listener.join()
 
+    def terminate(self):
+        self.listener.stop()
 
 class MainWindow(QMainWindow):
 
@@ -200,9 +199,9 @@ class MainWindow(QMainWindow):
         self.key_board_event.start()    
         ## UI JOYSTICK
         self.widget = Joystick()
-        self.widget.ros_fun.connect(self.simulate_ros_command)
+        self.widget.ros_fun.connect(self.ros_wrapper)
+        self.widget.ros_fun.connect(self.visual_joystick)
         self.resize(self.widget.pixmap.width(), self.widget.pixmap.height())
-
         ####
         self.setCentralWidget(self.widget)
         self.ros_commands = set()
@@ -216,19 +215,28 @@ class MainWindow(QMainWindow):
         if self.isActiveWindow():
             self.widget.light_d_pad(commands)
 
-    def simulate_ros_command(self, command):
-        # deprecated
-        if self.isActiveWindow():
-            print('Command: {}'.format(command))
-
 
 class Joystick(QWidget):
-    ros_fun = pyqtSignal(str)
+    ros_fun = pyqtSignal(set)
 
     def __init__(self, *args, **kwargs):
         super(Joystick, self).__init__(*args, **kwargs)
         self.initUI()
         self.setFocusPolicy(Qt.StrongFocus)
+        self.command = set()
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.timer_fun)
+
+    def timer_fun(self):
+        self.ros_fun.emit(self.command)
+    
+    def on_press_timer(self):
+        self.timer.start(int(1000/HZ))
+
+    def on_release_timer(self):
+        self.timer.stop()
+        self.command.clear()
+        self.ros_fun.emit(set())
 
     def initUI(self):
         self.setGeometry(100,100,300,200)
@@ -250,10 +258,18 @@ class Joystick(QWidget):
         self.change_state()
 
     def change_state(self):
-        self.label_up.setHidden(self.state_up)
-        self.label_down.setHidden(self.state_down)
-        self.label_left.setHidden(self.state_left)
-        self.label_right.setHidden(self.state_right)
+        if not e_stop:
+            self.label_up.setHidden(self.state_up)
+            self.label_down.setHidden(self.state_down)
+            self.label_left.setHidden(self.state_left)
+            self.label_right.setHidden(self.state_right)
+            self.label_stop.setHidden(True)
+        else:
+            self.label_up.setHidden(True)
+            self.label_down.setHidden(True)
+            self.label_left.setHidden(True)
+            self.label_right.setHidden(True)
+            self.label_stop.setHidden(False)
 
     def create_d_pad(self):
         self.state_up = True
@@ -264,6 +280,7 @@ class Joystick(QWidget):
         self.label_left = QLabel(self)
         self.label_down = QLabel(self)
         self.label_right = QLabel(self)
+        self.label_stop = QLabel(self)
         img = QPixmap('../images/d-pad-pressed.png')
         t = QTransform()
         self.label_up.setPixmap(img)
@@ -273,6 +290,8 @@ class Joystick(QWidget):
         self.label_down.setPixmap(img.transformed(t))
         t.rotate(90)
         self.label_left.setPixmap(img.transformed(t))
+        img = QPixmap('../images/d-e-stop.png')
+        self.label_stop.setPixmap(img)
         self.change_state()
 
     def create_up_button(self):
@@ -283,7 +302,19 @@ class Joystick(QWidget):
         button_up.setIconSize(QSize(size, size))
         button_up.resize(QSize(size - 40, size -10))
         button_up.move(int(self.pixmap.width()/2 - 80), 20)
-        button_up.clicked.connect(lambda _ : self.ros_fun.emit('up'))
+        button_up = self.add_listener_to_button(button_up, {'up'})
+        button_up.pressed.connect(lambda: self.change_command({'up'}))
+
+    def change_command(self, cm):
+        self.command = cm
+
+    def add_listener_to_button(self, button, command={''}):
+        def fun():
+            self.command = command
+            self.on_press_timer()
+        button.pressed.connect(fun)
+        button.released.connect(self.on_release_timer)
+        return button
 
     def create_left_button(self):
         button = QPushButton("", self)
@@ -293,7 +324,8 @@ class Joystick(QWidget):
         button.setIconSize(QSize(size, size))
         button.resize(QSize(size - 5, size - 60))
         button.move(20, int(self.pixmap.height()/2 - 70))
-        button.clicked.connect(lambda _ : self.ros_fun.emit('left'))
+        button = self.add_listener_to_button(button, {'left'})
+        button.pressed.connect(lambda: self.change_command({'left'}))
 
     def create_right_button(self):
         button = QPushButton("", self)
@@ -303,7 +335,8 @@ class Joystick(QWidget):
         button.setIconSize(QSize(size, size))
         button.resize(QSize(size - 5, size - 60))
         button.move(int(self.pixmap.width()/2 + 85), int(self.pixmap.height()/2 - 70))
-        button.clicked.connect(lambda _ : self.ros_fun.emit('right'))
+        button = self.add_listener_to_button(button, {'right'})
+        button.pressed.connect(lambda: self.change_command({'right'}))
 
     def create_down_button(self):
         button = QPushButton("", self)
@@ -313,7 +346,8 @@ class Joystick(QWidget):
         button.setIconSize(QSize(size, size))
         button.resize(QSize(size - 50, size -10))
         button.move(int(self.pixmap.width()/2 - 75), int(self.pixmap.height()/2 + 87))
-        button.clicked.connect(lambda _ : self.ros_fun.emit('down'))
+        button = self.add_listener_to_button(button, {'down'})
+        button.pressed.connect(lambda: self.change_command({'down'}))
 
 
 def print_hint():
@@ -344,4 +378,8 @@ if __name__ == "__main__":
     m = MainWindow()
     m.show()
     exit_code = app.exec_()
+    m.key_board_event.terminate()
+    m.key_board_event.wait()
+    m.ros.terminate()
+    m.ros.wait()
     sys.exit(exit_code)
