@@ -21,6 +21,7 @@ from layers.relations import get_layer_type_by_object_type
 from tag_config import get_duckietown_types
 from forms.new_tag_object import NewTagForm
 from forms.default_forms import question_form_yes_no
+from layers.serialization import serialize
 
 logger = logging.getLogger('root')
 TILE_TYPES = ('block', 'road')
@@ -113,6 +114,15 @@ class duck_window(QtWidgets.QMainWindow):
         change_info = self.ui.change_info
         change_map = self.ui.change_map
         change_layer = self.ui.change_layer
+
+        # serialization menu
+        self.ui.tiles.triggered.connect(self.tiles_serialization)
+        self.ui.signs.triggered.connect(self.signs_serialization)
+        self.ui.tags.triggered.connect(self.tags_serialization)
+        self.ui.watchtowers.triggered.connect(self.watchtowers_serialization)
+        self.ui.actors.triggered.connect(self.actors_serialization)
+        self.ui.decorations.triggered.connect(self.decorations_serialization)
+
 
         #  Initialize floating blocks
         block_widget = self.ui.block_widget
@@ -246,6 +256,38 @@ class duck_window(QtWidgets.QMainWindow):
         cp = QDesktopWidget().availableGeometry().center()
         qr.moveCenter(cp)
         self.move(qr.topLeft())
+
+    #### Serialization block
+
+    def show_serialization(self, layer_type):
+        layer = self.map.get_layer_by_type(layer_type)
+        if layer:
+            serialize(layer)
+        else:
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Information)
+            msg.setText('No such layer: {}'.format(str(layer_type)))
+            msg.setStandardButtons(QMessageBox.Ok)
+            msg.exec()
+
+    def tiles_serialization(self):
+        self.show_serialization(LayerType.TILES)
+
+    def signs_serialization(self):
+        self.show_serialization(LayerType.TRAFFIC_SIGNS)
+
+    def tags_serialization(self):
+        self.show_serialization(LayerType.GROUND_APRILTAG)
+
+    def watchtowers_serialization(self):
+        self.show_serialization(LayerType.WATCHTOWERS)
+
+    def actors_serialization(self):
+        self.show_serialization(LayerType.ACTORS)
+
+    def decorations_serialization(self):
+        self.show_serialization(LayerType.DECORATIONS)
+    ####
 
     #  Create a new map
     def create_map_triggered(self):
