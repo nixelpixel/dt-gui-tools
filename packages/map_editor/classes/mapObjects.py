@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from .baseClass import PlacedObject
+from .baseClass import BaseEditorClass
 
 
 class MapBaseObject(PlacedObject):
@@ -64,13 +65,47 @@ class WatchTowerObject(MapBaseObject):  # 3 layer
         }
 
 
-class CityObject(MapBaseObject):       # 4 layer
+class RegionObject(MapBaseObject):       # 4 layer NOT IMPLEMENTED
     pass
 
 
 class ActorObject(MapBaseObject):       # 4 layer
-    pass
+    def __init__(self, **kwargs):
+        MapBaseObject.__init__(self, **kwargs)
+        self.kind = kwargs['kind']
+        self.id = kwargs['ID'] if 'ID' in kwargs else 'ID'
+
+    def __iter__(self):
+        yield from {
+            'pose': self.pose,
+            'kind': self.kind,
+            'id': self.id
+        }.items()
+
+    def get_editable_attrs(self):
+        return {
+            'pose': self.pose,
+            'kind': self.kind,
+            'id': self.id
+        }
 
 
 class DecorationObject(MapBaseObject):  # 6 layer
-    pass
+    def __init__(self, **kwargs):
+        MapBaseObject.__init__(self, **kwargs)
+        self.size = kwargs['size'] if 'size' in kwargs else 1
+        self.mesh = kwargs['size'] if 'size' in kwargs else ['', '']
+
+    def __iter__(self):
+        yield from {
+            'pose': self.pose,
+            'mesh': self.mesh,
+            'size': self.size
+        }.items()
+
+    def get_editable_attrs(self):
+        return {
+            'pose': self.pose,
+            'mesh': self.mesh,
+            'size': self.size
+        }

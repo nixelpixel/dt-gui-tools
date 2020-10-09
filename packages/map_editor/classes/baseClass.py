@@ -15,7 +15,8 @@ class PlacedObject(BaseEditorClass):
         position = list(kwargs['pose'])
         position.extend([0.0]*4) if len(position) == 2 else None    # support pose = [x, y]
         self.pose = position
-        self.kind = kwargs['kind']
+        if 'kind' in kwargs:
+            self.kind = kwargs['kind']
 
     def __iter__(self):
         raise NotImplementedError("Subclasses should implement __iter__")
