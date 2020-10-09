@@ -253,7 +253,7 @@ def map_to_yaml(map, map_dir_path, lab_code=None):
         if str(LayerType.TILES) in layer:
             layer['tile_size'] = map_info['tile_size']/100
         with open('{}/{}-{}.yaml'.format(map_dir_path, layer['type'], lab_code if lab_code else layer['name']), 'w') as map_file:
-            yaml.safe_dump(layer, map_file, default_flow_style=None)
+            yaml.safe_dump(layer['data'], map_file, default_flow_style=None)
 
 
 def tiles_to_objects(tiles):

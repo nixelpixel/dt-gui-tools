@@ -2,7 +2,7 @@ from layers.layer_type import LayerType
 from layers.relations import get_class_by_object_type
 from layers.relations import LAYER_TYPE_WITH_OBJECTS
 
-
+from json import dumps as json_dumps
 import logging
 
 logger = logging.getLogger('root')
@@ -16,10 +16,13 @@ class MapLayer:
         self.visible = True
 
     def __iter__(self):
+        data = self.get_processed_layer_data()
+        if self.type == LayerType.TILES:
+            data['tile_size'] = 0.585           # tile_size if map! not in layer
         yield from {
             'type': str(self.type),
             'name': self.name,
-            '{}'.format(self.type): self.get_processed_layer_data()
+            'data': {'{}'.format(self.type): data}
         }.items()
 
     def add_elem(self, elem):
@@ -51,12 +54,10 @@ class MapLayer:
             return processed_data
 
         if self.type == LayerType.TILES:
-            layer_data = []
+            layer_data = {}
             for i, row in enumerate(self.data):
                 for j, tile in enumerate(row):
-                    tile_data = dict(tile)
-                    tile_data.update({'pose': [i, j, tile.k]})
-                    layer_data.append(tile_data)
+                    layer_data['{}'.format(json_dumps([i, j, tile.k]))] = dict(tile)
             return layer_data
         else:
             return process_data(self.data)
