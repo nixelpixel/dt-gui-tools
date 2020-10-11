@@ -4,7 +4,7 @@ from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QFileDialog
 from map_parser import *
 from utils import get_list_dir_with_path
-from layers.relations import get_layer_type_by_value
+from layers.layer_type import get_layer_type_by_value
 
 
 def init_map(parent: QtWidgets.QWidget):

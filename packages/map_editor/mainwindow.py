@@ -12,12 +12,11 @@ from PyQt5.QtWidgets import QMessageBox, QDesktopWidget, QFormLayout, QVBoxLayou
 from IOManager import *
 import functools, json , copy
 from infowindow import info_window
-from layers.layer_type import LayerType
 import logging
 import utils
 from classes.mapObjects import MapBaseObject as MapObject
 from classes.mapObjects import GroundAprilTagObject
-from layers.relations import get_layer_type_by_object_type
+from layers.layer_type import get_layer_type_by_object_type, LayerType
 from tag_config import get_duckietown_types
 from forms.new_tag_object import NewTagForm
 from forms.default_forms import question_form_yes_no
