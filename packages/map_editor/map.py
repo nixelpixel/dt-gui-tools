@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from layers.base_layer import MapLayer
-from layers.map_layers import TileLayer
+from layers.map_layer import TileLayer
 from layers.layer_type import LayerType
 import layers.layer_type as layer_relations
 from tag_config import TRAFFIC_SIGN_TYPES

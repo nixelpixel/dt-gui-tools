@@ -3,7 +3,7 @@ from collections import namedtuple
 
 from classes.mapTile import MapTile
 from classes.mapObjects import MapBaseObject, SignObject, GroundAprilTagObject, WatchTowerObject, RegionObject, ActorObject, DecorationObject
-from layers.map_layers import TileLayer, TagLayer, WatchtowerLayer, RegionLayer, ActorLayer, DecorationLayer
+from layers.map_layer import TileLayer, TagLayer, WatchtowerLayer, RegionLayer, ActorLayer, DecorationLayer
 
 LayerInfo = namedtuple('LayerInfo', ['type', 'obj_type', 'obj_class', 'layer_class'])
 
