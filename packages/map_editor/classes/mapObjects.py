@@ -30,7 +30,11 @@ class TagObject(MapBaseObject):
             'tag_id': self.tag_id,
             'data':
             {
-                'pose': self.pose
+                'pose': {
+                    'xyz': self.pose[:2],
+                    #'slot': self.pose[2],
+                    'rotate': self.pose[3:]
+                }
             }
         }.items()
 
@@ -60,7 +64,10 @@ class WatchTowerObject(MapBaseObject):  # 3 layer
             'hostname': self.hostname,
             'data':
             {
-                'pose': self.pose
+                'pose': {
+                    'xyz': self.pose[:3],
+                    'rotate': self.pose[3:]
+                }
             }
         }.items()
 
@@ -86,7 +93,10 @@ class ActorObject(MapBaseObject):       # 4 layer
             'kind': self.kind,
             'data':
             {
-                'pose': self.pose,
+                'pose': {
+                    'xyz': self.pose[:3],
+                    'rotate': self.pose[3:]
+                },
                 'id': self.id
             }
         }.items()
@@ -107,7 +117,10 @@ class DecorationObject(MapBaseObject):  # 6 layer
 
     def __iter__(self):
         yield from {
-            'pose': self.pose,
+            'pose': {
+                    'xyz': self.pose[:3],
+                    'rotate': self.pose[3:]
+                },
             'mesh': self.mesh,
             'size': self.size
         }.items()
