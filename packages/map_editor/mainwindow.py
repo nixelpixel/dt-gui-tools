@@ -3,6 +3,7 @@ import codecs
 
 import mapviewer
 import map
+import yaml
 
 from classes.mapTile import MapTile
 from mapEditor import MapEditor
@@ -636,6 +637,8 @@ class duck_window(QtWidgets.QMainWindow):
             self.mapviewer.raw_selection = [0]*4
         elif key == QtCore.Qt.Key_R:
             self.new_tag_class.create_form()
+        elif key == QtCore.Qt.Key_F:
+            self.serialization_full_map()
         if self.active_items:
             if key == QtCore.Qt.Key_Backspace:
                 # delete object
@@ -667,6 +670,24 @@ class duck_window(QtWidgets.QMainWindow):
                         logger.debug("I can't edit more than one object!")
         self.mapviewer.scene().update()
  
+    def serialization_full_map(self):
+        total_markup = {'main': {}}
+        total = total_markup["main"]
+        dir_path = 'new_format_folder'
+        for type_layer in LayerType:
+            layer = self.map.get_layer_by_type(type_layer)
+            if not layer:
+                logger.debug('Serialization. No such layer {}'.format(type_layer))
+            else:
+                s_layer = dict(layer)['data']
+                total[str(type_layer)] = '!include ./{}/{}.yaml'.format(dir_path, type_layer)
+                with open('./{}/{}.yaml'.format(dir_path, type_layer), 'w+') as file:
+                    yaml.safe_dump(s_layer, file, default_flow_style=None)
+                    print(s_layer, type(s_layer))
+        with open('./{}/main.yaml'.format(dir_path), 'w+') as file:
+            print(total_markup, type(total_markup))
+            yaml.safe_dump(total_markup, file, default_flow_style=None)
+
     def create_form(self, active_object: MapObject):
         def accept():
             if 'tag_type' in edit_obj:
