@@ -682,11 +682,9 @@ class duck_window(QtWidgets.QMainWindow):
                 s_layer = dict(layer)['data']
                 total[str(type_layer)] = '!include ./{}/{}.yaml'.format(dir_path, type_layer)
                 with open('./{}/{}.yaml'.format(dir_path, type_layer), 'w+') as file:
-                    yaml.safe_dump(s_layer, file, default_flow_style=None)
-                    print(s_layer, type(s_layer))
+                    yaml.safe_dump(s_layer, file, default_flow_style=False)
         with open('./{}/main.yaml'.format(dir_path), 'w+') as file:
-            print(total_markup, type(total_markup))
-            yaml.safe_dump(total_markup, file, default_flow_style=None)
+            yaml.safe_dump(total_markup, file, default_flow_style=False)
 
     def create_form(self, active_object: MapObject):
         def accept():

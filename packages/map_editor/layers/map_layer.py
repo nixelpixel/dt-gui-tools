@@ -25,7 +25,10 @@ class TagLayer(MapLayer):
         layer_data = defaultdict(list)
         for elem in self.data:
             elem = dict(elem)
-            layer_data[elem['tag_id']].append(elem['data'])
+            name_key = elem['tag_id']
+            while name_key in layer_data:
+                name_key = "_" + str(name_key) 
+            layer_data[name_key] = elem['data']
         return dict(layer_data)
 
 

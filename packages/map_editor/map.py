@@ -226,6 +226,7 @@ class DuckietownMap:
             if layer_type == LayerType.TRAFFIC_SIGNS:
                 tag_ids = TRAFFIC_SIGN_TYPES[map_object['kind']]
                 map_object['tag_id'] = tag_ids[0] if 'tag_id' not in map_object and tag_ids else 0
+                print(tag_ids, dict(map_object))
             map_object = LayerType.create_layer_object(object_type, map_object)
             if not self.get_layer_by_type(layer_type):
                 self.add_layer_from_data(layer_type, [map_object])

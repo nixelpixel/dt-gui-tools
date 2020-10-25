@@ -48,7 +48,6 @@ class TagObject(MapBaseObject):
 class SignObject(TagObject):            # 1 layer
     pass
 
-
 class GroundAprilTagObject(TagObject):  # 2 layer
     pass
 
