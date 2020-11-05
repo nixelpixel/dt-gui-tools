@@ -1,68 +1,143 @@
-#!/usr/bin/python3
-import pygame
-import time
-import rospy
-from sensor_msgs.msg import Joy
+from PyQt5.QtCore import QSize, pyqtSignal, Qt
+from PyQt5.QtCore import QThread, QTimer
+from PyQt5.QtGui import QImage, QPalette, QBrush, QIcon, QPixmap, QKeyEvent, QTransform
+from PyQt5.QtWidgets import QWidget, QApplication, QPushButton, QLabel, QMainWindow, QVBoxLayout
+from pynput.keyboard import Listener
 from duckietown_msgs.msg import BoolStamped
-import os, sys
+from sensor_msgs.msg import Joy
+from time import sleep
 import socket
+import rospy
+import time
+import sys
 import re
 
-# Button List index of joy.buttons array:
-#   0: A
-#   1: B
-#   2: X
-#   3: Y
-#   4: Left Back
-#   5: Right Back
-#   6: Back
-#   7: Start
-#   8: Logitek
-#   9: Left joystick
-#   10: Right joystick
+HZ = 30
 
+KEY_LEFT = 'left'
+KEY_RIGHT = 'right'
+KEY_UP = 'up'
+KEY_DOWN = 'down'
+KEY_A = 'a'
+KEY_Q = 'q'
+KEY_S = 's'
+KEY_I = 'i'
+KEY_E = 'e'
+KEY_P = 'p'
 
-screen_size = 300
+Keys = {
+    'Key.up': KEY_UP,
+    'Key.down': KEY_DOWN,
+    'Key.left': KEY_LEFT,
+    'Key.right': KEY_RIGHT,
+    KEY_A: KEY_A,
+    KEY_Q: KEY_Q,
+    KEY_S: KEY_S,
+    KEY_I: KEY_I,
+    KEY_E: KEY_E,
+    KEY_P: KEY_P
+}
+
 speed_tang = 1.0
 speed_norm = 1.0
 time_to_wait = 10000
-last_ms = 0
-last_ms_p = 0
-auto_restart = False
-e_stop = False
-dpad = None
-dpad_f = None
-dpad_r = None
-dpad_b = None
-dpad_l = None
-dpad_estop = None
-dpad_estop_big = None
-estop_last_time = time.time()
 estop_deadzone_secs = 0.5
+e_stop = False
+commands = set()
 
 
-# TODO: This should be a class
+class ROSManager(QThread):
 
-def loop():
-    global last_ms, time_to_wait, last_ms_p, e_stop, estop_last_time
-    veh_standing = True
+    def __init__(self, parent):
+        QThread.__init__(self, parent)
+        rospy.init_node('virtual_joy', anonymous=False)
+        self.sub_estop = rospy.Subscriber("~emergency_stop", BoolStamped, self.cbEStop, queue_size=1)
+        self.pub_joystick = rospy.Publisher("~joy", Joy, queue_size=1)
+        self.pub_int = rospy.Publisher("~intersection_go", BoolStamped, queue_size=1)
+        self.commands = set()
+        self.estop_last_time = time.time()
+        self.last_ms = 0
+        self.emergency_stop = False
 
-    while True:
-        ms_now = int(round(time.time() * 1000))
-        if ms_now - last_ms > time_to_wait:
-            # query rosmaster status, which will raise socket.error when failure
-            rospy.get_master().getSystemState()
-            # end-of-checking
-            last_ms = ms_now
+    def cbEStop(self, estop_msg):
+        """
+        Callback that process the received :obj:`BoolStamped` messages.
 
-        # add dpad to screen
-        screen.blit(dpad, (0,0))
+        Args:
+            estop_msg (:obj:`BoolStamped`): the emergency_stop message to process.
+        """
+        self.emergency_stop = estop_msg.data
+        if self.emergency_stop:
+            global e_stop
+            e_stop = self.emergency_stop
 
-        # draw e-stop signal
-        if e_stop:
-            screen.blit(dpad_estop, (0, 0))
+    def run(self):
+        veh_standing = True
 
-        # prepare message
+        while True:
+            ms_now = int(round(time.time() * 1000))
+
+            try:
+                if ms_now - self.last_ms > time_to_wait:
+                    rospy.get_master().getSystemState()
+                    self.last_ms = ms_now
+            except socket.error:
+                print("Error starting main loop in virtual joystick gui")
+
+            msg = self.get_raw_message()
+            force_joy_publish = False
+
+            # Arrows events
+            if KEY_LEFT in self.commands:
+                msg.axes[3] += speed_norm
+
+            if KEY_RIGHT in self.commands:
+                msg.axes[3] -= speed_norm
+
+            if KEY_UP in self.commands:
+                msg.axes[1] += speed_tang
+
+            if KEY_DOWN in self.commands:
+                msg.axes[1] -= speed_tang
+
+            if KEY_A in self.commands:
+                msg.buttons[7] = 1
+
+            if KEY_S in self.commands:
+                msg.buttons[6] = 1
+
+            if KEY_I in self.commands:
+                msg.buttons[3] = 1
+
+            if KEY_P in self.commands:
+                msg_int = BoolStamped()
+                msg_int.data = True
+                self.pub_int.publish(msg_int)
+
+            if KEY_E in self.commands and (time.time() - self.estop_last_time > estop_deadzone_secs):
+                msg.buttons[3] = 1
+                self.estop_last_time = time.time()
+                force_joy_publish = True
+
+            if KEY_Q in self.commands:
+                sys.exit(0)
+
+            stands = (sum(map(abs, msg.axes)) == 0 and sum(map(abs, msg.buttons)) == 0)
+            if not stands:
+                veh_standing = False
+
+            if (not veh_standing) or force_joy_publish:
+                self.pub_joystick.publish(msg)
+
+            if stands:
+                veh_standing = True
+
+            sleep(1 / HZ)
+
+    def action(self, commands):
+        self.commands = commands
+
+    def get_raw_message(self):
         msg = Joy()
         msg.header.seq = 0
         msg.header.stamp.secs = 0
@@ -70,147 +145,213 @@ def loop():
         msg.header.frame_id = ''
         msg.axes = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
         msg.buttons = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        force_joy_publish = False
 
-        # obtain pressed keys
-        keys = pygame.key.get_pressed()
-
-        # START CHECKING KEYS #
-
-        # drive left
-        if keys[pygame.K_LEFT]:
-            if e_stop:
-                screen.blit(dpad_estop_big, (0, 0))
-            else:
-                screen.blit(dpad_l, (0,0))
-            msg.axes[3] += speed_norm
-
-        # drive right
-        if keys[pygame.K_RIGHT]:
-            if e_stop:
-                screen.blit(dpad_estop_big, (0, 0))
-            else:
-                screen.blit(dpad_r, (0, 0))
-            msg.axes[3] -= speed_norm
-
-        # drive forward
-        if keys[pygame.K_UP]:
-            if e_stop:
-                screen.blit(dpad_estop_big, (0, 0))
-            else:
-                screen.blit(dpad_f, (0, 0))
-            msg.axes[1] += speed_tang
-
-        # drive backwards
-        if keys[pygame.K_DOWN]:
-            if e_stop:
-                screen.blit(dpad_estop_big, (0, 0))
-            else:
-                screen.blit(dpad_b, (0, 0))
-            msg.axes[1] -= speed_tang
-
-        # TODO: intersection_go?
-        if keys[pygame.K_p]:
-            msg_int = BoolStamped()
-            msg_int.data = True
-            pub_int.publish(msg_int)
-
-        # activate line-following
-        if keys[pygame.K_a]:
-            msg.buttons[7] = 1
-
-        # stop line-following
-        if keys[pygame.K_s]:
-            msg.buttons[6] = 1
-
-        # toggle anti-instagram
-        if keys[pygame.K_i]:
-            msg.buttons[3] = 1
-
-        # toggle emergency stop
-        if keys[pygame.K_e] and (time.time() - estop_last_time > estop_deadzone_secs):
-            msg.buttons[3] = 1
-            estop_last_time = time.time()
-            force_joy_publish = True
-
-        # key/action for quitting the program
-
-        # check if window exit button [x] was hit
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                sys.exit()
-
-        # quit program
-        if keys[pygame.K_q]:
-            pygame.quit()
-
-        # END CHECKING KEYS #
-
-        # refresh screen
-        pygame.display.flip()
-
-        # check for any input commands
-        stands = (sum(map(abs, msg.axes)) == 0 and sum(map(abs, msg.buttons)) == 0)
-        if not stands:
-            veh_standing = False
-
-        # publish message
-        if (not veh_standing) or force_joy_publish:
-            pub_joystick.publish(msg)
-
-        # adjust veh_standing such that when vehicle stands still, at least
-        # one last publishment was sent to the bot. That's why this adjustment
-        # is made after the publishment of the message
-        if stands:
-            veh_standing = True
-
-        time.sleep(0.03)
-
-        # obtain next key list
-        pygame.event.pump()
+        return msg
 
 
-# prepare size and rotations of dpad and dpad_pressed
-def prepare_dpad():
-    global dpad, dpad_f, dpad_r, dpad_b, dpad_l, dpad_estop, dpad_estop_big
-    script_path = os.path.dirname(__file__)
-    script_path = (script_path + "/") if script_path else ""
-    # draw d-pad
-    dpad = pygame.image.load(script_path + "../images/d-pad.png")
-    dpad = pygame.transform.scale(dpad, (screen_size, screen_size))
-    # draw pressed-arrows
-    dpad_pressed = pygame.image.load(script_path + "../images/d-pad-pressed.png")
-    dpad_pressed = pygame.transform.scale(dpad_pressed, (screen_size, screen_size))
-    dpad_f = dpad_pressed
-    dpad_r = pygame.transform.rotate(dpad_pressed, 270)
-    dpad_b = pygame.transform.rotate(dpad_pressed, 180)
-    dpad_l = pygame.transform.rotate(dpad_pressed, 90)
-    # draw E-Stop
-    estop_img = pygame.image.load(script_path + "../images/d-e-stop.png")
-    estop_big_img = pygame.image.load(script_path + "../images/d-e-stop-big.png")
-    dpad_estop = pygame.transform.scale(estop_img, (screen_size, screen_size))
-    dpad_estop_big = pygame.transform.scale(estop_big_img, (screen_size, screen_size))
+class MyKeyBoardThread(QThread):
+    key_board_event = pyqtSignal(object)
+
+    def __init__(self, parent):
+        QThread.__init__(self, parent)
+
+    def add_listener(self, listener):
+        self.key_board_event.connect(listener)
+
+    def on_press(self, key):
+        key_val = str(key)
+        if len(key_val) == 3:
+            key_val = key_val[1]
+        if key_val in Keys.keys():
+            commands.add(Keys[key_val])
+        self.key_board_event.emit(commands)
+
+    def on_release(self, key):
+        key_val = str(key)
+        if len(key_val) == 3:
+            key_val = key_val[1]
+        if key_val in Keys.keys():
+            commands.remove(Keys[key_val])
+        self.key_board_event.emit(commands)
+
+    def run(self):
+        with Listener(on_press=self.on_press, on_release=self.on_release) as listener:
+            self.listener = listener
+            self.listener.join()
+
+    def terminate(self):
+        self.listener.stop()
 
 
-def cbEStop(estop_msg):
-    """
-    Callback that process the received :obj:`BoolStamped` messages.
+class MainWindow(QMainWindow):
 
-    Args:
-        estop_msg (:obj:`BoolStamped`): the emergency_stop message to process.
-    """
-    global e_stop
-    e_stop = estop_msg.data
-    if e_stop:
-        # add dpad to screen
-        screen.blit(dpad, (0, 0))
-        # add e-stop to screen
-        screen.blit(dpad_estop, (0, 0))
-        # refresh screen
-        pygame.display.flip()
+    def __init__(self, *args, **kwargs):
+        super(MainWindow, self).__init__(*args, **kwargs)
+        self.setWindowTitle(sys.argv[1])
+
+        # ros class
+        self.ros = ROSManager(self)
+        self.ros.start()
+        # Key board
+        self.key_board_event = MyKeyBoardThread(self)
+        self.key_board_event.add_listener(self.ros_wrapper)
+        self.key_board_event.add_listener(self.visual_joystick)
+        self.key_board_event.start()
+        # UI JOYSTICK
+        self.widget = Joystick()
+        self.widget.ros_fun.connect(self.ros_wrapper)
+        self.widget.ros_fun.connect(self.visual_joystick)
+        self.resize(self.widget.pixmap.width(), self.widget.pixmap.height())
+        self.setFixedSize(self.widget.pixmap.width(), self.widget.pixmap.height())
+        ####
+        self.setCentralWidget(self.widget)
+        self.ros_commands = set()
+        self.was_added_new_key = False
+
+    def ros_wrapper(self, commands):
+        if self.isActiveWindow() and commands:
+            self.ros.action(commands)
+
+    def visual_joystick(self, commands):
+        if self.isActiveWindow():
+            self.widget.light_d_pad(commands)
 
 
-# Hint which is print at startup in console
+class Joystick(QWidget):
+    ros_fun = pyqtSignal(set)
+
+    def __init__(self, *args, **kwargs):
+        super(Joystick, self).__init__(*args, **kwargs)
+        self.state_right = True
+        self.state_left = True
+        self.state_down = True
+        self.state_up = True
+        self.initUI()
+        self.setFocusPolicy(Qt.StrongFocus)
+        self.command = set()
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.timer_fun)
+
+    def timer_fun(self):
+        self.ros_fun.emit(self.command)
+
+    def on_press_timer(self):
+        self.timer.start(int(1000 / HZ))
+
+    def on_release_timer(self):
+        self.timer.stop()
+        self.command.clear()
+        self.ros_fun.emit(set())
+
+    def initUI(self):
+        self.setGeometry(100, 100, 300, 200)
+        label = QLabel(self)
+        self.pixmap = QPixmap('../images/d-pad.png')
+        label.setPixmap(self.pixmap)
+        self.resize(self.pixmap.width(), self.pixmap.height())
+        self.create_up_button()
+        self.create_left_button()
+        self.create_right_button()
+        self.create_down_button()
+        self.create_d_pad()
+
+    def light_d_pad(self, commands):
+        self.state_left = not (KEY_LEFT in commands)
+        self.state_right = not (KEY_RIGHT in commands)
+        self.state_up = not (KEY_UP in commands)
+        self.state_down = not (KEY_DOWN in commands)
+        self.change_state()
+
+    def change_state(self):
+        if not e_stop:
+            self.label_up.setHidden(self.state_up)
+            self.label_down.setHidden(self.state_down)
+            self.label_left.setHidden(self.state_left)
+            self.label_right.setHidden(self.state_right)
+            self.label_stop.setHidden(True)
+        else:
+            self.label_up.setHidden(True)
+            self.label_down.setHidden(True)
+            self.label_left.setHidden(True)
+            self.label_right.setHidden(True)
+            self.label_stop.setHidden(False)
+
+    def create_d_pad(self):
+        self.label_up = QLabel(self)
+        self.label_left = QLabel(self)
+        self.label_down = QLabel(self)
+        self.label_right = QLabel(self)
+        self.label_stop = QLabel(self)
+        img = QPixmap('../images/d-pad-pressed.png')
+        t = QTransform()
+        self.label_up.setPixmap(img)
+        t.rotate(90)
+        self.label_right.setPixmap(img.transformed(t))
+        t.rotate(90)
+        self.label_down.setPixmap(img.transformed(t))
+        t.rotate(90)
+        self.label_left.setPixmap(img.transformed(t))
+        img = QPixmap('../images/d-e-stop.png')
+        self.label_stop.setPixmap(img)
+        self.change_state()
+
+    def create_up_button(self):
+        button_up = QPushButton("", self)
+        icon = QIcon('../images/up_button.jpg')
+        button_up.setIcon(icon)
+        size = 200
+        button_up.setIconSize(QSize(size, size))
+        button_up.resize(QSize(size - 40, size - 10))
+        button_up.move(int(self.pixmap.width() / 2 - 81), 22)
+        button_up = self.add_listener_to_button(button_up, {'up'})
+        button_up.pressed.connect(lambda: self.change_command({'up'}))
+
+    def change_command(self, cm):
+        self.command = cm
+
+    def add_listener_to_button(self, button, command={''}):
+        def fun():
+            self.command = command
+            self.on_press_timer()
+
+        button.pressed.connect(fun)
+        button.released.connect(self.on_release_timer)
+        return button
+
+    def create_left_button(self):
+        button = QPushButton("", self)
+        icon = QIcon('../images/left_button.jpg')
+        button.setIcon(icon)
+        size = 200
+        button.setIconSize(QSize(size, size))
+        button.resize(QSize(size - 5, size - 60))
+        button.move(22, int(self.pixmap.height() / 2 - 70))
+        button = self.add_listener_to_button(button, {'left'})
+        button.pressed.connect(lambda: self.change_command({'left'}))
+
+    def create_right_button(self):
+        button = QPushButton("", self)
+        icon = QIcon('../images/right_button.jpg')
+        button.setIcon(icon)
+        size = 200
+        button.setIconSize(QSize(size, size))
+        button.resize(QSize(size - 5, size - 60))
+        button.move(int(self.pixmap.width() / 2 + 81), int(self.pixmap.height() / 2 - 70))
+        button = self.add_listener_to_button(button, {'right'})
+        button.pressed.connect(lambda: self.change_command({'right'}))
+
+    def create_down_button(self):
+        button = QPushButton("", self)
+        icon = QIcon('../images/down_button.jpg')
+        button.setIcon(icon)
+        size = 200
+        button.setIconSize(QSize(size, size))
+        button.resize(QSize(size - 50, size - 10))
+        button.move(int(self.pixmap.width() / 2 - 75), int(self.pixmap.height() / 2 + 83))
+        button = self.add_listener_to_button(button, {'down'})
+        button.pressed.connect(lambda: self.change_command({'down'}))
+
+
 def print_hint():
     print("\n\n\n")
     print("Virtual Joystick for your Duckiebot")
@@ -225,8 +366,7 @@ def print_hint():
     print("\n")
 
 
-if __name__ == '__main__':
-
+if __name__ == "__main__":
     if len(sys.argv) < 2:
         raise Exception("No hostname specified!")
     else:
@@ -235,34 +375,14 @@ if __name__ == '__main__':
     veh_no = re.sub("\D", "", veh_name)
     main_letter = veh_name[0]
 
-    # prepare pygame
-    pygame.init()
-
-    file_dir = os.path.dirname(__file__)
-    file_dir = (file_dir + "/") if file_dir else ""
-    logo = pygame.image.load(file_dir + "../images/logo.png")
-
-    pygame.display.set_icon(logo)
-    screen = pygame.display.set_mode((screen_size, screen_size))
-    pygame.display.set_caption(veh_name)
-
-    prepare_dpad()
-
-    # prepare ROS node
-    rospy.init_node('virtual_joy', anonymous=False)
-
-    # prepare ROS subscribers
-    sub_estop = rospy.Subscriber("~emergency_stop", BoolStamped, cbEStop, queue_size=1)
-
-    # prepare ROS publisher
-    pub_joystick = rospy.Publisher("~joy", Joy, queue_size=1)
-    pub_int = rospy.Publisher("~intersection_go", BoolStamped, queue_size=1)
-
-    # print the hint
     print_hint()
+    app = QApplication(sys.argv)
+    m = MainWindow()
+    m.show()
+    exit_code = app.exec_()
+    m.key_board_event.terminate()
+    m.key_board_event.wait()
+    m.ros.terminate()
+    m.ros.wait()
+    sys.exit(exit_code)
 
-    try:
-        # start the main loop
-        loop()
-    except socket.error:
-        print("Error starting main loop in virtual joystick gui")
