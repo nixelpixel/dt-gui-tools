@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 from PyQt5.QtCore import QSize, pyqtSignal, Qt
 from PyQt5.QtCore import QThread, QTimer
 from PyQt5.QtGui import QImage, QPalette, QBrush, QIcon, QPixmap, QKeyEvent, QTransform
@@ -10,6 +11,7 @@ import socket
 import rospy
 import time
 import sys
+import os
 import re
 
 HZ = 30
@@ -226,6 +228,8 @@ class Joystick(QWidget):
         self.state_left = True
         self.state_down = True
         self.state_up = True
+        script_path = os.path.dirname(__file__)
+        self.script_path = (script_path + "/") if script_path else ""
         self.initUI()
         self.setFocusPolicy(Qt.StrongFocus)
         self.command = set()
@@ -246,7 +250,7 @@ class Joystick(QWidget):
     def initUI(self):
         self.setGeometry(100, 100, 300, 200)
         label = QLabel(self)
-        self.pixmap = QPixmap('../images/d-pad.png')
+        self.pixmap = QPixmap(self.script_path + '../images/d-pad.png')
         label.setPixmap(self.pixmap)
         self.resize(self.pixmap.width(), self.pixmap.height())
         self.create_up_button()
@@ -282,7 +286,7 @@ class Joystick(QWidget):
         self.label_down = QLabel(self)
         self.label_right = QLabel(self)
         self.label_stop = QLabel(self)
-        img = QPixmap('../images/d-pad-pressed.png')
+        img = QPixmap(self.script_path + '../images/d-pad-pressed.png')
         t = QTransform()
         self.label_up.setPixmap(img)
         t.rotate(90)
@@ -291,13 +295,13 @@ class Joystick(QWidget):
         self.label_down.setPixmap(img.transformed(t))
         t.rotate(90)
         self.label_left.setPixmap(img.transformed(t))
-        img = QPixmap('../images/d-e-stop.png')
+        img = QPixmap(self.script_path + '../images/d-e-stop.png')
         self.label_stop.setPixmap(img)
         self.change_state()
 
     def create_up_button(self):
         button_up = QPushButton("", self)
-        icon = QIcon('../images/up_button.jpg')
+        icon = QIcon(self.script_path + '../images/up_button.jpg')
         button_up.setIcon(icon)
         size = 200
         button_up.setIconSize(QSize(size, size))
@@ -320,7 +324,7 @@ class Joystick(QWidget):
 
     def create_left_button(self):
         button = QPushButton("", self)
-        icon = QIcon('../images/left_button.jpg')
+        icon = QIcon(self.script_path + '../images/left_button.jpg')
         button.setIcon(icon)
         size = 200
         button.setIconSize(QSize(size, size))
@@ -331,7 +335,7 @@ class Joystick(QWidget):
 
     def create_right_button(self):
         button = QPushButton("", self)
-        icon = QIcon('../images/right_button.jpg')
+        icon = QIcon(self.script_path + '../images/right_button.jpg')
         button.setIcon(icon)
         size = 200
         button.setIconSize(QSize(size, size))
@@ -342,7 +346,7 @@ class Joystick(QWidget):
 
     def create_down_button(self):
         button = QPushButton("", self)
-        icon = QIcon('../images/down_button.jpg')
+        icon = QIcon(self.script_path + '../images/down_button.jpg')
         button.setIcon(icon)
         size = 200
         button.setIconSize(QSize(size, size))
