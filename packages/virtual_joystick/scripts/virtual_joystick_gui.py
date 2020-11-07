@@ -14,8 +14,11 @@ import sys
 import os
 import re
 
-HZ = 30
+#class BoolStamped(object):
+#    pass
 
+HZ = 30
+SCREEN_SIZE = 300
 KEY_LEFT = 'left'
 KEY_RIGHT = 'right'
 KEY_UP = 'up'
@@ -248,11 +251,11 @@ class Joystick(QWidget):
         self.ros_fun.emit(set())
 
     def initUI(self):
-        self.setGeometry(100, 100, 300, 200)
         label = QLabel(self)
         self.pixmap = QPixmap(self.script_path + '../images/d-pad.png')
+        self.pixmap = self.pixmap.scaled(300, 300, Qt.KeepAspectRatio)
         label.setPixmap(self.pixmap)
-        self.resize(self.pixmap.width(), self.pixmap.height())
+        self.resize(SCREEN_SIZE, SCREEN_SIZE)
         self.create_up_button()
         self.create_left_button()
         self.create_right_button()
@@ -287,6 +290,7 @@ class Joystick(QWidget):
         self.label_right = QLabel(self)
         self.label_stop = QLabel(self)
         img = QPixmap(self.script_path + '../images/d-pad-pressed.png')
+        img = img.scaled(SCREEN_SIZE, SCREEN_SIZE, Qt.KeepAspectRatio)
         t = QTransform()
         self.label_up.setPixmap(img)
         t.rotate(90)
@@ -296,6 +300,7 @@ class Joystick(QWidget):
         t.rotate(90)
         self.label_left.setPixmap(img.transformed(t))
         img = QPixmap(self.script_path + '../images/d-e-stop.png')
+        img = img.scaled(SCREEN_SIZE, SCREEN_SIZE, Qt.KeepAspectRatio)
         self.label_stop.setPixmap(img)
         self.change_state()
 
@@ -303,10 +308,10 @@ class Joystick(QWidget):
         button_up = QPushButton("", self)
         icon = QIcon(self.script_path + '../images/up_button.jpg')
         button_up.setIcon(icon)
-        size = 200
+        size = 100
         button_up.setIconSize(QSize(size, size))
-        button_up.resize(QSize(size - 40, size - 10))
-        button_up.move(int(self.pixmap.width() / 2 - 81), 22)
+        button_up.resize(QSize(size - 25, size - 10))
+        button_up.move(int(SCREEN_SIZE / 2 - SCREEN_SIZE/8), 15)
         button_up = self.add_listener_to_button(button_up, {'up'})
         button_up.pressed.connect(lambda: self.change_command({'up'}))
 
@@ -326,10 +331,10 @@ class Joystick(QWidget):
         button = QPushButton("", self)
         icon = QIcon(self.script_path + '../images/left_button.jpg')
         button.setIcon(icon)
-        size = 200
+        size = 120
         button.setIconSize(QSize(size, size))
-        button.resize(QSize(size - 5, size - 60))
-        button.move(22, int(self.pixmap.height() / 2 - 70))
+        button.resize(QSize(size - 25, size - 25))
+        button.move(10, int(SCREEN_SIZE / 2 - size/2 + 25/2))
         button = self.add_listener_to_button(button, {'left'})
         button.pressed.connect(lambda: self.change_command({'left'}))
 
@@ -337,10 +342,10 @@ class Joystick(QWidget):
         button = QPushButton("", self)
         icon = QIcon(self.script_path + '../images/right_button.jpg')
         button.setIcon(icon)
-        size = 200
+        size = 120
         button.setIconSize(QSize(size, size))
-        button.resize(QSize(size - 5, size - 60))
-        button.move(int(self.pixmap.width() / 2 + 81), int(self.pixmap.height() / 2 - 70))
+        button.resize(QSize(size - 25, size - 25))
+        button.move(int(SCREEN_SIZE / 2 + size/2 - 25/2), int(SCREEN_SIZE / 2 - 47))
         button = self.add_listener_to_button(button, {'right'})
         button.pressed.connect(lambda: self.change_command({'right'}))
 
@@ -348,10 +353,10 @@ class Joystick(QWidget):
         button = QPushButton("", self)
         icon = QIcon(self.script_path + '../images/down_button.jpg')
         button.setIcon(icon)
-        size = 200
+        size = 120
         button.setIconSize(QSize(size, size))
-        button.resize(QSize(size - 50, size - 10))
-        button.move(int(self.pixmap.width() / 2 - 75), int(self.pixmap.height() / 2 + 83))
+        button.resize(QSize(size - 25, size - 25))
+        button.move(int(SCREEN_SIZE / 2 - size/2 + 13), int(SCREEN_SIZE / 2 + 47))
         button = self.add_listener_to_button(button, {'down'})
         button.pressed.connect(lambda: self.change_command({'down'}))
 
@@ -382,6 +387,7 @@ if __name__ == "__main__":
     print_hint()
     app = QApplication(sys.argv)
     m = MainWindow()
+    m.resize(SCREEN_SIZE, SCREEN_SIZE)
     m.show()
     exit_code = app.exec_()
     m.key_board_event.terminate()
