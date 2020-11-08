@@ -14,9 +14,6 @@ import sys
 import os
 import re
 
-#class BoolStamped(object):
-#    pass
-
 HZ = 30
 SCREEN_SIZE = 300
 KEY_LEFT = 'left'
@@ -253,9 +250,10 @@ class Joystick(QWidget):
     def initUI(self):
         label = QLabel(self)
         self.pixmap = QPixmap(self.script_path + '../images/d-pad.png')
-        self.pixmap = self.pixmap.scaled(300, 300, Qt.KeepAspectRatio)
+        self.pixmap = self.pixmap.scaled(SCREEN_SIZE, SCREEN_SIZE, Qt.KeepAspectRatio)
         label.setPixmap(self.pixmap)
         self.resize(SCREEN_SIZE, SCREEN_SIZE)
+        # NOTE: if SCREEN_SIZE changed, need to change funs for buttons
         self.create_up_button()
         self.create_left_button()
         self.create_right_button()
