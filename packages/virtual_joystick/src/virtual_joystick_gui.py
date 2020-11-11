@@ -13,7 +13,6 @@ import rospy
 import time
 import sys
 import os
-import re
 
 HZ = 30
 SCREEN_SIZE = 300
@@ -140,16 +139,12 @@ class ROSManager(QThread):
     def action(self, commands):
         self.commands = commands
 
-    def get_raw_message(self):
-        msg = Joy()
-        msg.header.seq = 0
-        msg.header.stamp.secs = 0
-        msg.header.stamp.nsecs = 0
-        msg.header.frame_id = ''
-        msg.axes = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-        msg.buttons = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-
-        return msg
+    @staticmethod
+    def get_raw_message():
+        return Joy(
+            axes=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            buttons=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        )
 
 
 class MyKeyBoardThread(QThread):
@@ -379,10 +374,7 @@ if __name__ == "__main__":
         raise Exception("No hostname specified!")
     else:
         veh_name = sys.argv[1]
-
-    veh_no = re.sub("\D", "", veh_name)
-    main_letter = veh_name[0]
-
+    # ---
     print_hint()
     app = QApplication(sys.argv)
     m = MainWindow()
