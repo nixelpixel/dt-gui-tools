@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-
+#!/usr/bin/python3
 from PyQt5.QtCore import QSize, pyqtSignal, Qt
 from PyQt5.QtCore import QThread, QTimer
 from PyQt5.QtGui import QImage, QPalette, QBrush, QIcon, QPixmap, QKeyEvent, QTransform, QFocusEvent
@@ -59,6 +58,7 @@ class ROSManager(QThread):
         self.estop_last_time = time.time()
         self.last_ms = 0
         self.emergency_stop = False
+
 
     def cbEStop(self, estop_msg):
         """
@@ -367,8 +367,8 @@ if __name__ == "__main__":
         raise Exception("No hostname specified!")
     else:
         veh_name = sys.argv[1]
-    # ---
     print_hint()
+
     app = QApplication(sys.argv)
     m = MainWindow()
     m.resize(SCREEN_SIZE, SCREEN_SIZE)
