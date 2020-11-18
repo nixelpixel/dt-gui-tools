@@ -2,6 +2,7 @@
 ros-noetic-rviz
 ros-noetic-rqt
 ros-noetic-rqt-common-plugins
+ros-noetic-rqt-tf-tree
 ros-noetic-image-geometry
 python3-pygame
 
