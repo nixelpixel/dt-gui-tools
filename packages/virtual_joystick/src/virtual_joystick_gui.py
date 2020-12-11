@@ -156,7 +156,7 @@ class MyKeyBoardThread(QThread):
         key_val = str(key)
         if len(key_val) == 3:
             key_val = key_val[1]
-        if key_val in Keys.keys():
+        if key_val in Keys:
             commands.add(Keys[key_val])
         self.key_board_event.emit(commands)
 
@@ -164,7 +164,7 @@ class MyKeyBoardThread(QThread):
         key_val = str(key)
         if len(key_val) == 3:
             key_val = key_val[1]
-        if key_val in Keys.keys():
+        if key_val in Keys:
             commands.remove(Keys[key_val])
         self.key_board_event.emit(commands)
 
