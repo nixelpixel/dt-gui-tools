@@ -70,7 +70,7 @@ class ROSManager(QThread):
         e_stop = self.emergency_stop = estop_msg.data
 
     def run(self):
-        
+
         veh_standing = True
 
         while True:
@@ -165,7 +165,7 @@ class MyKeyBoardThread(QThread):
         if len(key_val) == 3:
             key_val = key_val[1]
         if key_val in Keys:
-            commands.remove(Keys[key_val])
+            commands.discard(Keys[key_val])
         self.key_board_event.emit(commands)
 
     def run(self):
