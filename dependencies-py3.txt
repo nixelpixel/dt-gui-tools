@@ -1,6 +1,11 @@
 # LIST YOUR PYTHON3 PACKAGES HERE
 numpy
 
+# Duckietown World
+git+https://github.com/duckietown/duckietown-world@ente-devel-map-format
+
 # Map editor
 PyQt5
 PyYAML
+
+
