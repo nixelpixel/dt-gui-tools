@@ -5,6 +5,7 @@ from map import DuckietownMap
 from utils import get_list_dir_with_path
 from classes.mapObjects import MapBaseObject
 import numpy as np
+import duckietown_world.structure_2 as st
 
 TILES_DIR_PATH = './img/tiles'
 OBJECT_DIR_PATHS = ['./img/signs',
@@ -12,6 +13,7 @@ OBJECT_DIR_PATHS = ['./img/signs',
                     './img/objects']
 
 DELTA_EUCLIDEAN_DISTANCE = .15
+
 
 class MapViewer(QGraphicsView, QtWidgets.QWidget):
     map = None
@@ -33,7 +35,7 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
     tileSelection = [0] * 4
     selectionChanged = QtCore.pyqtSignal()
     editObjectChanged = QtCore.pyqtSignal(MapBaseObject)
-    lmbClicked = QtCore.pyqtSignal(int, int)  #  click coordinates as an index of the clicked tile
+    lmbClicked = QtCore.pyqtSignal(int, int)  # click coordinates as an index of the clicked tile
 
     def __init__(self):
         QGraphicsView.__init__(self)
@@ -62,7 +64,7 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
             return
         self.sc *= sf
         self.scene().update()
-    
+
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
         self.drag_mode = False
         self.drag_obj = None
@@ -74,19 +76,19 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
                 (self.mouseCurY - self.offsetY) / self.sc * self.map.gridSize):
                 self.lmbClicked.emit(int((self.mouseStartX - self.offsetX) / self.sc * self.map.gridSize),
                                      int((self.mouseStartY - self.offsetY) / self.sc * self.map.gridSize))
-            
+
             self.raw_selection = [
                 ((min(self.mouseStartX, self.mouseCurX) - self.offsetX) / self.sc
-                                         ) / self.map.gridSize,
+                 ) / self.map.gridSize,
                 ((min(self.mouseStartY, self.mouseCurY) - self.offsetY) / self.sc
-                                         ) / self.map.gridSize,
+                 ) / self.map.gridSize,
                 ((max(self.mouseStartX, self.mouseCurX) - self.offsetX) / self.sc) / self.map.gridSize,
                 ((max(self.mouseStartY, self.mouseCurY) - self.offsetY) / self.sc) / self.map.gridSize
             ]
-            
+
             if self.map.get_tile_layer().visible:
                 self.tileSelection = [
-                    int(v) + (1 if i > 1 else 0) 
+                    int(v) + (1 if i > 1 else 0)
                     for i, v in enumerate(self.raw_selection)
                 ]
             self.selectionChanged.emit()
@@ -100,7 +102,7 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
             x_map = (x - self.offsetX) / self.sc / self.map.gridSize
             y_map = (y - self.offsetY) / self.sc / self.map.gridSize
             drag_obj = self.find_object(x_map, y_map)
-            if  drag_obj:
+            if drag_obj:
                 self.drag_obj = drag_obj
                 self.drag_mode = True
                 return
@@ -127,7 +129,7 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
                 obj_y = object_from_layer.position[1]
                 obj_array = np.array((obj_x, obj_y))
                 if np.linalg.norm(obj_array - event_x) < DELTA_EUCLIDEAN_DISTANCE:
-                    return object_from_layer 
+                    return object_from_layer
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
         x_map = (event.x() - self.offsetX) / self.sc / self.map.gridSize
@@ -161,8 +163,8 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
             self.draw_tiles(tile_layer.data, painter, global_transform)
         # painter.scale(self.sc, self.sc)
         # Draw layer w/ objects
-        for layer in self.map.get_object_layers(only_visible=True):
-            self.draw_objects(layer.get_objects(), painter)
+        # for layer in self.map.get_object_layers(only_visible=True):
+        #    self.draw_objects(layer.get_objects(), painter)
 
         painter.resetTransform()
         painter.setPen(QtGui.QColor('black'))
@@ -171,36 +173,44 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
                              , self.mouseCurX - self.mouseStartX, self.mouseCurY - self.mouseStartY)
 
     def draw_tiles(self, layer_data, painter, global_transform):
-        for y in range(len(layer_data)):
-            for x in range(len(layer_data[y])):
-                painter.scale(self.sc, self.sc)
-                painter.translate(x * self.map.gridSize, y * self.map.gridSize)
-                if layer_data[y][x].rotation == 90:
-                    painter.rotate(90)
-                    painter.translate(0, -self.map.gridSize)
-                elif layer_data[y][x].rotation == 180:
-                    painter.rotate(180)
-                    painter.translate(-self.map.gridSize, -self.map.gridSize)
-                elif layer_data[y][x].rotation == 270:
-                    painter.rotate(270)
-                    painter.translate(-self.map.gridSize, 0)
-                painter.drawImage(QtCore.QRectF(0, 0, self.map.gridSize, self.map.gridSize),
-                                  self.tileSprites[layer_data[y][x].kind])
-                if self.tileSelection[0] <= x < self.tileSelection[2] and self.tileSelection[1] <= y < \
-                        self.tileSelection[3]:
-                    painter.setPen(QtGui.QColor('green'))
-                    painter.drawRect(QtCore.QRectF(1, 1, self.map.gridSize - 1, self.map.gridSize - 1))
-                else:
-                    painter.setPen(QtGui.QColor('white'))
-                    painter.drawRect(QtCore.QRectF(0, 0, self.map.gridSize, self.map.gridSize))
-                painter.setTransform(global_transform, False)
+        rotation_val = {0: 'E', 90: 'S', 180: 'W', 270: 'N'}
+        rot_val = {'E': 0, 'S': 90, 'W': 180, 'N': 270, None: 0}
+        map_name = "maps/tm1"
+        print('MAP1 ', st.get_map_path(map_name))
+        dm = st.DuckietownMap.deserialize(map_name)
+        from duckietown_world.structure_2.objects import _Tile
+        tiles = dm.get_layer_objects(_Tile)
+
+        for tile_name in tiles:  # dm.get_layer_objects(_Tile):
+            tile = dm.tiles[tile_name]
+            print(tile)
+            orientation = tile.orientation
+            painter.scale(self.sc, self.sc)
+            painter.translate(tile.i * self.map.gridSize, tile.j * self.map.gridSize)
+            painter.rotate(rot_val[orientation])
+            if orientation == "S":
+                painter.translate(0, -self.map.gridSize)
+            elif orientation == "N":
+                painter.translate(-self.map.gridSize, 0)
+            elif orientation == "W":
+                painter.translate(-self.map.gridSize, -self.map.gridSize)
+
+            painter.drawImage(QtCore.QRectF(0, 0, self.map.gridSize, self.map.gridSize),
+                              self.tileSprites[tile.type])
+            if self.tileSelection[0] <= tile.i < self.tileSelection[2] and self.tileSelection[1] <= tile.j < \
+                    self.tileSelection[3]:
+                painter.setPen(QtGui.QColor('green'))
+                painter.drawRect(QtCore.QRectF(1, 1, self.map.gridSize - 1, self.map.gridSize - 1))
+            else:
+                painter.setPen(QtGui.QColor('white'))
+                painter.drawRect(QtCore.QRectF(0, 0, self.map.gridSize, self.map.gridSize))
+            painter.setTransform(global_transform, False)
 
     def draw_objects(self, layer_data, painter):
         for layer_object in layer_data:
             width, height = self.map.gridSize * self.sc / 2, self.map.gridSize * self.sc / 2
             painter.drawImage(
-                QtCore.QRectF(self.map.gridSize * self.sc * layer_object.position[0]- width/2,
-                              self.map.gridSize * self.sc * layer_object.position[1]- height/2,
+                QtCore.QRectF(self.map.gridSize * self.sc * layer_object.position[0] - width / 2,
+                              self.map.gridSize * self.sc * layer_object.position[1] - height / 2,
                               width, height),
                 self.objects[layer_object.kind]) if layer_object.kind in self.objects else None
-
