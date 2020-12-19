@@ -163,7 +163,12 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
             self.draw_tiles(tile_layer.data, painter, global_transform)
         # painter.scale(self.sc, self.sc)
         # Draw layer w/ objects
-        # for layer in self.map.get_object_layers(only_visible=True):
+
+        map_name = "maps/tm1"
+        dm = st.DuckietownMap.deserialize(map_name)
+        self.draw_objects(dm, painter)
+
+        #for layer in self.map.get_object_layers(only_visible=True):
         #    self.draw_objects(layer.get_objects(), painter)
 
         painter.resetTransform()
@@ -178,12 +183,13 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
         map_name = "maps/tm1"
         print('MAP1 ', st.get_map_path(map_name))
         dm = st.DuckietownMap.deserialize(map_name)
+        #print(dm.watchtowers)
         from duckietown_world.structure_2.objects import _Tile
         tiles = dm.get_layer_objects(_Tile)
 
         for tile_name in tiles:  # dm.get_layer_objects(_Tile):
             tile = dm.tiles[tile_name]
-            print(tile)
+            #print(tile)
             orientation = tile.orientation
             painter.scale(self.sc, self.sc)
             painter.translate(tile.i * self.map.gridSize, tile.j * self.map.gridSize)
@@ -206,11 +212,24 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
                 painter.drawRect(QtCore.QRectF(0, 0, self.map.gridSize, self.map.gridSize))
             painter.setTransform(global_transform, False)
 
-    def draw_objects(self, layer_data, painter):
-        for layer_object in layer_data:
-            width, height = self.map.gridSize * self.sc / 2, self.map.gridSize * self.sc / 2
+    def draw_objects(self, duckietown_map, painter):
+        from duckietown_world.structure_2.objects import _Watchtower
+        width, height = self.map.gridSize * self.sc / 2, self.map.gridSize * self.sc / 2
+        for watchtower_name in duckietown_map.get_layer_objects(_Watchtower):
+            wt = duckietown_map.watchtowers[watchtower_name]
+            frame_wt = duckietown_map.frames[watchtower_name]
+            print(wt, frame_wt, frame_wt.pose)
+            x, y = frame_wt.pose.x, frame_wt.pose.y
             painter.drawImage(
-                QtCore.QRectF(self.map.gridSize * self.sc * layer_object.position[0] - width / 2,
-                              self.map.gridSize * self.sc * layer_object.position[1] - height / 2,
-                              width, height),
-                self.objects[layer_object.kind]) if layer_object.kind in self.objects else None
+                    QtCore.QRectF(self.map.gridSize * self.sc * x - width / 2,
+                                  self.map.gridSize * self.sc * y - height / 2,
+                                  width, height),
+                    self.objects["watchtower"])
+
+        #for layer_object in layer_data:
+        #
+        #    painter.drawImage(
+        #        QtCore.QRectF(self.map.gridSize * self.sc * layer_object.position[0] - width / 2,
+        #                      self.map.gridSize * self.sc * layer_object.position[1] - height / 2,
+        #                      width, height),
+        #        self.objects[layer_object.kind]) if layer_object.kind in self.objects else None
