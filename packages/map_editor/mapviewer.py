@@ -6,7 +6,7 @@ from utils import get_list_dir_with_path
 from classes.mapObjects import MapBaseObject
 import numpy as np
 import duckietown_world.structure_2 as st
-
+from DTWorld import get_dt_world
 TILES_DIR_PATH = './img/tiles'
 OBJECT_DIR_PATHS = ['./img/signs',
                     './img/apriltags',
@@ -159,13 +159,12 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
 
         # Draw tile layer
         tile_layer = self.map.get_tile_layer()
+        map_name = "maps/tm1"
+        dm = get_dt_world(map_name)
         if tile_layer and tile_layer.visible:
-            self.draw_tiles(tile_layer.data, painter, global_transform)
+            self.draw_tiles(tile_layer.data, painter, global_transform, dm)
         # painter.scale(self.sc, self.sc)
         # Draw layer w/ objects
-
-        map_name = "maps/tm1"
-        dm = st.DuckietownMap.deserialize(map_name)
         self.draw_objects(dm, painter)
 
         #for layer in self.map.get_object_layers(only_visible=True):
@@ -177,19 +176,10 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
             painter.drawRect(0 + self.mouseStartX, 0 + self.mouseStartY
                              , self.mouseCurX - self.mouseStartX, self.mouseCurY - self.mouseStartY)
 
-    def draw_tiles(self, layer_data, painter, global_transform):
-        rotation_val = {0: 'E', 90: 'S', 180: 'W', 270: 'N'}
+    def draw_tiles(self, layer_data, painter, global_transform, dm):
         rot_val = {'E': 0, 'S': 90, 'W': 180, 'N': 270, None: 0}
-        map_name = "maps/tm1"
-        print('MAP1 ', st.get_map_path(map_name))
-        dm = st.DuckietownMap.deserialize(map_name)
-        #print(dm.watchtowers)
-        from duckietown_world.structure_2.objects import _Tile
-        tiles = dm.get_layer_objects(_Tile)
 
-        for tile_name in tiles:  # dm.get_layer_objects(_Tile):
-            tile = dm.tiles[tile_name]
-            #print(tile)
+        for tile_name, tile in dm.tiles:
             orientation = tile.orientation
             painter.scale(self.sc, self.sc)
             painter.translate(tile.i * self.map.gridSize, tile.j * self.map.gridSize)
@@ -212,13 +202,11 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
                 painter.drawRect(QtCore.QRectF(0, 0, self.map.gridSize, self.map.gridSize))
             painter.setTransform(global_transform, False)
 
-    def draw_objects(self, duckietown_map, painter):
-        from duckietown_world.structure_2.objects import _Watchtower
+    def draw_objects(self, dm, painter):
         width, height = self.map.gridSize * self.sc / 2, self.map.gridSize * self.sc / 2
-        for watchtower_name in duckietown_map.get_layer_objects(_Watchtower):
-            wt = duckietown_map.watchtowers[watchtower_name]
-            frame_wt = duckietown_map.frames[watchtower_name]
-            print(wt, frame_wt, frame_wt.pose)
+        for watchtower_name, watchtower in dm.watchtowers:
+            frame_wt = dm.frames[watchtower_name]
+            print(watchtower, frame_wt, frame_wt.pose)
             x, y = frame_wt.pose.x, frame_wt.pose.y
             painter.drawImage(
                     QtCore.QRectF(self.map.gridSize * self.sc * x - width / 2,
