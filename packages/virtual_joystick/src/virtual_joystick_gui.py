@@ -47,6 +47,7 @@ estop_deadzone_secs = 0.5
 e_stop = False
 commands = set()
 
+
 class ROSManager(QThread):
 
     def __init__(self, parent):
@@ -138,8 +139,8 @@ class ROSManager(QThread):
     @staticmethod
     def get_raw_message():
         return Joy(
-        	axes=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        	buttons=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            axes=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            buttons=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         )
 
 
@@ -181,7 +182,11 @@ class MainWindow(QMainWindow):
 
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
+        script_path = os.path.dirname(__file__)
+        self.script_path = (script_path + "/") if script_path else ""
         self.setWindowTitle(sys.argv[1])
+        self.setWindowIcon(QIcon(self.script_path + '../images/logo.png'))
+
         # ros class
         self.ros = ROSManager(self)
         self.ros.start()
@@ -206,7 +211,6 @@ class MainWindow(QMainWindow):
             self.widget.light_d_pad(commands)
             if commands:
                 self.ros.action(commands)
-
 
 
 class Joystick(QWidget):
@@ -298,7 +302,7 @@ class Joystick(QWidget):
         size = 100
         button_up.setIconSize(QSize(size, size))
         button_up.resize(QSize(size - 25, size - 10))
-        button_up.move(int(SCREEN_SIZE / 2 - SCREEN_SIZE/8), 15)
+        button_up.move(int(SCREEN_SIZE / 2 - SCREEN_SIZE / 8), 15)
         button_up = self.add_listener_to_button(button_up, {'up'})
         button_up.pressed.connect(lambda: self.change_command({'up'}))
 
@@ -321,7 +325,7 @@ class Joystick(QWidget):
         size = 120
         button.setIconSize(QSize(size, size))
         button.resize(QSize(size - 25, size - 25))
-        button.move(10, int(SCREEN_SIZE / 2 - size/2 + 25/2))
+        button.move(10, int(SCREEN_SIZE / 2 - size / 2 + 25 / 2))
         button = self.add_listener_to_button(button, {'left'})
         button.pressed.connect(lambda: self.change_command({'left'}))
 
@@ -332,7 +336,7 @@ class Joystick(QWidget):
         size = 120
         button.setIconSize(QSize(size, size))
         button.resize(QSize(size - 25, size - 25))
-        button.move(int(SCREEN_SIZE / 2 + size/2 - 25/2), int(SCREEN_SIZE / 2 - 47))
+        button.move(int(SCREEN_SIZE / 2 + size / 2 - 25 / 2), int(SCREEN_SIZE / 2 - 47))
         button = self.add_listener_to_button(button, {'right'})
         button.pressed.connect(lambda: self.change_command({'right'}))
 
@@ -343,7 +347,7 @@ class Joystick(QWidget):
         size = 120
         button.setIconSize(QSize(size, size))
         button.resize(QSize(size - 25, size - 25))
-        button.move(int(SCREEN_SIZE / 2 - size/2 + 13), int(SCREEN_SIZE / 2 + 47))
+        button.move(int(SCREEN_SIZE / 2 - size / 2 + 13), int(SCREEN_SIZE / 2 + 47))
         button = self.add_listener_to_button(button, {'down'})
         button.pressed.connect(lambda: self.change_command({'down'}))
 
