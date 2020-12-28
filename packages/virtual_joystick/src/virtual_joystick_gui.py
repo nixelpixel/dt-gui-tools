@@ -45,7 +45,6 @@ speed_norm = 1.0
 time_to_wait = 10000
 estop_deadzone_secs = 0.5
 e_stop = False
-#commands = set()
 
 
 class ROSManager(QThread):
