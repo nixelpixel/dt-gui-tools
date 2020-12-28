@@ -45,7 +45,7 @@ speed_norm = 1.0
 time_to_wait = 10000
 estop_deadzone_secs = 0.5
 e_stop = False
-commands = set()
+#commands = set()
 
 
 class ROSManager(QThread):
@@ -123,14 +123,8 @@ class ROSManager(QThread):
                 sys.exit(0)
 
             stands = (sum(map(abs, msg.axes)) == 0 and sum(map(abs, msg.buttons)) == 0)
-            if not stands:
-                veh_standing = False
-
-            if (not veh_standing) or force_joy_publish:
+            if not stands or force_joy_publish:
                 self.pub_joystick.publish(msg)
-            self.commands = set()
-            if stands:
-                veh_standing = True
             sleep(1 / HZ)
 
     def action(self, commands):
@@ -149,6 +143,7 @@ class MyKeyBoardThread(QThread):
 
     def __init__(self, parent):
         QThread.__init__(self, parent)
+        self.commands = set()
 
     def add_listener(self, listener):
         self.key_board_event.connect(listener)
@@ -158,16 +153,16 @@ class MyKeyBoardThread(QThread):
         if len(key_val) == 3:
             key_val = key_val[1]
         if key_val in Keys:
-            commands.add(Keys[key_val])
-        self.key_board_event.emit(commands)
+            self.commands.add(Keys[key_val])
+        self.key_board_event.emit(self.commands)
 
     def on_release(self, key):
         key_val = str(key)
         if len(key_val) == 3:
             key_val = key_val[1]
         if key_val in Keys:
-            commands.discard(Keys[key_val])
-        self.key_board_event.emit(commands)
+            self.commands.discard(Keys[key_val])
+        self.key_board_event.emit(self.commands)
 
     def run(self):
         with Listener(on_press=self.on_press, on_release=self.on_release) as listener:
