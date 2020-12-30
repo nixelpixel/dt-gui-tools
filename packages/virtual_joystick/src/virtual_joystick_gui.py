@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
+import os
+import socket
+import sys
+import time
 
 from PyQt5.QtCore import QSize, pyqtSignal, Qt
 from PyQt5.QtCore import QThread, QTimer
-from PyQt5.QtGui import QImage, QPalette, QBrush, QIcon, QPixmap, QKeyEvent, QTransform, QFocusEvent
-from PyQt5.QtWidgets import QWidget, QApplication, QPushButton, QLabel, QMainWindow, QVBoxLayout
+from PyQt5.QtGui import QIcon, QPixmap, QTransform
+from PyQt5.QtWidgets import QWidget, QApplication, QPushButton, QLabel, QMainWindow
 from pynput.keyboard import Listener
-from duckietown_msgs.msg import BoolStamped
-from sensor_msgs.msg import Joy
-from time import sleep
-import socket
-import rospy
-import time
-import sys
-import os
 
-HZ = 30
+import rospy
+from sensor_msgs.msg import Joy
+from duckietown_msgs.msg import BoolStamped
+
+HZ = 60
 SCREEN_SIZE = 300
 KEY_LEFT = 'left'
 KEY_RIGHT = 'right'
@@ -51,14 +51,33 @@ class ROSManager(QThread):
 
     def __init__(self, parent):
         QThread.__init__(self, parent)
+        self._parent = parent
         rospy.init_node('virtual_joy', anonymous=False)
-        self.sub_estop = rospy.Subscriber("~emergency_stop", BoolStamped, self.cbEStop, queue_size=1)
-        self.pub_joystick = rospy.Publisher("~joy", Joy, queue_size=1)
-        self.pub_int = rospy.Publisher("~intersection_go", BoolStamped, queue_size=1)
+        self.sub_estop = rospy.Subscriber(
+            "~emergency_stop",
+            BoolStamped,
+            self.cbEStop,
+            queue_size=1
+        )
+        self.pub_joystick = rospy.Publisher(
+            "~joy",
+            Joy,
+            queue_size=1
+        )
+        self.pub_int = rospy.Publisher(
+            "~intersection_go",
+            BoolStamped,
+            queue_size=1
+        )
         self.commands = set()
+        self.standing = False
         self.estop_last_time = time.time()
         self.last_ms = 0
         self.emergency_stop = False
+        self._is_shutdown = False
+
+    def shutdown(self):
+        self._is_shutdown = True
 
     def cbEStop(self, estop_msg):
         """
@@ -70,10 +89,7 @@ class ROSManager(QThread):
         e_stop = self.emergency_stop = estop_msg.data
 
     def run(self):
-
-        veh_standing = True
-
-        while True:
+        while not self._is_shutdown:
             ms_now = int(round(time.time() * 1000))
 
             try:
@@ -113,18 +129,25 @@ class ROSManager(QThread):
                 msg_int.data = True
                 self.pub_int.publish(msg_int)
 
-            if KEY_E in self.commands and (time.time() - self.estop_last_time > estop_deadzone_secs):
+            if KEY_E in self.commands and \
+                    (time.time() - self.estop_last_time > estop_deadzone_secs):
                 msg.buttons[3] = 1
                 self.estop_last_time = time.time()
                 force_joy_publish = True
 
             if KEY_Q in self.commands:
-                sys.exit(0)
+                print('Received shutdown request (Event `Q` button down).')
+                self.shutdown()
+                self._parent.shutdown()
 
             stands = (sum(map(abs, msg.axes)) == 0 and sum(map(abs, msg.buttons)) == 0)
-            if not stands or force_joy_publish:
+
+            if not stands or not self.standing or force_joy_publish:
                 self.pub_joystick.publish(msg)
-            sleep(1 / HZ)
+
+            self.standing = stands
+
+            time.sleep(1 / HZ)
 
     def action(self, commands):
         self.commands = commands
@@ -142,12 +165,16 @@ class MyKeyBoardThread(QThread):
 
     def __init__(self, parent):
         QThread.__init__(self, parent)
+        self._parent = parent
+        self.listener = None
         self.commands = set()
 
     def add_listener(self, listener):
         self.key_board_event.connect(listener)
 
     def on_press(self, key):
+        if not self._parent.inFocus:
+            return
         key_val = str(key)
         if len(key_val) == 3:
             key_val = key_val[1]
@@ -156,6 +183,8 @@ class MyKeyBoardThread(QThread):
         self.key_board_event.emit(self.commands)
 
     def on_release(self, key):
+        if not self._parent.inFocus:
+            return
         key_val = str(key)
         if len(key_val) == 3:
             key_val = key_val[1]
@@ -168,17 +197,18 @@ class MyKeyBoardThread(QThread):
             self.listener = listener
             self.listener.join()
 
-    def terminate(self):
+    def shutdown(self):
         self.listener.stop()
+        self.quit()
 
 
 class MainWindow(QMainWindow):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, title, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         script_path = os.path.dirname(__file__)
         self.script_path = (script_path + "/") if script_path else ""
-        self.setWindowTitle(sys.argv[1])
+        self.setWindowTitle(title)
         self.setWindowIcon(QIcon(self.script_path + '../images/logo.png'))
 
         # ros class
@@ -198,13 +228,21 @@ class MainWindow(QMainWindow):
         self.ros_commands = set()
         self.was_added_new_key = False
 
+    @property
+    def inFocus(self):
+        return QApplication.focusWidget() is not None
+
     def visual_joystick(self, commands):
-        focus = QApplication.focusWidget() is not None
         active = self.isActiveWindow()
-        if active and focus:
+        if active and self.inFocus:
             self.widget.light_d_pad(commands)
             if commands:
                 self.ros.action(commands)
+
+    def shutdown(self):
+        self.ros.shutdown()
+        self.key_board_event.shutdown()
+        self.close()
 
 
 class Joystick(QWidget):
@@ -212,10 +250,20 @@ class Joystick(QWidget):
 
     def __init__(self, *args, **kwargs):
         super(Joystick, self).__init__(*args, **kwargs)
+        # GUI stuff init
+        self.label_up = None
+        self.label_left = None
+        self.label_down = None
+        self.label_right = None
+        self.label_stop = None
+        self.main_label = None
+        self.pixmap = None
+        # state init
         self.state_right = True
         self.state_left = True
         self.state_down = True
         self.state_up = True
+        # ---
         script_path = os.path.dirname(__file__)
         self.script_path = (script_path + "/") if script_path else ""
         self.initUI()
@@ -303,7 +351,10 @@ class Joystick(QWidget):
     def change_command(self, cm):
         self.command = cm
 
-    def add_listener_to_button(self, button, command={''}):
+    def add_listener_to_button(self, button, command=None):
+        if command is None:
+            command = {''}
+
         def fun():
             self.command = command
             self.on_press_timer()
@@ -368,7 +419,8 @@ if __name__ == "__main__":
     # ---
     print_hint()
     app = QApplication(sys.argv)
-    m = MainWindow()
+    app.setApplicationName(f"{veh_name} - Virtual Joystick")
+    m = MainWindow(veh_name)
     m.resize(SCREEN_SIZE, SCREEN_SIZE)
     m.show()
     exit_code = app.exec_()
