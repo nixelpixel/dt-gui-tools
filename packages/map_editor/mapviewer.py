@@ -16,6 +16,7 @@ DELTA_EUCLIDEAN_DISTANCE = .15
 
 
 class MapViewer(QGraphicsView, QtWidgets.QWidget):
+
     map = None
     tileSprites = {'empty': QtGui.QImage()}
     objects = {'stop': QtGui.QImage()}
@@ -34,11 +35,13 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
     #  If the selection is outside the array to the right - width / height
     tileSelection = [0] * 4
     selectionChanged = QtCore.pyqtSignal()
-    editObjectChanged = QtCore.pyqtSignal(MapBaseObject)
+    editObjectChanged = QtCore.pyqtSignal(object)
     lmbClicked = QtCore.pyqtSignal(int, int)  # click coordinates as an index of the clicked tile
 
     def __init__(self):
         QGraphicsView.__init__(self)
+        map_name = "maps/tm1"
+        self.dm = get_dt_world(map_name)
         self.setScene(QtWidgets.QGraphicsScene())
         # load tiles
         for filename, file_path in get_list_dir_with_path(TILES_DIR_PATH):
@@ -123,6 +126,15 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
 
     def find_object(self, x, y):
         event_x = np.array((x, y))
+        for frame_name, frame in self.dm.frames:
+            #print(frame_name, frame)
+            obj_x = frame.pose.x
+            obj_y = frame.pose.y
+            obj_array = np.array((obj_x, obj_y))
+            if np.linalg.norm(obj_array - event_x) < DELTA_EUCLIDEAN_DISTANCE:
+                return frame
+        return None
+        '''
         for layer in self.map.get_object_layers(only_visible=True):
             for object_from_layer in layer.get_objects():
                 obj_x = object_from_layer.position[0]
@@ -131,13 +143,17 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
                 if np.linalg.norm(obj_array - event_x) < DELTA_EUCLIDEAN_DISTANCE:
                     return object_from_layer
 
+        '''
+
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
         x_map = (event.x() - self.offsetX) / self.sc / self.map.gridSize
         y_map = (event.y() - self.offsetY) / self.sc / self.map.gridSize
         if self.drag_mode:
             x_map = (event.x() - self.offsetX) / self.sc / self.map.gridSize
             y_map = (event.y() - self.offsetY) / self.sc / self.map.gridSize
-            self.drag_obj.position = [x_map, y_map]
+            #self.drag_obj.position = [x_map, y_map]
+            self.drag_obj.pose.x = x_map
+            self.drag_obj.pose.y = y_map
             self.scene().update()
         elif self.rmbPressed:
             self.offsetX += event.x() - self.rmbPrevPos[0]
@@ -159,13 +175,14 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
 
         # Draw tile layer
         tile_layer = self.map.get_tile_layer()
-        map_name = "maps/tm1"
-        dm = get_dt_world(map_name)
+        #print(self.dm.tiles)
+        #print(self.dm.tile_maps)
+        #print(self.dm.citizens)
         if tile_layer and tile_layer.visible:
-            self.draw_tiles(tile_layer.data, painter, global_transform, dm)
+            self.draw_tiles(tile_layer.data, painter, global_transform)
         # painter.scale(self.sc, self.sc)
         # Draw layer w/ objects
-        self.draw_objects(dm, painter)
+        self.draw_objects(painter)
 
         #for layer in self.map.get_object_layers(only_visible=True):
         #    self.draw_objects(layer.get_objects(), painter)
@@ -176,10 +193,10 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
             painter.drawRect(0 + self.mouseStartX, 0 + self.mouseStartY
                              , self.mouseCurX - self.mouseStartX, self.mouseCurY - self.mouseStartY)
 
-    def draw_tiles(self, layer_data, painter, global_transform, dm):
+    def draw_tiles(self, layer_data, painter, global_transform):
         rot_val = {'E': 0, 'S': 90, 'W': 180, 'N': 270, None: 0}
 
-        for tile_name, tile in dm.tiles:
+        for tile_name, tile in self.dm.tiles:
             orientation = tile.orientation
             painter.scale(self.sc, self.sc)
             painter.translate(tile.i * self.map.gridSize, tile.j * self.map.gridSize)
@@ -202,11 +219,26 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
                 painter.drawRect(QtCore.QRectF(0, 0, self.map.gridSize, self.map.gridSize))
             painter.setTransform(global_transform, False)
 
-    def draw_objects(self, dm, painter):
+    def draw_objects(self, painter):
         width, height = self.map.gridSize * self.sc / 2, self.map.gridSize * self.sc / 2
-        for watchtower_name, watchtower in dm.watchtowers:
-            frame_wt = dm.frames[watchtower_name]
-            print(watchtower, frame_wt, frame_wt.pose)
+        self.draw_watchtowers(width, height, painter)
+        self.draw_citizens(width, height, painter)
+
+    def draw_citizens(self, width, height, painter):
+        for citizen_name, citizen in self.dm.citizens:
+            citizen_frame = self.dm.frames[citizen_name]
+            #print(watchtower, frame_wt, frame_wt.pose)
+            x, y = citizen_frame.pose.x, citizen_frame.pose.y
+            painter.drawImage(
+                    QtCore.QRectF(self.map.gridSize * self.sc * x - width / 2,
+                                  self.map.gridSize * self.sc * y - height / 2,
+                                  width, height),
+                    self.objects["duckie"])
+
+    def draw_watchtowers(self, width, height, painter):
+        for watchtower_name, watchtower in self.dm.watchtowers:
+            frame_wt = self.dm.frames[watchtower_name]
+            #print(watchtower, frame_wt, frame_wt.pose)
             x, y = frame_wt.pose.x, frame_wt.pose.y
             painter.drawImage(
                     QtCore.QRectF(self.map.gridSize * self.sc * x - width / 2,
