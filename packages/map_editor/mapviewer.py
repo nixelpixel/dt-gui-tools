@@ -1,12 +1,17 @@
 # -*- coding: utf-8 -*-
+import logging
+
 from PyQt5.QtWidgets import QGraphicsView
 from PyQt5 import QtCore, QtGui, QtWidgets
 from map import DuckietownMap
 from utils import get_list_dir_with_path
 from classes.mapObjects import MapBaseObject
 import numpy as np
-import duckietown_world.structure_2 as st
+import duckietown_world.structure as st
 from DTWorld import get_dt_world
+import os
+logger = logging.getLogger('root')
+
 TILES_DIR_PATH = './img/tiles'
 OBJECT_DIR_PATHS = ['./img/signs',
                     './img/apriltags',
@@ -40,7 +45,8 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
 
     def __init__(self):
         QGraphicsView.__init__(self)
-        map_name = "maps/tm1"
+        map_name = os.path.abspath("maps/tm1")
+        #print(map_name)
         self.dm = get_dt_world(map_name)
         self.setScene(QtWidgets.QGraphicsScene())
         # load tiles
@@ -127,23 +133,13 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
     def find_object(self, x, y):
         event_x = np.array((x, y))
         for frame_name, frame in self.dm.frames:
-            #print(frame_name, frame)
             obj_x = frame.pose.x
             obj_y = frame.pose.y
             obj_array = np.array((obj_x, obj_y))
             if np.linalg.norm(obj_array - event_x) < DELTA_EUCLIDEAN_DISTANCE:
+                logger.debug('Found frame: {}'.format(frame))
                 return frame
         return None
-        '''
-        for layer in self.map.get_object_layers(only_visible=True):
-            for object_from_layer in layer.get_objects():
-                obj_x = object_from_layer.position[0]
-                obj_y = object_from_layer.position[1]
-                obj_array = np.array((obj_x, obj_y))
-                if np.linalg.norm(obj_array - event_x) < DELTA_EUCLIDEAN_DISTANCE:
-                    return object_from_layer
-
-        '''
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
         x_map = (event.x() - self.offsetX) / self.sc / self.map.gridSize
@@ -151,7 +147,6 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
         if self.drag_mode:
             x_map = (event.x() - self.offsetX) / self.sc / self.map.gridSize
             y_map = (event.y() - self.offsetY) / self.sc / self.map.gridSize
-            #self.drag_obj.position = [x_map, y_map]
             self.drag_obj.pose.x = x_map
             self.drag_obj.pose.y = y_map
             self.scene().update()
@@ -195,7 +190,7 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
 
     def draw_tiles(self, layer_data, painter, global_transform):
         rot_val = {'E': 0, 'S': 90, 'W': 180, 'N': 270, None: 0}
-
+        #print(self.dm.tiles)
         for tile_name, tile in self.dm.tiles:
             orientation = tile.orientation
             painter.scale(self.sc, self.sc)
@@ -210,6 +205,7 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
 
             painter.drawImage(QtCore.QRectF(0, 0, self.map.gridSize, self.map.gridSize),
                               self.tileSprites[tile.type])
+            #print(self.tileSelection)
             if self.tileSelection[0] <= tile.i < self.tileSelection[2] and self.tileSelection[1] <= tile.j < \
                     self.tileSelection[3]:
                 painter.setPen(QtGui.QColor('green'))
@@ -220,13 +216,14 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
             painter.setTransform(global_transform, False)
 
     def draw_objects(self, painter):
+        print(self.dm.frames)
         width, height = self.map.gridSize * self.sc / 2, self.map.gridSize * self.sc / 2
         self.draw_watchtowers(width, height, painter)
         self.draw_citizens(width, height, painter)
 
     def draw_citizens(self, width, height, painter):
-        for citizen_name, citizen in self.dm.citizens:
-            citizen_frame = self.dm.frames[citizen_name]
+        for citizen_info, citizen in self.dm.citizens:
+            citizen_frame = self.dm.frames[citizen_info[0]]
             #print(watchtower, frame_wt, frame_wt.pose)
             x, y = citizen_frame.pose.x, citizen_frame.pose.y
             painter.drawImage(
@@ -236,15 +233,25 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
                     self.objects["duckie"])
 
     def draw_watchtowers(self, width, height, painter):
-        for watchtower_name, watchtower in self.dm.watchtowers:
-            frame_wt = self.dm.frames[watchtower_name]
-            #print(watchtower, frame_wt, frame_wt.pose)
-            x, y = frame_wt.pose.x, frame_wt.pose.y
+        self.raw_draw_objects(width, height, painter, self.dm.watchtowers, "watchtower")
+
+    def raw_draw_objects(self, width, height, painter, arr_objects, type_name):
+        for info, object in arr_objects:
+            obj_name, obj_type = info
+            frame_obj = self.dm.frames[obj_name]
+            x, y = 0, 0
+            frame_of_pose = frame_obj
+            while frame_of_pose:
+                x += frame_of_pose.pose.x
+                y += frame_of_pose.pose.y
+                frame_of_pose = self.dm.frames[frame_of_pose.relative_to]
+
             painter.drawImage(
                     QtCore.QRectF(self.map.gridSize * self.sc * x - width / 2,
                                   self.map.gridSize * self.sc * y - height / 2,
                                   width, height),
-                    self.objects["watchtower"])
+                    self.objects[type_name])
+
 
         #for layer_object in layer_data:
         #

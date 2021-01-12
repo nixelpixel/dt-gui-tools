@@ -4,6 +4,7 @@ import codecs
 import mapviewer
 import map
 from DTWorld import get_dt_world
+import duckietown_world.structure as st
 
 from classes.mapTile import MapTile
 from mapEditor import MapEditor
@@ -23,6 +24,8 @@ from layers.relations import get_layer_type_by_object_type
 from tag_config import get_duckietown_types
 from forms.new_tag_object import NewTagForm
 from forms.default_forms import question_form_yes_no
+from DTWorld import get_dt_world
+from duckietown_world.structure.objects import Watchtower, Citizen
 
 logger = logging.getLogger('root')
 TILE_TYPES = ('block', 'road')
@@ -47,6 +50,7 @@ class duck_window(QtWidgets.QMainWindow):
         super().__init__()
         # active items in editor
         self.active_items = []
+        self.dm = get_dt_world()
 
         #  additional windows for displaying information
         self.author_window = info_window()
@@ -280,8 +284,16 @@ class duck_window(QtWidgets.QMainWindow):
 
     #  Save map as
     def save_map_as_triggered(self):
-        save_map_as(self)
-
+        path_folder = save_map_as(self)
+        if path_folder:
+            map_final = self.dm.dump(self.dm)
+            print(map_final)
+            #for i in map_final:
+            #    print('aaaa ', i)
+            for layer_name in map_final:
+                with open(path_folder+f'/{layer_name}.yaml', 'w+') as file:
+                    file.write(map_final[layer_name])
+            print('FINAL PATH, ', path_folder)
     #  Export to png
     def export_png_triggered(self):
         export_png(self)
@@ -523,8 +535,15 @@ class duck_window(QtWidgets.QMainWindow):
                 # save map before adding object
                 self.editor.save(self.map)
                 # adding object
-                self.map.add_objects_to_map([dict(kind=item_name, pos=(.0, .0), rotate=0, height=1,
-                                                  optional=False, static=True)], self.info_json['info'])
+                print(item_name)
+                if item_name == "duckie":
+                    self.dm.add(Citizen("duckie2", x=1, y=1))
+                elif item_name == "watchtower":
+                    self.dm.add(Watchtower("wt3", x=1, y=1))
+
+                #self.map.add_objects_to_map([dict(kind=item_name, pos=(.0, .0), rotate=0, height=1,
+                #                                  optional=False, static=True)], self.info_json['info'])
+
                 # TODO: need to understand what's the type and create desired class, not general
                 # also https://github.com/moevm/mse_visual_map_editor_for_duckietown/issues/122
                 # (for args, that can be edited and be different between classes)
@@ -820,6 +839,8 @@ class duck_window(QtWidgets.QMainWindow):
             if selection[1] < 0:
                 delta = -selection[1]
                 selection[3] += delta
+            print(self.get_size_of_map())
+            print(selection)
             for i in range(max(selection[0], 0), min(selection[2], len(tile_layer[0]))):
                 for j in range(max(selection[1], 0), min(selection[3], len(tile_layer))):
                     obj = self.dm.tiles['map_1/tile_{}_{}'.format(i, j)]
@@ -828,6 +849,15 @@ class duck_window(QtWidgets.QMainWindow):
                     #tile_layer[j][i] = copy.copy(filler)
         self.update_layer_tree()
         self.mapviewer.scene().update()
+
+    def get_size_of_map(self) -> tuple:
+        print(self.dm.tiles)
+        i, j = 0, 0
+        while self.dm.tiles['map_1/tile_{}_{}'.format(i, 0)]:
+            i += 1
+        while self.dm.tiles['map_1/tile_{}_{}'.format(0, j)]:
+            j += 1
+        return i, j
 
     def show_info(self, name, title, text):
         name.set_window_name(title)
