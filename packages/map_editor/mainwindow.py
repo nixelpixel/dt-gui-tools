@@ -7,6 +7,7 @@ from DTWorld import get_dt_world
 import duckietown_world.structure as st
 
 from classes.mapTile import MapTile
+from forms.start_info import StartInfoForm
 from mapEditor import MapEditor
 from main_design import *
 from PyQt5 import QtWidgets, QtGui, QtCore
@@ -25,7 +26,7 @@ from tag_config import get_duckietown_types
 from forms.new_tag_object import NewTagForm
 from forms.default_forms import question_form_yes_no
 from DTWorld import get_dt_world
-from duckietown_world.structure.objects import Watchtower, Citizen
+from duckietown_world.structure.objects import Watchtower, Citizen, Tile
 
 logger = logging.getLogger('root')
 TILE_TYPES = ('block', 'road')
@@ -72,7 +73,10 @@ class duck_window(QtWidgets.QMainWindow):
 
         # Loads info about types from duckietown
         self.duckietown_types_apriltags = get_duckietown_types()
+        #####  Forms   #############
         self.new_tag_class = NewTagForm(self.duckietown_types_apriltags)
+        self.init_info_form = StartInfoForm()
+        ############################
         map_name = "maps/tm1"
         self.dm = get_dt_world(map_name)
         self.map = map.DuckietownMap()
@@ -262,6 +266,7 @@ class duck_window(QtWidgets.QMainWindow):
 
     #  Create a new map
     def create_map_triggered(self):
+        logger.debug(1)
         new_map(self)
         logger.debug("Length - {}".format(len(self.map.get_tile_layer().data)))
         self.mapviewer.offsetX = self.mapviewer.offsetY = 0
@@ -271,8 +276,24 @@ class duck_window(QtWidgets.QMainWindow):
 
     #  Open map
     def open_map_triggered(self):
+        logger.debug(2)
         self.editor.save(self.map)
-        open_map(self)
+        # dir_path = open_map(self)
+        # self.dm = get_dt_world(dir_path)
+
+        def init_info(info):
+            i, j = int(info['x']), int(info['y'])
+            tile_size = float(info['tile_size'])
+            self.create_empty_map(i, j)
+            self.dm.tile_maps['map_1'].x = tile_size
+            self.dm.tile_maps['map_1'].y = tile_size
+            #self.dm.tile_maps['map_1']
+            self.mapviewer.scene().update()
+            self.update_layer_tree()
+        self.init_info_form.send_info.connect(init_info)
+        self.init_info_form.show()
+
+
         self.mapviewer.offsetX = self.mapviewer.offsetY = 0
         self.mapviewer.scene().update()
         self.update_layer_tree()
@@ -287,13 +308,14 @@ class duck_window(QtWidgets.QMainWindow):
         path_folder = save_map_as(self)
         if path_folder:
             map_final = self.dm.dump(self.dm)
-            print(map_final)
-            #for i in map_final:
+            # print(map_final)
+            # for i in map_final:
             #    print('aaaa ', i)
             for layer_name in map_final:
-                with open(path_folder+f'/{layer_name}.yaml', 'w+') as file:
+                with open(path_folder + f'/{layer_name}.yaml', 'w+') as file:
                     file.write(map_final[layer_name])
             print('FINAL PATH, ', path_folder)
+
     #  Export to png
     def export_png_triggered(self):
         export_png(self)
@@ -482,6 +504,18 @@ class duck_window(QtWidgets.QMainWindow):
 
         event.accept()
 
+    def create_empty_map(self, i_size: int, j_size: int) -> None:
+        for i in range(i_size):
+            for j in range(j_size):
+                tile = Tile("map_1/tile_{}_{}".format(i, j))
+                tile.obj.i = i
+                tile.obj.j = j
+                tile.frame.pose.x = i + 0.5
+                tile.frame.pose.y = j + 0.5
+                tile.frame.relative_to = 'map_1'
+                tile.frame.dm = self.dm
+                self.dm.add(tile)
+
     #  Handle a click on an item from a list to a list
     def item_list_clicked(self):
         list = self.ui.block_list
@@ -535,13 +569,13 @@ class duck_window(QtWidgets.QMainWindow):
                 # save map before adding object
                 self.editor.save(self.map)
                 # adding object
-                print(item_name)
+                # print(item_name)
                 if item_name == "duckie":
                     self.dm.add(Citizen("duckie2", x=1, y=1))
                 elif item_name == "watchtower":
                     self.dm.add(Watchtower("wt3", x=1, y=1))
 
-                #self.map.add_objects_to_map([dict(kind=item_name, pos=(.0, .0), rotate=0, height=1,
+                # self.map.add_objects_to_map([dict(kind=item_name, pos=(.0, .0), rotate=0, height=1,
                 #                                  optional=False, static=True)], self.info_json['info'])
 
                 # TODO: need to understand what's the type and create desired class, not general
@@ -799,15 +833,16 @@ class duck_window(QtWidgets.QMainWindow):
         self.editor.save(self.map)
         selection = self.mapviewer.tileSelection
         tile_layer = self.map.get_tile_layer().data
+        i_size, j_size = self.get_size_of_map()
         if selection:
-            for i in range(max(selection[1], 0), min(selection[3], len(tile_layer[0]))):
-                for j in range(max(selection[0], 0), min(selection[2], len(tile_layer[0]))):
-                    obj = self.dm.tiles['map_1/tile_{}_{}'.format(j, i)]
+            for i in range(max(selection[0], 0), min(selection[2], i_size)):
+                for j in range(max(selection[1], 0), min(selection[3], j_size)):
+                    obj = self.dm.tiles['map_1/tile_{}_{}'.format(i, j)]
                     orien_val = (rot_val[obj.orientation] + 90) % 360
                     for key in rot_val:
                         if rot_val[key] == orien_val:
                             obj.orientation = key
-                    #tile_layer[i][j].rotation = (tile_layer[i][j].rotation + 90) % 360
+                    # tile_layer[i][j].rotation = (tile_layer[i][j].rotation + 90) % 360
             self.mapviewer.scene().update()
 
     def add_apriltag(self, apriltag: GroundAprilTagObject):
@@ -839,19 +874,20 @@ class duck_window(QtWidgets.QMainWindow):
             if selection[1] < 0:
                 delta = -selection[1]
                 selection[3] += delta
-            print(self.get_size_of_map())
-            print(selection)
-            for i in range(max(selection[0], 0), min(selection[2], len(tile_layer[0]))):
-                for j in range(max(selection[1], 0), min(selection[3], len(tile_layer))):
+            # print(self.get_size_of_map())
+            i_size, j_size = self.get_size_of_map()
+            # print(selection)
+            for i in range(max(selection[0], 0), min(selection[2], i_size)):
+                for j in range(max(selection[1], 0), min(selection[3], j_size)):
                     obj = self.dm.tiles['map_1/tile_{}_{}'.format(i, j)]
                     obj.type = self.ui.default_fill.currentData()
                     obj.orientation = 'N'
-                    #tile_layer[j][i] = copy.copy(filler)
+                    # tile_layer[j][i] = copy.copy(filler)
         self.update_layer_tree()
         self.mapviewer.scene().update()
 
     def get_size_of_map(self) -> tuple:
-        print(self.dm.tiles)
+        # print(self.dm.tiles)
         i, j = 0, 0
         while self.dm.tiles['map_1/tile_{}_{}'.format(i, 0)]:
             i += 1
