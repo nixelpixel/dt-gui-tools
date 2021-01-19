@@ -26,7 +26,7 @@ from tag_config import get_duckietown_types
 from forms.new_tag_object import NewTagForm
 from forms.default_forms import question_form_yes_no
 from DTWorld import get_dt_world
-from duckietown_world.structure.objects import Watchtower, Citizen, Tile
+from duckietown_world.structure.objects import Watchtower, Citizen, Tile, TrafficSign
 
 logger = logging.getLogger('root')
 TILE_TYPES = ('block', 'road')
@@ -569,12 +569,14 @@ class duck_window(QtWidgets.QMainWindow):
                 # save map before adding object
                 self.editor.save(self.map)
                 # adding object
-                # print(item_name)
+                print(item_name)
+                sign_list = ['stop']
                 if item_name == "duckie":
                     self.dm.add(Citizen("duckie2", x=1, y=1))
                 elif item_name == "watchtower":
                     self.dm.add(Watchtower("wt3", x=1, y=1))
-
+                elif item_name in sign_list:
+                    self.dm.add(TrafficSign("map_1/stop_1", x=1, y=1))
                 # self.map.add_objects_to_map([dict(kind=item_name, pos=(.0, .0), rotate=0, height=1,
                 #                                  optional=False, static=True)], self.info_json['info'])
 
