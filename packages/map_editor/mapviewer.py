@@ -4,6 +4,8 @@ from typing import Tuple
 
 from PyQt5.QtWidgets import QGraphicsView
 from PyQt5 import QtCore, QtGui, QtWidgets
+from duckietown_world.structure.objects import Tile, _Tile
+
 from map import DuckietownMap
 from utils import get_list_dir_with_path
 from classes.mapObjects import MapBaseObject
@@ -110,14 +112,14 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
                 #((max(self.mouseStartY, self.mouseCurY) - self.offsetY) / self.sc) / self.map.gridSize
             ]
 
-            print('SELECTION - ', self.raw_selection)
+            #print('SELECTION - ', self.raw_selection)
 
             if self.map.get_tile_layer().visible:
                 self.tileSelection = [
-                    int(v) + (1 if i > 1 else 0)
+                    int(v) #+ (1 if i > 1 else 0)
                     for i, v in enumerate(self.raw_selection)
                 ]
-            print('TILE SELECTION ', self.tileSelection)
+            #print('TILE SELECTION ', self.tileSelection)
             self.selectionChanged.emit()
         else:
             self.rmbPressed = False
@@ -229,9 +231,8 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
 
                 painter.drawImage(QtCore.QRectF(0, 0, self.map.gridSize, self.map.gridSize),
                                   self.tileSprites[tile.type])
-                print('Selection - ', self.tileSelection, ' === ', tile.i, tile.j)
-                if self.tileSelection[0] <= tile.i < self.tileSelection[2] and self.tileSelection[3] < tile.j <= \
-                        self.tileSelection[1]:
+                print(self.tileSelection)
+                if self.is_selected_tile(tile):
                     painter.setPen(QtGui.QColor('green'))
                     painter.drawRect(QtCore.QRectF(1, 1, self.map.gridSize - 1, self.map.gridSize - 1))
                 else:
@@ -242,24 +243,45 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
                     painter.drawRect(QtCore.QRectF(1, 1, self.map.gridSize - 1, self.map.gridSize - 1))
                 painter.setTransform(global_transform, False)
 
+    def is_selected_tile(self, tile: _Tile) -> bool:
+        return self.tileSelection[0] <= tile.i <= self.tileSelection[2] and self.tileSelection[3] <= tile.j <= \
+                        self.tileSelection[1]
+
     def draw_objects(self, painter):
         width, height = self.map.gridSize * self.sc / 2, self.map.gridSize * self.sc / 2
         self.draw_watchtowers(width, height, painter)
-        #self.draw_citizens(width, height, painter)
+        self.draw_citizens(width, height, painter)
+        self.draw_traffic_signs(width, height, painter)
+        self.draw_groundtags(width, height, painter)
 
     def draw_citizens(self, width, height, painter):
-        for citizen_info, citizen in self.dm.citizens:
-            citizen_frame = self.dm.frames[citizen_info[0]]
-            x, y = citizen_frame.pose.x, citizen_frame.pose.y
-            painter.drawImage(
-                QtCore.QRectF(self.map.gridSize * self.sc * x - width / 2,
-                              self.map.gridSize * self.sc * y - height / 2,
-                              width, height),
-                self.objects["duckie"])
+        self.raw_draw_objects(width, height, painter, self.dm.citizens, "duckie")
 
     def draw_watchtowers(self, width, height, painter):
         if self.dm.watchtowers is not None:
             self.raw_draw_objects(width, height, painter, self.dm.watchtowers, "watchtower")
+
+    def draw_traffic_signs(self, width, height, painter):
+        for info, object in self.dm.trafficsigns:
+            obj_name, obj_type = info
+            frame_obj = self.dm.frames[obj_name]
+            x, y = 0, 0
+            frame_of_pose = frame_obj
+            while frame_of_pose:
+                x += frame_of_pose.pose.x
+                y += frame_of_pose.pose.y
+                frame_of_pose = self.dm.frames[frame_of_pose.relative_to]
+            # - width / 2
+            # - height / 2
+            x, y = self.get_x_to_view(x), self.get_y_to_view(y)
+            painter.drawImage(
+                QtCore.QRectF(x - width / 2,
+                              y - height / 2,
+                              width, height),
+                self.objects[object.type])
+
+    def draw_groundtags(self, width, height, painter):
+        self.raw_draw_objects(width, height, painter, self.dm.groundtags, "apriltag")
 
     def raw_draw_objects(self, width, height, painter, arr_objects, type_name):
         for info, object in arr_objects:
@@ -273,7 +295,7 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
                 frame_of_pose = self.dm.frames[frame_of_pose.relative_to]
             # - width / 2
             # - height / 2
-            x, y = self.get_x_to_view(x), self.get_y_to_view(y) #self.get_x(x), 0#self.get_y(y)
+            x, y = self.get_x_to_view(x), self.get_y_to_view(y)
             painter.drawImage(
                 QtCore.QRectF(x - width / 2,
                               y - height / 2,
