@@ -30,6 +30,7 @@ from duckietown_world.structure.objects import Watchtower, Citizen, Tile, Traffi
 
 logger = logging.getLogger('root')
 TILE_TYPES = ('block', 'road')
+DEFAULT_TILE_SIZE = 0.585
 
 # pyuic5 main_design.ui -o main_design.py
 
@@ -52,6 +53,7 @@ class duck_window(QtWidgets.QMainWindow):
         # active items in editor
         self.active_items = []
         self.dm = get_dt_world()
+        self.tile_size = DEFAULT_TILE_SIZE
 
         #  additional windows for displaying information
         self.author_window = info_window()
@@ -283,11 +285,12 @@ class duck_window(QtWidgets.QMainWindow):
 
         def init_info(info):
             i, j = int(info['x']), int(info['y'])
-            tile_size = float(info['tile_size'])
+            self.tile_size = float(info['tile_size'])
             self.create_empty_map(i, j)
-            self.dm.tile_maps['map_1'].x = tile_size
-            self.dm.tile_maps['map_1'].y = tile_size
+            self.dm.tile_maps['map_1'].x = self.tile_size
+            self.dm.tile_maps['map_1'].y = self.tile_size
             #self.dm.tile_maps['map_1']
+            self.mapviewer.tile_size = self.tile_size
             self.mapviewer.scene().update()
             self.update_layer_tree()
         self.init_info_form.send_info.connect(init_info)
@@ -570,18 +573,21 @@ class duck_window(QtWidgets.QMainWindow):
                 self.editor.save(self.map)
                 # adding object
                 print(item_name)
-                print(self.info_json['info'][item_name]['type'])#[0]['elements'])
+                print(self.info_json['info'][item_name]['type'])
                 type_of_element = self.info_json['info'][item_name]['type']
+                obj = None
                 if item_name == "duckie":
-                    self.dm.add(Citizen(self.get_random_name("map_1/duckie"), x=1, y=1))
+                    obj = Citizen(self.get_random_name("map_1/duckie"), x=1, y=1)
                 elif item_name == "watchtower":
-                    self.dm.add(Watchtower(self.get_random_name("map_1/watchtower"), x=1, y=1))
+                    obj = Watchtower(self.get_random_name("map_1/watchtower"), x=1, y=1)
                 elif type_of_element == "sign":
                     obj = TrafficSign(self.get_random_name("map_1/{}".format(item_name)), x=1, y=1)
                     obj.obj.type = item_name
-                    self.dm.add(obj)
                 elif item_name == "apriltag":
-                    self.dm.add(GroundTag(self.get_random_name("map_1/grountag"), x=1, y=1))
+                    obj = GroundTag(self.get_random_name("map_1/grountag"), x=1, y=1)
+                if obj:
+                    obj.frame.relative_to = "map_1"
+                    self.dm.add(obj)
                 # self.map.add_objects_to_map([dict(kind=item_name, pos=(.0, .0), rotate=0, height=1,
                 #                                  optional=False, static=True)], self.info_json['info'])
 

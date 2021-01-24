@@ -24,6 +24,9 @@ OBJECT_DIR_PATHS = ['./img/signs',
 DELTA_EUCLIDEAN_DISTANCE = .15
 
 
+# TILE_SIZE = 0.585
+
+
 class MapViewer(QGraphicsView, QtWidgets.QWidget):
     map = None
     tileSprites = {'empty': QtGui.QImage()}
@@ -38,6 +41,7 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
     rmbPrevPos = [0, 0]
     mouseStartX, mouseStartY = 0, 0
     mouseCurX, mouseCurY = 0, 0
+    tile_size = 0.585
     #  Stores the top left and bottom right coordinates of the selected area (including zero size areas) as array indexes
     #  If the selection is outside the array to the left, contains -1
     #  If the selection is outside the array to the right - width / height
@@ -71,16 +75,20 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
         self.scene().update()
 
     def get_x_from_view(self, x_view: float) -> float:
-        return (x_view - self.offsetX) / self.sc / self.map.gridSize
+        logger.debug((x_view - self.offsetX) / self.sc / self.map.gridSize * self.tile_size)
+        return (x_view - self.offsetX) / self.sc / self.map.gridSize * self.tile_size
 
     def get_y_from_view(self, y_view: float) -> float:
-        return len(self.dm.tiles.only_tiles()[0]) - (y_view - self.offsetY) / self.sc / self.map.gridSize
+        logger.debug((len(self.dm.tiles.only_tiles()[0]) - (y_view - self.offsetY) / self.sc / self.map.gridSize) \
+                     * self.tile_size)
+        return (len(self.dm.tiles.only_tiles()[0]) - (y_view - self.offsetY) / self.sc / self.map.gridSize) \
+               * self.tile_size
 
     def get_x_to_view(self, x_real: float) -> float:
-        return (x_real + 0) * self.sc * self.map.gridSize
+        return (x_real + 0) * self.sc * self.map.gridSize / self.tile_size
 
     def get_y_to_view(self, y_real: float) -> float:
-        return ((len(self.dm.tiles.only_tiles()[0]) - y_real) + 0) * self.sc * self.map.gridSize
+        return ((len(self.dm.tiles.only_tiles()[0]) - y_real / self.tile_size) + 0) * self.sc * self.map.gridSize
 
     def wheelEvent(self, event: QtGui.QWheelEvent) -> None:
         sf = 2 ** (event.angleDelta().y() / 240)
@@ -104,22 +112,16 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
             self.raw_selection = [
                 ((min(self.mouseStartX, self.mouseCurX) - self.offsetX) / self.sc
                  ) / self.map.gridSize,
-                #((min(self.mouseStartY, self.mouseCurY) - self.offsetY) / self.sc
-                # ) / self.map.gridSize,
-                self.get_y_from_view(min(self.mouseStartY, self.mouseCurY)),
+                self.get_y_from_view(min(self.mouseStartY, self.mouseCurY)) / self.tile_size,
                 ((max(self.mouseStartX, self.mouseCurX) - self.offsetX) / self.sc) / self.map.gridSize,
-                self.get_y_from_view(max(self.mouseStartY, self.mouseCurY))
-                #((max(self.mouseStartY, self.mouseCurY) - self.offsetY) / self.sc) / self.map.gridSize
+                self.get_y_from_view(max(self.mouseStartY, self.mouseCurY)) / self.tile_size
             ]
-
-            #print('SELECTION - ', self.raw_selection)
 
             if self.map.get_tile_layer().visible:
                 self.tileSelection = [
-                    int(v) #+ (1 if i > 1 else 0)
+                    int(v)  # + (1 if i > 1 else 0)
                     for i, v in enumerate(self.raw_selection)
                 ]
-            #print('TILE SELECTION ', self.tileSelection)
             self.selectionChanged.emit()
         else:
             self.rmbPressed = False
@@ -231,7 +233,7 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
 
                 painter.drawImage(QtCore.QRectF(0, 0, self.map.gridSize, self.map.gridSize),
                                   self.tileSprites[tile.type])
-                print(self.tileSelection)
+                # print(self.tileSelection)
                 if self.is_selected_tile(tile):
                     painter.setPen(QtGui.QColor('green'))
                     painter.drawRect(QtCore.QRectF(1, 1, self.map.gridSize - 1, self.map.gridSize - 1))
@@ -245,7 +247,7 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
 
     def is_selected_tile(self, tile: _Tile) -> bool:
         return self.tileSelection[0] <= tile.i <= self.tileSelection[2] and self.tileSelection[3] <= tile.j <= \
-                        self.tileSelection[1]
+               self.tileSelection[1]
 
     def draw_objects(self, painter):
         width, height = self.map.gridSize * self.sc / 2, self.map.gridSize * self.sc / 2
