@@ -47,7 +47,7 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
     #  If the selection is outside the array to the right - width / height
     tileSelection = [0] * 4
     selectionChanged = QtCore.pyqtSignal()
-    editObjectChanged = QtCore.pyqtSignal(object)
+    editObjectChanged = QtCore.pyqtSignal(tuple)
     lmbClicked = QtCore.pyqtSignal(int, int)  # click coordinates as an index of the clicked tile
 
     def __init__(self):
@@ -140,9 +140,9 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
                 self.drag_mode = True
                 return
         if event.buttons() == QtCore.Qt.RightButton:
-            obj, name = self.find_object(x_map, y_map)
+            obj, (name, tp) = self.find_object(x_map, y_map)
             if obj:
-                self.editObjectChanged.emit(obj)
+                self.editObjectChanged.emit((obj, name))
             else:
                 # if press event is not near with any object
                 self.rmbPrevPos = [x, y]

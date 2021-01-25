@@ -708,7 +708,7 @@ class duck_window(QtWidgets.QMainWindow):
                         logger.debug("I can't edit more than one object!")
         self.mapviewer.scene().update()
 
-    def create_form(self, active_object: MapObject):
+    def create_form(self, active_object_data: tuple):
         '''
                 def accept():
             if 'tag_type' in edit_obj:
@@ -751,7 +751,7 @@ class duck_window(QtWidgets.QMainWindow):
             dialog.close()
 
         '''
-
+        active_object, name = active_object_data
         def accept():
             active_object.pose.x = float(edit_obj['x'].text())
             active_object.pose.y = float(edit_obj['y'].text())
@@ -763,6 +763,10 @@ class duck_window(QtWidgets.QMainWindow):
         def reject():
             dialog.close()
 
+        print(name)
+        d = self.dm.get_objects_by_name(name)
+        print(d[list(d.keys())[0]])
+        print()
         dialog = QtWidgets.QDialog(self)
         dialog.setWindowTitle('Change attribute of object')
         # buttonbox
