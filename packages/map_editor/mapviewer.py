@@ -142,7 +142,7 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
         if event.buttons() == QtCore.Qt.RightButton:
             obj, (name, tp) = self.find_object(x_map, y_map)
             if obj:
-                self.editObjectChanged.emit((obj, name))
+                self.editObjectChanged.emit((obj, (name, tp)))
             else:
                 # if press event is not near with any object
                 self.rmbPrevPos = [x, y]
@@ -166,7 +166,7 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
                 except:
                     pass
                 return frame, frame_name
-        return None, None
+        return None, (None, None)
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
         x, y = event.x(), event.y()
