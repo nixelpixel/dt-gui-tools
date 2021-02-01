@@ -446,32 +446,34 @@ class duck_window(QtWidgets.QMainWindow):
         Show layer's elements as children in hierarchy (except tile layer)
         :return: -
         """
-        print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+
         def signal_check_state(item):
             """
             update visible state of layer.
             :return: -
             """
 
-            #layer = self.map.get_layer_by_type_name(item.text())
-            #print(item.text(), layer)
-            #if not layer:
+            # layer = self.map.get_layer_by_type_name(item.text())
+            # print(item.text(), layer)
+            # if not layer:
 
             #    logger.debug("Not found layer: {}".format(item.text()))
             #    return
 
-            #layer.visible = not layer.visible
-            #logger.debug('Layer: {}; visible: {}'.format(item.text(), layer.visible))
-            #self.map.set_layer(layer)
+            # layer.visible = not layer.visible
+            # logger.debug('Layer: {}; visible: {}'.format(item.text(), layer.visible))
+            # self.map.set_layer(layer)
             dm = self.duckie_manager.get_map(item.text())
             self.reset_duckietown_map(dm)
             self.mapviewer.scene().update()
             layer_tree_view.clearSelection()
-            #layer_tree_view.expandAll()
+            item_model.clear()
+            item_model.setHorizontalHeaderLabels(['Maps'])
+            self.show_maps_menu(layer_tree_view.model().invisibleRootItem())
 
-            #self.update_layer_tree()
+            # self.update_layer_tree()
 
-        #def reset_ui_dm(item):
+        # def reset_ui_dm(item):
         #    print('1 ', item.text())
         #    dm = self.duckie_manager.get_map(item.text())
         #    print(dm)
@@ -488,43 +490,36 @@ class duck_window(QtWidgets.QMainWindow):
         except TypeError:
             pass  # only 1st time in update_layer_tree
         item_model.itemChanged.connect(signal_check_state)
-        #item_model.itemChanged.connect(signal_check_state)
-        #item_model.itemChanged.connect(reset_ui_dm)
-        item_model.setHorizontalHeaderLabels(['Name'])
+        # item_model.itemChanged.connect(signal_check_state)
+        # item_model.itemChanged.connect(reset_ui_dm)
+        item_model.setHorizontalHeaderLabels(['Maps'])
         root_item = layer_tree_view.model().invisibleRootItem()
-        #for map_name in self.duckie_manager.get_maps_name():
-        #    layer_item = QtGui.QStandardItem(str(map_name))
-        #    layer_item.setCheckable(True)
-        #    layer_item.setCheckState(QtCore.Qt.Checked)
-        #    root_item.appendRow(layer_item)
-        #    layer_item.appendRow(QtGui.QStandardItem(map_name))
-        #    #layer_item.sortChildren(0)
 
+        self.show_maps_menu(root_item)
+        layer_tree_view.expandAll()
 
-        #for layer in self.map.layers:
+    def show_maps_menu(self, root_item):
         for map_name in self.duckie_manager.get_maps_name():
             layer_item = QtGui.QStandardItem(str(map_name))
             layer_item.setCheckable(True)
             layer_item.setCheckState(QtCore.Qt.Unchecked)
-            layer_item.setCheckState(QtCore.Qt.Checked if self.duckie_manager.is_active == map_name else QtCore.Qt.Unchecked)
+            layer_item.setCheckState(
+                QtCore.Qt.Checked if self.duckie_manager.is_active == map_name else QtCore.Qt.Unchecked)
             root_item.appendRow(layer_item)
-            #if layer.type == LayerType.TILES:
+            # if layer.type == LayerType.TILES:
             #    tile_elements = []
             #    for row in layer.data:
             #        for tile in row:
             #            tile_elements.append(tile.kind)
             #    layer_elements = utils.count_elements(tile_elements)
-            #elif layer.type in (LayerType.TRAFFIC_SIGNS, LayerType.GROUND_APRILTAG):
+            # elif layer.type in (LayerType.TRAFFIC_SIGNS, LayerType.GROUND_APRILTAG):
             #    layer_elements = utils.count_elements(['{}{}'.format(elem.kind, elem.tag_id) for elem in layer.data])
-            #else:
+            # else:
             #    layer_elements = utils.count_elements([elem.kind for elem in layer.data])
-            #for kind, counter in layer_elements.most_common():
+            # for kind, counter in layer_elements.most_common():
             #    item = QtGui.QStandardItem("{} ({})".format(kind, counter))
             #    layer_item.appendRow(item)
             layer_item.sortChildren(0)
-
-
-        layer_tree_view.expandAll()
 
     #  MessageBox to exit
     def quit_MessageBox(self):
@@ -615,8 +610,9 @@ class duck_window(QtWidgets.QMainWindow):
                 self.editor.save(self.map)
                 # adding object
                 print(item_name)
-                print(self.info_json['info'][item_name]['type'])
+                print(self.info_json['info'][item_name])
                 type_of_element = self.info_json['info'][item_name]['type']
+                print(self.duckietown_types_apriltags)
                 obj = None
                 if item_name == "duckie":
                     obj = Citizen(self.get_random_name("map_1/duckie"), x=1, y=1)
@@ -625,13 +621,12 @@ class duck_window(QtWidgets.QMainWindow):
                 elif type_of_element == "sign":
                     obj = TrafficSign(self.get_random_name("map_1/{}".format(item_name)), x=1, y=1)
                     obj.obj.type = item_name
+                    obj.obj.id = utils.get_id_by_type(item_name)
                 elif item_name == "apriltag":
                     obj = GroundTag(self.get_random_name("map_1/grountag"), x=1, y=1)
                 if obj:
                     obj.frame.relative_to = "map_1"
                     self.dm.add(obj)
-                # self.map.add_objects_to_map([dict(kind=item_name, pos=(.0, .0), rotate=0, height=1,
-                #                                  optional=False, static=True)], self.info_json['info'])
 
                 # TODO: need to understand what's the type and create desired class, not general
                 # also https://github.com/moevm/mse_visual_map_editor_for_duckietown/issues/122
@@ -720,12 +715,12 @@ class duck_window(QtWidgets.QMainWindow):
         elif key == QtCore.Qt.Key_R:
             self.new_tag_class.create_form()
         elif key == QtCore.Qt.Key_H:
-            #print(self.duckie_manager.get_maps_name())
+            # print(self.duckie_manager.get_maps_name())
             for map_name in self.duckie_manager.get_maps_name():
                 if map_name == "maps/test":
                     self.reset_duckietown_map(self.duckie_manager.get_map(map_name))
-                #print(map_name)
-                #print(self.duckie_manager.get_map(map_name))
+                # print(map_name)
+                # print(self.duckie_manager.get_map(map_name))
 
         if self.active_items:
             if key == QtCore.Qt.Key_Backspace:
@@ -807,9 +802,15 @@ class duck_window(QtWidgets.QMainWindow):
         def accept():
             active_object.pose.x = float(edit_obj['x'].text())
             active_object.pose.y = float(edit_obj['y'].text())
+            new_type = None
             for key in editable_values:
                 print(key)
-                new_value = edit_obj[key].text()
+                new_value = edit_obj[key].text().split()[0]
+                if key == 'id' and len(edit_obj[key].text().split()) > 1:
+                    new_type = edit_obj[key].text().split()[1][1:-1]
+                if key == 'type' and new_type:
+                    obj[key] = new_type
+                    continue
                 if new_value.isdigit():
                     new_value = int(new_value)
                 try:
@@ -846,10 +847,14 @@ class duck_window(QtWidgets.QMainWindow):
         edit_obj = {}
         combo_id = QComboBox(self)
 
-        # def change_combo_id(value):
-        #    combo_id.clear()
-        #    combo_id.addItems([str(i) for i in self.duckietown_types_apriltags[value]])
-        #    combo_id.setEditText(str(self.duckietown_types_apriltags[value][0]))
+        def change_combo_id(value):
+            combo_id.clear()
+            combo_id.addItems(["{}/{}".format(i.id, i.type) for i in self.duckietown_types_apriltags[value]])
+            combo_id.setEditText(str(self.duckietown_types_apriltags[value][0]))
+
+        def change_type_from_combo(value: str):
+            if 'type' in edit_obj:
+                edit_obj['type'].setText(value.split()[1][1:-1])
 
         x_edit = QLineEdit(str(active_object.pose.x))
         y_edit = QLineEdit(str(active_object.pose.y))
@@ -860,9 +865,27 @@ class duck_window(QtWidgets.QMainWindow):
         editable_values = obj.dict()
         print('ATTR SHOW: ', editable_values)
         for attr_name in sorted(editable_values.keys()):
-            new_edit = QLineEdit(str(editable_values[attr_name]))
+            attr = editable_values[attr_name]
+            new_edit = QLineEdit(str(attr))
+
             edit_obj[attr_name] = new_edit
-            layout.addRow(QLabel("{}".format(attr_name)), new_edit)
+            if attr_name == 'id':
+                type_id = list(self.duckietown_types_apriltags.keys())[0]
+                for type_sign in self.duckietown_types_apriltags.keys():
+                    if int(attr) in self.duckietown_types_apriltags[type_sign]:
+                        type_id = type_sign
+                        break
+                print(type_id)
+                combo_id.addItems(["{} ({})".format(i.id, i.type) for i in self.duckietown_types_apriltags[type_id]])
+                combo_id.setLineEdit(new_edit)
+                combo_id.setEditText(str(attr))
+                combo_id.currentTextChanged.connect(change_type_from_combo)
+                layout.addRow(QLabel(attr_name), combo_id)
+            elif attr_name == "type":
+                new_edit.setReadOnly(True)
+                layout.addRow(QLabel("{}".format(attr_name)), new_edit)
+            else:
+                layout.addRow(QLabel("{}".format(attr_name)), new_edit)
         '''
         for attr_name in sorted(editable_attrs):
             attr = editable_attrs[attr_name]
@@ -963,7 +986,7 @@ class duck_window(QtWidgets.QMainWindow):
     def reset_duckietown_map(self, new_dm: DuckietownMap):
         self.dm = new_dm
         self.mapviewer.dm = new_dm
-        #self.update_layer_tree()
+        # self.update_layer_tree()
         self.mapviewer.scene().update()
 
     def get_random_name(self, begin):

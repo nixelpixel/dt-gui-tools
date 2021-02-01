@@ -7,6 +7,7 @@ class ManagerDuckietownMaps:
     def __init__(self):
         self._maps: Dict[str, DuckietownMap] = {}
         self.is_active: str = ""
+        self.main_relative: str = ""  # TODO: save main relative in map
 
     def add_map(self, new_map_name: str, map_obj: DuckietownMap) -> None:
         if new_map_name not in self._maps:
