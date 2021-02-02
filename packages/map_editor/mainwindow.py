@@ -1,36 +1,32 @@
 # -*- coding: utf-8 -*-
 import codecs
+import copy
+import functools
+import json
 
+from PyQt5.QtWidgets import QMessageBox, QDesktopWidget, QFormLayout, QVBoxLayout, QLineEdit, QGroupBox, \
+    QLabel, QComboBox
 from duckietown_world.structure.bases import _Frame
 from duckietown_world.structure.duckietown_map import DuckietownMap
+from duckietown_world.structure.objects import Watchtower, Citizen, Tile, TrafficSign, GroundTag
 
-import mapviewer
 import map
-from DTWorld import get_dt_world, get_new_dt_world
-import duckietown_world.structure as st
-
-from classes.mapTile import MapTile
-from forms.start_info import StartInfoForm
-from managerduckietownmaps import ManagerDuckietownMaps
-from mapEditor import MapEditor
-from main_design import *
-from PyQt5 import QtWidgets, QtGui, QtCore
-from PyQt5.QtWidgets import QMessageBox, QDesktopWidget, QFormLayout, QVBoxLayout, QLineEdit, QCheckBox, QGroupBox, \
-    QLabel, QComboBox
+import mapviewer
+import utils
+from DTWorld import get_dt_world
+from DTWorld import get_new_dt_world
 from IOManager import *
-import functools, json, copy
+from classes.mapObjects import GroundAprilTagObject
+from forms.default_forms import question_form_yes_no
+from forms.new_tag_object import NewTagForm
+from forms.start_info import StartInfoForm
 from infowindow import info_window
 from layers.layer_type import LayerType
-import logging
-import utils
-from classes.mapObjects import MapBaseObject as MapObject
-from classes.mapObjects import GroundAprilTagObject
 from layers.relations import get_layer_type_by_object_type
+from main_design import *
+from managerduckietownmaps import ManagerDuckietownMaps
+from mapEditor import MapEditor
 from tag_config import get_duckietown_types
-from forms.new_tag_object import NewTagForm
-from forms.default_forms import question_form_yes_no
-from DTWorld import get_dt_world
-from duckietown_world.structure.objects import Watchtower, Citizen, Tile, TrafficSign, GroundTag, _TrafficSign
 
 logger = logging.getLogger('root')
 TILE_TYPES = ('block', 'road')
@@ -60,8 +56,6 @@ class duck_window(QtWidgets.QMainWindow):
         self.tile_size = DEFAULT_TILE_SIZE
         self.duckie_manager = ManagerDuckietownMaps()
         self.duckie_manager.add_map("maps/empty", self.dm)
-        dm2_test = get_new_dt_world("maps/test")
-        self.duckie_manager.add_map("maps/test", dm2_test)
 
         #  additional windows for displaying information
         self.author_window = info_window()
@@ -87,7 +81,7 @@ class duck_window(QtWidgets.QMainWindow):
         self.new_tag_class = NewTagForm(self.duckietown_types_apriltags)
         self.init_info_form = StartInfoForm()
         ############################
-        map_name = "maps/tm1"
+        map_name = "maps/empty"
         self.dm = get_dt_world(map_name)
         self.map = map.DuckietownMap()
         self.ui = Ui_MainWindow()
@@ -275,22 +269,21 @@ class duck_window(QtWidgets.QMainWindow):
         self.move(qr.topLeft())
 
     #  Create a new map
-    def create_map_triggered(self):
-        logger.debug(1)
-        new_map(self)
-        logger.debug("Length - {}".format(len(self.map.get_tile_layer().data)))
-        self.mapviewer.offsetX = self.mapviewer.offsetY = 0
-        self.mapviewer.scene().update()
+    def open_map_triggered(self):
         logger.debug("Creating a new map")
-        self.update_layer_tree()
+        new_map_dir = QFileDialog.getExistingDirectory(self, 'Open new map', '.',
+                                                       QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
+        if new_map_dir:
+            dm2_test = get_new_dt_world(new_map_dir)
+            self.duckie_manager.add_map(new_map_dir.split('/')[-1], dm2_test)
+            self.mapviewer.offsetX = self.mapviewer.offsetY = 0
+            self.mapviewer.scene().update()
+            self.update_layer_tree()
 
     #  Open map
-    def open_map_triggered(self):
+    def create_map_triggered(self):
         logger.debug(2)
         self.editor.save(self.map)
-
-        # dir_path = open_map(self)
-        # self.dm = get_dt_world(dir_path)
 
         def init_info(info):
             i, j = int(info['x']), int(info['y'])
