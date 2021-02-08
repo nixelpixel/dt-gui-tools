@@ -37,7 +37,8 @@ DEFAULT_TILE_SIZE = 0.585
 _translate = QtCore.QCoreApplication.translate
 EPS = .1  # step for move
 
-rot_val = {'E': 0, 'S': 90, 'W': 180, 'N': 270, None: 0}
+#rot_val = {'E': 0, 'S': 90, 'W': 180, 'N': 270, None: 0}
+rot_val = {'E': 0, 'S': 270, 'W': 180, 'N': 90, None: 0}
 
 
 class duck_window(QtWidgets.QMainWindow):
@@ -543,8 +544,9 @@ class duck_window(QtWidgets.QMainWindow):
                 tile = Tile("map_1/tile_{}_{}".format(i, j))
                 tile.obj.i = i
                 tile.obj.j = j
-                tile.frame.pose.x = i + 0.5
-                tile.frame.pose.y = j + 0.5
+                tile.frame.pose.x = int(i) * 0.585 + 0.585/2
+                tile.frame.pose.y = int(j) * 0.585 + 0.585/2
+                tile.obj.orientation = 'E'
                 tile.frame.relative_to = 'map_1'
                 tile.frame.dm = self.dm
                 self.dm.add(tile)
@@ -972,7 +974,7 @@ class duck_window(QtWidgets.QMainWindow):
                     tile = tiles[i][j]
                     if is_selected_tile(tile):
                         tile.type = self.ui.default_fill.currentData()
-                        tile.orientation = 'N'
+                        tile.orientation = 'E'
         self.update_layer_tree()
         self.mapviewer.scene().update()
 

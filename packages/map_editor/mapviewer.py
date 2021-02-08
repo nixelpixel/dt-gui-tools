@@ -215,7 +215,7 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
                              , self.mouseCurX - self.mouseStartX, self.mouseCurY - self.mouseStartY)
 
     def draw_tiles(self, layer_data, painter, global_transform):
-        rot_val = {'E': 0, 'S': 90, 'W': 180, 'N': 270, None: 0}
+        rot_val = {'E': 0, 'S': 270, 'W': 180, 'N': 90, None: 0}
         tiles = self.dm.tiles.only_tiles()
         for i in range(len(tiles)):
             for j in range(len(tiles[0])):
