@@ -938,16 +938,16 @@ class duck_window(QtWidgets.QMainWindow):
     def rotateSelectedTiles(self):
         self.editor.save(self.map)
         is_selected_tile = self.mapviewer.is_selected_tile
-        tiles = self.dm.tiles.only_tiles()
-        for i in range(len(tiles)):
-            for j in range(len(tiles[0])):
-                tile = tiles[i][j]
-                if is_selected_tile(tile):
-                    orien_val = (rot_val[tile.orientation] + 90) % 360
-                    for key in rot_val:
-                        if rot_val[key] == orien_val:
-                            tile.orientation = key
-            self.mapviewer.scene().update()
+        for ((nm, _), tile) in self.dm.tiles:
+            if is_selected_tile(tile):
+                frame: _Frame = self.dm.frames[nm]
+                orien_val = (rot_val[tile.orientation] + 90) % 360
+                for key in rot_val:
+                    if rot_val[key] == orien_val:
+                        tile.orientation = key
+                        frame.pose.yaw = {'E': 0, 'N': np.pi * 0.5, 'W': np.pi, 'S': np.pi * 1.5, None: 0}[key]
+
+        self.mapviewer.scene().update()
 
     def add_apriltag(self, apriltag: GroundAprilTagObject):
         layer = self.map.get_layer_by_type(LayerType.GROUND_APRILTAG)

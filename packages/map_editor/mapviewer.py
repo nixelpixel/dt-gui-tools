@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import logging
-from typing import Tuple
+from typing import Tuple, Dict
 
+from PyQt5.QtGui import QTransform
 from PyQt5.QtWidgets import QGraphicsView
 from PyQt5 import QtCore, QtGui, QtWidgets
 from duckietown_world.structure.objects import Tile, _Tile
@@ -29,7 +30,7 @@ DELTA_EUCLIDEAN_DISTANCE = .15
 
 class MapViewer(QGraphicsView, QtWidgets.QWidget):
     map = None
-    tileSprites = {'empty': QtGui.QImage()}
+    tileSprites: Dict[str, QtGui.QImage] = {'empty': QtGui.QImage()}
     objects = {'stop': QtGui.QImage()}
     offsetX = 0
     offsetY = 0
@@ -214,7 +215,7 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
             painter.drawRect(0 + self.mouseStartX, 0 + self.mouseStartY
                              , self.mouseCurX - self.mouseStartX, self.mouseCurY - self.mouseStartY)
 
-    def draw_tiles(self, layer_data, painter, global_transform):
+    def draw_tiles(self, layer_data, painter: QtGui.QPainter, global_transform):
         rot_val = {'E': 0, 'S': 270, 'W': 180, 'N': 90, None: 0}
         tiles = self.dm.tiles.only_tiles()
         for i in range(len(tiles)):
@@ -223,16 +224,20 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
                 orientation = tile.orientation
                 painter.scale(self.sc, self.sc)
                 painter.translate(tile.i * self.map.gridSize, (len(tiles[0]) - 1 - tile.j) * self.map.gridSize)
-                painter.rotate(rot_val[orientation])
-                if orientation == "S":
-                    painter.translate(0, -self.map.gridSize)
-                elif orientation == "N":
-                    painter.translate(-self.map.gridSize, 0)
-                elif orientation == "W":
-                    painter.translate(-self.map.gridSize, -self.map.gridSize)
+                #painter.rotate(rot_val[orientation])
+                painter.rotate(0)
+                #if orientation == "S":
+                #    painter.translate(0, -self.map.gridSize)
+                #elif orientation == "N":
+                #    painter.translate(-self.map.gridSize, 0)
+                #elif orientation == "W":
+                #    painter.translate(-self.map.gridSize, -self.map.gridSize)
 
+                my_transform = QTransform()
+                my_transform.rotate(rot_val[orientation])
+                img = self.tileSprites[tile.type].transformed(my_transform)
                 painter.drawImage(QtCore.QRectF(0, 0, self.map.gridSize, self.map.gridSize),
-                                  self.tileSprites[tile.type])
+                                  img)
                 # print(self.tileSelection)
                 if self.is_selected_tile(tile):
                     painter.setPen(QtGui.QColor('green'))
