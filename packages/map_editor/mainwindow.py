@@ -1,34 +1,44 @@
 # -*- coding: utf-8 -*-
 import codecs
+import copy
+import functools
+import json
 
-import mapviewer
+from PyQt5.QtWidgets import QMessageBox, QDesktopWidget, QFormLayout, QVBoxLayout, QLineEdit, QGroupBox, \
+    QLabel, QComboBox
+from duckietown_world.structure.bases import _Frame
+from duckietown_world.structure.duckietown_map import DuckietownMap
+from duckietown_world.structure.objects import Watchtower, Citizen, Tile, TrafficSign, GroundTag
+
 import map
-
-from classes.mapTile import MapTile
-from mapEditor import MapEditor
-from main_design import *
-from PyQt5 import QtWidgets, QtGui, QtCore
-from PyQt5.QtWidgets import QMessageBox, QDesktopWidget, QFormLayout, QVBoxLayout, QLineEdit, QCheckBox, QGroupBox, QLabel, QComboBox
+import mapviewer
+import utils
+from DTWorld import get_dt_world
+from DTWorld import get_new_dt_world
 from IOManager import *
-import functools, json , copy
+from classes.mapObjects import GroundAprilTagObject
+from forms.default_forms import question_form_yes_no
+from forms.new_tag_object import NewTagForm
+from forms.start_info import StartInfoForm
 from infowindow import info_window
 from layers.layer_type import LayerType
-import logging
-import utils
-from classes.mapObjects import MapBaseObject as MapObject
-from classes.mapObjects import GroundAprilTagObject
 from layers.relations import get_layer_type_by_object_type
+from main_design import *
+from managerduckietownmaps import ManagerDuckietownMaps
+from mapEditor import MapEditor
 from tag_config import get_duckietown_types
-from forms.new_tag_object import NewTagForm
-from forms.default_forms import question_form_yes_no
 
 logger = logging.getLogger('root')
 TILE_TYPES = ('block', 'road')
+DEFAULT_TILE_SIZE = 0.585
 
 # pyuic5 main_design.ui -o main_design.py
 
 _translate = QtCore.QCoreApplication.translate
-EPS = .1 # step for move
+EPS = .1  # step for move
+
+#rot_val = {'E': 0, 'S': 90, 'W': 180, 'N': 270, None: 0}
+rot_val = {'E': 0, 'S': 270, 'W': 180, 'N': 90, None: 0}
 
 
 class duck_window(QtWidgets.QMainWindow):
@@ -38,11 +48,15 @@ class duck_window(QtWidgets.QMainWindow):
     editor = None
     drawState = ''
     copyBuffer = [[]]
-    
+
     def __init__(self, args, elem_info="doc/info.json"):
         super().__init__()
         # active items in editor
         self.active_items = []
+        self.dm = get_dt_world()
+        self.tile_size = DEFAULT_TILE_SIZE
+        self.duckie_manager = ManagerDuckietownMaps()
+        self.duckie_manager.add_map("maps/empty", self.dm)
 
         #  additional windows for displaying information
         self.author_window = info_window()
@@ -64,8 +78,12 @@ class duck_window(QtWidgets.QMainWindow):
 
         # Loads info about types from duckietown
         self.duckietown_types_apriltags = get_duckietown_types()
+        #####  Forms   #############
         self.new_tag_class = NewTagForm(self.duckietown_types_apriltags)
-
+        self.init_info_form = StartInfoForm()
+        ############################
+        map_name = "maps/empty"
+        self.dm = get_dt_world(map_name)
         self.map = map.DuckietownMap()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
@@ -167,7 +185,8 @@ class duck_window(QtWidgets.QMainWindow):
         b5.setShortcut("Ctrl+Z")
 
         c1 = QtWidgets.QAction(QtGui.QIcon("img/icons/rotate.png"), _translate("MainWindow", "Rotate"), self)
-        c2 = QtWidgets.QAction(QtGui.QIcon("img/icons/trim.png"), _translate("MainWindow", "Delete extreme empty blocks"), self)
+        c2 = QtWidgets.QAction(QtGui.QIcon("img/icons/trim.png"),
+                               _translate("MainWindow", "Delete extreme empty blocks"), self)
         c1.setShortcut("Ctrl+R")
         c2.setShortcut("Ctrl+F")
 
@@ -226,14 +245,17 @@ class duck_window(QtWidgets.QMainWindow):
             block_list_widget.addItem(widget)
             # add elements
             for elem_id in group['elements']:
-                widget = QtWidgets.QListWidgetItem(QtGui.QIcon(information[elem_id]['icon']), self.get_translation(information[elem_id])['name'])
+                widget = QtWidgets.QListWidgetItem(QtGui.QIcon(information[elem_id]['icon']),
+                                                   self.get_translation(information[elem_id])['name'])
                 widget.setData(0x0100, elem_id)
                 widget.setData(0x0101, group['id'])
                 block_list_widget.addItem(widget)
                 # add tiles to fill menu
                 if group['id'] in ("road", "block"):
-                    default_fill.addItem(QtGui.QIcon(information[elem_id]['icon']), self.get_translation(information[elem_id])['name'], elem_id)
-                    delete_fill.addItem(QtGui.QIcon(information[elem_id]['icon']), self.get_translation(information[elem_id])['name'], elem_id)
+                    default_fill.addItem(QtGui.QIcon(information[elem_id]['icon']),
+                                         self.get_translation(information[elem_id])['name'], elem_id)
+                    delete_fill.addItem(QtGui.QIcon(information[elem_id]['icon']),
+                                        self.get_translation(information[elem_id])['name'], elem_id)
 
         default_fill.setCurrentText(self.get_translation(information["grass"])['name'])
         delete_fill.setCurrentText(self.get_translation(information["empty"])['name'])
@@ -248,18 +270,36 @@ class duck_window(QtWidgets.QMainWindow):
         self.move(qr.topLeft())
 
     #  Create a new map
-    def create_map_triggered(self):
-        new_map(self)
-        logger.debug("Length - {}".format(len(self.map.get_tile_layer().data)))
-        self.mapviewer.offsetX = self.mapviewer.offsetY = 0
-        self.mapviewer.scene().update()
+    def open_map_triggered(self):
         logger.debug("Creating a new map")
-        self.update_layer_tree()
+        new_map_dir = QFileDialog.getExistingDirectory(self, 'Open new map', '.',
+                                                       QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
+        if new_map_dir:
+            dm2_test = get_new_dt_world(new_map_dir)
+            self.duckie_manager.add_map(new_map_dir.split('/')[-1], dm2_test)
+            self.mapviewer.offsetX = self.mapviewer.offsetY = 0
+            self.mapviewer.scene().update()
+            self.update_layer_tree()
 
     #  Open map
-    def open_map_triggered(self):
+    def create_map_triggered(self):
+        logger.debug(2)
         self.editor.save(self.map)
-        open_map(self)
+
+        def init_info(info):
+            i, j = int(info['x']), int(info['y'])
+            self.tile_size = float(info['tile_size'])
+            self.create_empty_map(i, j)
+            self.dm.tile_maps['map_1'].x = self.tile_size
+            self.dm.tile_maps['map_1'].y = self.tile_size
+            # self.dm.tile_maps['map_1']
+            self.mapviewer.tile_size = self.tile_size
+            self.mapviewer.scene().update()
+            self.update_layer_tree()
+
+        self.init_info_form.send_info.connect(init_info)
+        self.init_info_form.show()
+
         self.mapviewer.offsetX = self.mapviewer.offsetY = 0
         self.mapviewer.scene().update()
         self.update_layer_tree()
@@ -271,7 +311,16 @@ class duck_window(QtWidgets.QMainWindow):
 
     #  Save map as
     def save_map_as_triggered(self):
-        save_map_as(self)
+        path_folder = save_map_as(self)
+        if path_folder:
+            map_final = self.dm.dump(self.dm)
+            # print(map_final)
+            # for i in map_final:
+            #    print('aaaa ', i)
+            for layer_name in map_final:
+                with open(path_folder + f'/{layer_name}.yaml', 'w+') as file:
+                    file.write(map_final[layer_name])
+            print('FINAL PATH, ', path_folder)
 
     #  Export to png
     def export_png_triggered(self):
@@ -391,51 +440,80 @@ class duck_window(QtWidgets.QMainWindow):
         Show layer's elements as children in hierarchy (except tile layer)
         :return: -
         """
+
         def signal_check_state(item):
             """
             update visible state of layer.
             :return: -
             """
-            layer = self.map.get_layer_by_type_name(item.text())
-            if not layer:
-                logger.debug("Not found layer: {}".format(item.text()))
-                return
-            
-            layer.visible = not layer.visible
-            logger.debug('Layer: {}; visible: {}'.format(item.text(), layer.visible))
-            self.map.set_layer(layer)
+
+            # layer = self.map.get_layer_by_type_name(item.text())
+            # print(item.text(), layer)
+            # if not layer:
+
+            #    logger.debug("Not found layer: {}".format(item.text()))
+            #    return
+
+            # layer.visible = not layer.visible
+            # logger.debug('Layer: {}; visible: {}'.format(item.text(), layer.visible))
+            # self.map.set_layer(layer)
+            dm = self.duckie_manager.get_map(item.text())
+            self.reset_duckietown_map(dm)
             self.mapviewer.scene().update()
-            
+            layer_tree_view.clearSelection()
+            item_model.clear()
+            item_model.setHorizontalHeaderLabels(['Maps'])
+            self.show_maps_menu(layer_tree_view.model().invisibleRootItem())
+
+            # self.update_layer_tree()
+
+        # def reset_ui_dm(item):
+        #    print('1 ', item.text())
+        #    dm = self.duckie_manager.get_map(item.text())
+        #    print(dm)
+        #    self.reset_duckietown_map(dm)
+        #    self.mapviewer.scene().update()
+        #    print('2')
+
         layer_tree_view = self.ui.layer_tree
         item_model = layer_tree_view.model()
         item_model.clear()
+        print('waws clear')
         try:
             item_model.itemChanged.disconnect()
         except TypeError:
-            pass # only 1st time in update_layer_tree
+            pass  # only 1st time in update_layer_tree
         item_model.itemChanged.connect(signal_check_state)
-        item_model.setHorizontalHeaderLabels(['Name'])
+        # item_model.itemChanged.connect(signal_check_state)
+        # item_model.itemChanged.connect(reset_ui_dm)
+        item_model.setHorizontalHeaderLabels(['Maps'])
         root_item = layer_tree_view.model().invisibleRootItem()
-        for layer in self.map.layers:
-            layer_item = QtGui.QStandardItem(str(layer.type))
-            layer_item.setCheckable(True)
-            layer_item.setCheckState(QtCore.Qt.Checked if layer.visible else QtCore.Qt.Unchecked)
-            root_item.appendRow(layer_item)
-            if layer.type == LayerType.TILES:
-                tile_elements = []
-                for row in layer.data:
-                    for tile in row:
-                        tile_elements.append(tile.kind)
-                layer_elements = utils.count_elements(tile_elements)
-            elif layer.type in (LayerType.TRAFFIC_SIGNS, LayerType.GROUND_APRILTAG):
-                layer_elements = utils.count_elements(['{}{}'.format(elem.kind, elem.tag_id) for elem in layer.data])
-            else:
-                layer_elements = utils.count_elements([elem.kind for elem in layer.data])
-            for kind, counter in layer_elements.most_common():
-                item = QtGui.QStandardItem("{} ({})".format(kind, counter))
-                layer_item.appendRow(item)
-            layer_item.sortChildren(0)
+
+        self.show_maps_menu(root_item)
         layer_tree_view.expandAll()
+
+    def show_maps_menu(self, root_item):
+        for map_name in self.duckie_manager.get_maps_name():
+            layer_item = QtGui.QStandardItem(str(map_name))
+            layer_item.setCheckable(True)
+            layer_item.setCheckState(QtCore.Qt.Unchecked)
+            layer_item.setCheckState(
+                QtCore.Qt.Checked if self.duckie_manager.is_active == map_name else QtCore.Qt.Unchecked)
+            root_item.appendRow(layer_item)
+            # if layer.type == LayerType.TILES:
+            #    tile_elements = []
+            #    for row in layer.data:
+            #        for tile in row:
+            #            tile_elements.append(tile.kind)
+            #    layer_elements = utils.count_elements(tile_elements)
+            # elif layer.type in (LayerType.TRAFFIC_SIGNS, LayerType.GROUND_APRILTAG):
+            #    layer_elements = utils.count_elements(['{}{}'.format(elem.kind, elem.tag_id) for elem in layer.data])
+            # else:
+            #    layer_elements = utils.count_elements([elem.kind for elem in layer.data])
+            # for kind, counter in layer_elements.most_common():
+            #    item = QtGui.QStandardItem("{} ({})".format(kind, counter))
+            #    layer_item.appendRow(item)
+            layer_item.sortChildren(0)
 
     #  MessageBox to exit
     def quit_MessageBox(self):
@@ -460,6 +538,19 @@ class duck_window(QtWidgets.QMainWindow):
 
         event.accept()
 
+    def create_empty_map(self, i_size: int, j_size: int) -> None:
+        for i in range(i_size):
+            for j in range(j_size):
+                tile = Tile("map_1/tile_{}_{}".format(i, j))
+                tile.obj.i = i
+                tile.obj.j = j
+                tile.frame.pose.x = int(i) * 0.585 + 0.585/2
+                tile.frame.pose.y = int(j) * 0.585 + 0.585/2
+                tile.obj.orientation = 'E'
+                tile.frame.relative_to = 'map_1'
+                tile.frame.dm = self.dm
+                self.dm.add(tile)
+
     #  Handle a click on an item from a list to a list
     def item_list_clicked(self):
         list = self.ui.block_list
@@ -482,13 +573,19 @@ class duck_window(QtWidgets.QMainWindow):
             elem = self.info_json['info'][name]
             info_browser = self.ui.info_browser
             info_browser.clear()
-            text = "{}:\n {}\n{}:\n{}".format(_translate("MainWindow", "Name"), list.currentItem().text(), _translate("MainWindow", "Description"), self.get_translation(elem)['info'])
+            text = "{}:\n {}\n{}:\n{}".format(_translate("MainWindow", "Name"), list.currentItem().text(),
+                                              _translate("MainWindow", "Description"),
+                                              self.get_translation(elem)['info'])
             if elem["type"] == "block":
-                text += "\n\n{}: {} {}".format(_translate("MainWindow", "Road len"), elem["length"], _translate("MainWindow", "sm"))
+                text += "\n\n{}: {} {}".format(_translate("MainWindow", "Road len"), elem["length"],
+                                               _translate("MainWindow", "sm"))
                 text += " Tape:\n"
-                text += " {}: {} {}\n".format(_translate("MainWindow", "Red"), elem["red"], _translate("MainWindow", "sm"))
-                text += " {}: {} {}\n".format(_translate("MainWindow", "Yellow"), elem["yellow"], _translate("MainWindow", "sm"))
-                text += " {}: {} {}\n".format(_translate("MainWindow", "White"), elem["white"], _translate("MainWindow", "sm"))
+                text += " {}: {} {}\n".format(_translate("MainWindow", "Red"), elem["red"],
+                                              _translate("MainWindow", "sm"))
+                text += " {}: {} {}\n".format(_translate("MainWindow", "Yellow"), elem["yellow"],
+                                              _translate("MainWindow", "sm"))
+                text += " {}: {} {}\n".format(_translate("MainWindow", "White"), elem["white"],
+                                              _translate("MainWindow", "sm"))
             info_browser.setText(text)
 
     #  Double click initiates as single click action
@@ -507,8 +604,25 @@ class duck_window(QtWidgets.QMainWindow):
                 # save map before adding object
                 self.editor.save(self.map)
                 # adding object
-                self.map.add_objects_to_map([dict(kind=item_name,pos=(.0, .0), rotate=0, height=1,
-                                                  optional=False, static=True)], self.info_json['info'])
+                print(item_name)
+                print(self.info_json['info'][item_name])
+                type_of_element = self.info_json['info'][item_name]['type']
+                print(self.duckietown_types_apriltags)
+                obj = None
+                if item_name == "duckie":
+                    obj = Citizen(self.get_random_name("map_1/duckie"), x=1, y=1)
+                elif item_name == "watchtower":
+                    obj = Watchtower(self.get_random_name("map_1/watchtower"), x=1, y=1)
+                elif type_of_element == "sign":
+                    obj = TrafficSign(self.get_random_name("map_1/{}".format(item_name)), x=1, y=1)
+                    obj.obj.type = item_name
+                    obj.obj.id = utils.get_id_by_type(item_name)
+                elif item_name == "apriltag":
+                    obj = GroundTag(self.get_random_name("map_1/grountag"), x=1, y=1)
+                if obj:
+                    obj.frame.relative_to = "map_1"
+                    self.dm.add(obj)
+
                 # TODO: need to understand what's the type and create desired class, not general
                 # also https://github.com/moevm/mse_visual_map_editor_for_duckietown/issues/122
                 # (for args, that can be edited and be different between classes)
@@ -556,7 +670,7 @@ class duck_window(QtWidgets.QMainWindow):
     #  Delete
     def delete_button_clicked(self):
         if not self.map.get_tile_layer().visible:
-            return 
+            return
         self.editor.save(self.map)
         self.editor.deleteSelection(self.mapviewer.tileSelection, MapTile(self.ui.delete_fill.currentData()))
         self.mapviewer.scene().update()
@@ -577,7 +691,7 @@ class duck_window(QtWidgets.QMainWindow):
 
     def keyPressEvent(self, e):
         selection = self.mapviewer.raw_selection
-        item_layer = self.map.get_objects_from_layers() # TODO: add self.current_layer for editing only it's objects?
+        item_layer = self.map.get_objects_from_layers()  # TODO: add self.current_layer for editing only it's objects?
         new_selected_obj = False
         for item in item_layer:
             x, y = item.position
@@ -592,9 +706,17 @@ class duck_window(QtWidgets.QMainWindow):
         if key == QtCore.Qt.Key_Q:
             # clear object buffer
             self.active_items = []
-            self.mapviewer.raw_selection = [0]*4
+            self.mapviewer.raw_selection = [0] * 4
         elif key == QtCore.Qt.Key_R:
             self.new_tag_class.create_form()
+        elif key == QtCore.Qt.Key_H:
+            # print(self.duckie_manager.get_maps_name())
+            for map_name in self.duckie_manager.get_maps_name():
+                if map_name == "maps/test":
+                    self.reset_duckietown_map(self.duckie_manager.get_map(map_name))
+                # print(map_name)
+                # print(self.duckie_manager.get_map(map_name))
+
         if self.active_items:
             if key == QtCore.Qt.Key_Backspace:
                 # delete object
@@ -625,9 +747,10 @@ class duck_window(QtWidgets.QMainWindow):
                     else:
                         logger.debug("I can't edit more than one object!")
         self.mapviewer.scene().update()
- 
-    def create_form(self, active_object: MapObject):
-        def accept():
+
+    def create_form(self, active_object_data: tuple):
+        '''
+                def accept():
             if 'tag_type' in edit_obj:
                 tag_type = edit_obj['tag_type'].text()
                 if 'tag_id' in edit_obj and (not edit_obj['tag_id'].text().isdigit() or int(edit_obj['tag_id'].text()) not in self.duckietown_types_apriltags[tag_type]):
@@ -645,7 +768,7 @@ class duck_window(QtWidgets.QMainWindow):
                     msgBox = QMessageBox()
                     msgBox.setText("tag id is uncorrect!")
                     msgBox.exec()
-                    return  
+                    return
             for attr_name, attr in editable_attrs.items():
                 if attr_name == 'pos':
                     active_object.position[0] = float(edit_obj['x'].text())
@@ -667,25 +790,98 @@ class duck_window(QtWidgets.QMainWindow):
         def reject():
             dialog.close()
 
+        '''
+        active_object, (name, tp) = active_object_data
+        assert tp is _Frame
+
+        def accept():
+            active_object.pose.x = float(edit_obj['x'].text())
+            active_object.pose.y = float(edit_obj['y'].text())
+            new_type = None
+            for key in editable_values:
+                print(key)
+                new_value = edit_obj[key].text().split()[0]
+                if key == 'id' and len(edit_obj[key].text().split()) > 1:
+                    new_type = edit_obj[key].text().split()[1][1:-1]
+                if key == 'type' and new_type:
+                    obj[key] = new_type
+                    continue
+                if new_value.isdigit():
+                    new_value = int(new_value)
+                try:
+                    if isinstance(new_value, str):
+                        new_value = float(new_value)
+                except ValueError:
+                    pass
+                obj[key] = new_value
+
+            dialog.close()
+            self.mapviewer.scene().update()
+            self.update_layer_tree()
+
+        def reject():
+            dialog.close()
+
+        # work version
+        info_object = self.dm.get_objects_by_name(name)
+        del info_object[(name, tp)]
+        _, type_object = list(info_object.keys())[0]
+        obj = info_object[(name, type_object)]
+
         dialog = QtWidgets.QDialog(self)
         dialog.setWindowTitle('Change attribute of object')
         # buttonbox
         buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
-        buttonBox.accepted.connect(accept)   
-        buttonBox.rejected.connect(reject) 
+        buttonBox.accepted.connect(accept)
+        buttonBox.rejected.connect(reject)
         # form
-        formGroupBox = QGroupBox("Change attribute's object: {}".format(active_object.kind))
+        formGroupBox = QGroupBox("Change attribute's object: {}".format(""))
 
         layout = QFormLayout()
-        editable_attrs = active_object.get_editable_attrs()
+        # editable_attrs = active_object.get_editable_attrs()
         edit_obj = {}
         combo_id = QComboBox(self)
-        
+
         def change_combo_id(value):
             combo_id.clear()
-            combo_id.addItems([str(i) for i in self.duckietown_types_apriltags[value]])
+            combo_id.addItems(["{}/{}".format(i.id, i.type) for i in self.duckietown_types_apriltags[value]])
             combo_id.setEditText(str(self.duckietown_types_apriltags[value][0]))
 
+        def change_type_from_combo(value: str):
+            if 'type' in edit_obj:
+                edit_obj['type'].setText(value.split()[1][1:-1])
+
+        x_edit = QLineEdit(str(active_object.pose.x))
+        y_edit = QLineEdit(str(active_object.pose.y))
+        edit_obj['x'] = x_edit
+        edit_obj['y'] = y_edit
+        layout.addRow(QLabel("{}.X".format("pose")), x_edit)
+        layout.addRow(QLabel("{}.Y".format("pose")), y_edit)
+        editable_values = obj.dict()
+        print('ATTR SHOW: ', editable_values)
+        for attr_name in sorted(editable_values.keys()):
+            attr = editable_values[attr_name]
+            new_edit = QLineEdit(str(attr))
+
+            edit_obj[attr_name] = new_edit
+            if attr_name == 'id':
+                type_id = list(self.duckietown_types_apriltags.keys())[0]
+                for type_sign in self.duckietown_types_apriltags.keys():
+                    if int(attr) in self.duckietown_types_apriltags[type_sign]:
+                        type_id = type_sign
+                        break
+                print(type_id)
+                combo_id.addItems(["{} ({})".format(i.id, i.type) for i in self.duckietown_types_apriltags[type_id]])
+                combo_id.setLineEdit(new_edit)
+                combo_id.setEditText(str(attr))
+                combo_id.currentTextChanged.connect(change_type_from_combo)
+                layout.addRow(QLabel(attr_name), combo_id)
+            elif attr_name == "type":
+                new_edit.setReadOnly(True)
+                layout.addRow(QLabel("{}".format(attr_name)), new_edit)
+            else:
+                layout.addRow(QLabel("{}".format(attr_name)), new_edit)
+        '''
         for attr_name in sorted(editable_attrs):
             attr = editable_attrs[attr_name]
             if attr_name == 'pos':
@@ -730,63 +926,70 @@ class duck_window(QtWidgets.QMainWindow):
             edit = QLineEdit(str(attr))
             edit_obj[attr_name] = edit
             layout.addRow(QLabel(attr_name), edit)
-
+        '''
         formGroupBox.setLayout(layout)
         # layout
-        mainLayout = QVBoxLayout() 
+        mainLayout = QVBoxLayout()
         mainLayout.addWidget(formGroupBox)
         mainLayout.addWidget(buttonBox)
         dialog.setLayout(mainLayout)
         dialog.exec_()
-    
+
     def rotateSelectedTiles(self):
         self.editor.save(self.map)
-        selection = self.mapviewer.tileSelection
-        tile_layer = self.map.get_tile_layer().data
-        if selection:
-            for i in range(max(selection[1], 0), min(selection[3], len(tile_layer))):
-                for j in range(max(selection[0], 0), min(selection[2], len(tile_layer[0]))):
-                    tile_layer[i][j].rotation = (tile_layer[i][j].rotation + 90) % 360
-            self.mapviewer.scene().update()
+        is_selected_tile = self.mapviewer.is_selected_tile
+        for ((nm, _), tile) in self.dm.tiles:
+            if is_selected_tile(tile):
+                frame: _Frame = self.dm.frames[nm]
+                orien_val = (rot_val[tile.orientation] + 90) % 360
+                for key in rot_val:
+                    if rot_val[key] == orien_val:
+                        tile.orientation = key
+                        frame.pose.yaw = {'E': 0, 'N': np.pi * 0.5, 'W': np.pi, 'S': np.pi * 1.5, None: 0}[key]
+
+        self.mapviewer.scene().update()
 
     def add_apriltag(self, apriltag: GroundAprilTagObject):
         layer = self.map.get_layer_by_type(LayerType.GROUND_APRILTAG)
-        if layer is None: 
+        if layer is None:
             self.map.add_layer_from_data(LayerType.GROUND_APRILTAG, [apriltag])
         else:
             self.map.add_elem_to_layer_by_type(LayerType.GROUND_APRILTAG, apriltag)
         self.update_layer_tree()
         self.mapviewer.scene().update()
 
-
     def trimClicked(self):
         self.editor.save(self.map)
-        self.editor.trimBorders(True,True,True,True,MapTile(self.ui.delete_fill.currentData()))
+        self.editor.trimBorders(True, True, True, True, MapTile(self.ui.delete_fill.currentData()))
         self.mapviewer.scene().update()
         self.update_layer_tree()
-
 
     def selectionUpdate(self):
-        selection = self.mapviewer.tileSelection
-        filler = MapTile(self.ui.default_fill.currentData())
-        tile_layer = self.map.get_tile_layer().data
+        is_selected_tile = self.mapviewer.is_selected_tile
         if self.drawState == 'brush':
-            self.editor.save(self.map)
-            self.editor.extendToFit(selection, selection[0], selection[1], MapTile(self.ui.delete_fill.currentData()))
-            if selection[0] < 0:
-                delta = -selection[0]
-                selection[0] = 0
-                selection[2] += delta
-            if selection[1] < 0:
-                delta = -selection[1]
-                selection[3] += delta
-            for i in range(max(selection[0], 0), min(selection[2], len(tile_layer[0]))):
-                for j in range(max(selection[1], 0), min(selection[3], len(tile_layer))):
-                    tile_layer[j][i] = copy.copy(filler)
+            self.editor.save(self.map)  # TODO: CTRL+Z need to fix because dt-world
+            tiles = self.dm.tiles.only_tiles()
+            for i in range(len(tiles)):
+                for j in range(len(tiles[0])):
+                    tile = tiles[i][j]
+                    if is_selected_tile(tile):
+                        tile.type = self.ui.default_fill.currentData()
+                        tile.orientation = 'E'
         self.update_layer_tree()
         self.mapviewer.scene().update()
 
-    # функция создания доп. информационного окна
+    def reset_duckietown_map(self, new_dm: DuckietownMap):
+        self.dm = new_dm
+        self.mapviewer.dm = new_dm
+        # self.update_layer_tree()
+        self.mapviewer.scene().update()
+
+    def get_random_name(self, begin):
+        return "{}_{}".format(
+            begin,
+            np.random.randint(1000)
+        )
+
     def show_info(self, name, title, text):
         name.set_window_name(title)
         name.set_text(text)
