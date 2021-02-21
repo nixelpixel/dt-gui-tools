@@ -952,7 +952,6 @@ class duck_window(QtWidgets.QMainWindow):
                     #if rot_val[key] == orien_val:
                     #    tile.orientation = key
                     #    frame.pose.yaw = {'E': 0, 'N': np.pi * 0.5, 'W': np.pi, 'S': np.pi * 1.5, None: 0}[key]
-
         self.mapviewer.scene().update()
 
     def add_apriltag(self, apriltag: GroundAprilTagObject):

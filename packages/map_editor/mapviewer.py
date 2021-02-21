@@ -226,7 +226,6 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
                 painter.scale(self.sc, self.sc)
                 painter.translate(tile.i * self.map.gridSize, (len(tiles[0]) - 1 - tile.j) * self.map.gridSize)
                 #painter.rotate(rot_val[orientation])
-                #painter.rotate(0)
                 #if orientation == "S":
                 #    painter.translate(0, -self.map.gridSize)
                 #elif orientation == "N":
