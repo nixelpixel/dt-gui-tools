@@ -6,6 +6,7 @@ from PyQt5.QtGui import QTransform
 from PyQt5.QtWidgets import QGraphicsView
 from PyQt5 import QtCore, QtGui, QtWidgets
 from duckietown_world.structure.objects import Tile, _Tile
+from duckietown_world.structure.utils import get_degree_for_orientation, get_canonical_sign_name
 
 from map import DuckietownMap
 from utils import get_list_dir_with_path
@@ -31,7 +32,7 @@ DELTA_EUCLIDEAN_DISTANCE = .15
 class MapViewer(QGraphicsView, QtWidgets.QWidget):
     map = None
     tileSprites: Dict[str, QtGui.QImage] = {'empty': QtGui.QImage()}
-    objects = {'stop': QtGui.QImage()}
+    objects = {get_canonical_sign_name('stop'): QtGui.QImage()}
     offsetX = 0
     offsetY = 0
     sc = 1
@@ -66,8 +67,8 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
         for dir_path in OBJECT_DIR_PATHS:
             for filename, file_path in get_list_dir_with_path(dir_path):
                 object_name = filename.split('.')[0]
-                self.objects[object_name] = QtGui.QImage()
-                self.objects[object_name].load(file_path)
+                self.objects[get_canonical_sign_name(object_name)] = QtGui.QImage()
+                self.objects[get_canonical_sign_name(object_name)].load(file_path)
 
     def setMap(self, tiles: DuckietownMap):
         self.map = tiles
@@ -225,7 +226,6 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
                 painter.scale(self.sc, self.sc)
                 painter.translate(tile.i * self.map.gridSize, (len(tiles[0]) - 1 - tile.j) * self.map.gridSize)
                 #painter.rotate(rot_val[orientation])
-                painter.rotate(0)
                 #if orientation == "S":
                 #    painter.translate(0, -self.map.gridSize)
                 #elif orientation == "N":
@@ -234,7 +234,8 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
                 #    painter.translate(-self.map.gridSize, -self.map.gridSize)
 
                 my_transform = QTransform()
-                my_transform.rotate(rot_val[orientation])
+                #my_transform.rotate(rot_val[orientation])
+                my_transform.rotate(get_degree_for_orientation(orientation))
                 img = self.tileSprites[tile.type].transformed(my_transform)
                 painter.drawImage(QtCore.QRectF(0, 0, self.map.gridSize, self.map.gridSize),
                                   img)

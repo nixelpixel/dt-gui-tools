@@ -17,6 +17,8 @@ from DTWorld import get_dt_world
 from DTWorld import get_new_dt_world
 from IOManager import *
 from classes.mapObjects import GroundAprilTagObject
+from duckietown_world.structure.utils import get_degree_for_orientation, get_orientation_for_degree, \
+    get_canonical_sign_name
 from forms.default_forms import question_form_yes_no
 from forms.new_tag_object import NewTagForm
 from forms.start_info import StartInfoForm
@@ -84,6 +86,7 @@ class duck_window(QtWidgets.QMainWindow):
         ############################
         map_name = "maps/empty"
         self.dm = get_dt_world(map_name)
+        logger.debug(self.dm.get_context())
         self.map = map.DuckietownMap()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
@@ -541,13 +544,13 @@ class duck_window(QtWidgets.QMainWindow):
     def create_empty_map(self, i_size: int, j_size: int) -> None:
         for i in range(i_size):
             for j in range(j_size):
-                tile = Tile("map_1/tile_{}_{}".format(i, j))
+                tile = Tile("{}/tile_{}_{}".format(self.dm.get_context(), i, j))
                 tile.obj.i = i
                 tile.obj.j = j
                 tile.frame.pose.x = int(i) * 0.585 + 0.585/2
                 tile.frame.pose.y = int(j) * 0.585 + 0.585/2
                 tile.obj.orientation = 'E'
-                tile.frame.relative_to = 'map_1'
+                tile.frame.relative_to = self.dm.get_context()
                 tile.frame.dm = self.dm
                 self.dm.add(tile)
 
@@ -614,8 +617,8 @@ class duck_window(QtWidgets.QMainWindow):
                 elif item_name == "watchtower":
                     obj = Watchtower(self.get_random_name("map_1/watchtower"), x=1, y=1)
                 elif type_of_element == "sign":
-                    obj = TrafficSign(self.get_random_name("map_1/{}".format(item_name)), x=1, y=1)
-                    obj.obj.type = item_name
+                    obj = TrafficSign(self.get_random_name("map_1/{}".format(get_canonical_sign_name(item_name))), x=1, y=1)
+                    obj.obj.type = get_canonical_sign_name(item_name)
                     obj.obj.id = utils.get_id_by_type(item_name)
                 elif item_name == "apriltag":
                     obj = GroundTag(self.get_random_name("map_1/grountag"), x=1, y=1)
@@ -804,7 +807,7 @@ class duck_window(QtWidgets.QMainWindow):
                 if key == 'id' and len(edit_obj[key].text().split()) > 1:
                     new_type = edit_obj[key].text().split()[1][1:-1]
                 if key == 'type' and new_type:
-                    obj[key] = new_type
+                    obj[key] = get_canonical_sign_name(new_type)# new_type
                     continue
                 if new_value.isdigit():
                     new_value = int(new_value)
@@ -941,12 +944,14 @@ class duck_window(QtWidgets.QMainWindow):
         for ((nm, _), tile) in self.dm.tiles:
             if is_selected_tile(tile):
                 frame: _Frame = self.dm.frames[nm]
-                orien_val = (rot_val[tile.orientation] + 90) % 360
-                for key in rot_val:
-                    if rot_val[key] == orien_val:
-                        tile.orientation = key
-                        frame.pose.yaw = {'E': 0, 'N': np.pi * 0.5, 'W': np.pi, 'S': np.pi * 1.5, None: 0}[key]
-
+                orien_val = get_degree_for_orientation(tile.orientation) - 90  # (rot_val[tile.orientation] + 90) % 360
+                tile.orientation = get_orientation_for_degree(orien_val)
+                frame.pose.yaw = {'E': np.pi * 1.5, 'N': 0, 'W': np.pi, 'S': np.pi * 0.5, None: 0}[tile.orientation]
+                # {'E': 0, 'N': np.pi * 0.5, 'W': np.pi, 'S': np.pi * 1.5, None: 0}[tile.orientation]
+                #for key in rot_val:
+                    #if rot_val[key] == orien_val:
+                    #    tile.orientation = key
+                    #    frame.pose.yaw = {'E': 0, 'N': np.pi * 0.5, 'W': np.pi, 'S': np.pi * 1.5, None: 0}[key]
         self.mapviewer.scene().update()
 
     def add_apriltag(self, apriltag: GroundAprilTagObject):
