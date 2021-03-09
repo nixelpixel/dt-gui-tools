@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import QMessageBox, QDesktopWidget, QFormLayout, QVBoxLayou
     QLabel, QComboBox
 from duckietown_world.structure.bases import _Frame
 from duckietown_world.structure.duckietown_map import DuckietownMap
-from duckietown_world.structure.objects import Watchtower, Citizen, Tile, TrafficSign, GroundTag
+from duckietown_world.structure.objects import Watchtower, Citizen, Tile, TrafficSign, GroundTag, Vehicle
 
 import map
 import mapviewer
@@ -608,9 +608,9 @@ class duck_window(QtWidgets.QMainWindow):
                 self.editor.save(self.map)
                 # adding object
                 print(item_name)
-                print(self.info_json['info'][item_name])
+                #print(self.info_json['info'][item_name])
                 type_of_element = self.info_json['info'][item_name]['type']
-                print(self.duckietown_types_apriltags)
+                #print(self.duckietown_types_apriltags)
                 obj = None
                 if item_name == "duckie":
                     obj = Citizen(self.get_random_name("map_1/duckie"), x=1, y=1)
@@ -622,6 +622,8 @@ class duck_window(QtWidgets.QMainWindow):
                     obj.obj.id = utils.get_id_by_type(item_name)
                 elif item_name == "apriltag":
                     obj = GroundTag(self.get_random_name("map_1/grountag"), x=1, y=1)
+                elif item_name == "duckiebot":
+                    obj = Vehicle(self.get_random_name("map_1/vehicle"), x=1, y=1)
                 if obj:
                     obj.frame.relative_to = "map_1"
                     self.dm.add(obj)
