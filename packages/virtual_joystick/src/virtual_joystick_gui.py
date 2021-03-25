@@ -4,6 +4,7 @@ import socket
 import sys
 import time
 
+from PyQt5 import QtCore
 from PyQt5.QtCore import QSize, pyqtSignal, Qt
 from PyQt5.QtCore import QThread, QTimer
 from PyQt5.QtGui import QIcon, QPixmap, QTransform
@@ -14,7 +15,7 @@ import rospy
 from sensor_msgs.msg import Joy
 from duckietown_msgs.msg import BoolStamped
 
-HZ = 60
+HZ = 30
 SCREEN_SIZE = 300
 KEY_LEFT = 'left'
 KEY_RIGHT = 'right'
@@ -100,7 +101,7 @@ class ROSManager(QThread):
                 print("Error starting main loop in virtual joystick gui")
 
             msg = self.get_raw_message()
-            force_joy_publish = False
+            force_joy_publish = self._parent.inFocus
 
             # Arrows events
             if KEY_LEFT in self.commands:
@@ -210,6 +211,7 @@ class MainWindow(QMainWindow):
         self.script_path = (script_path + "/") if script_path else ""
         self.setWindowTitle(title)
         self.setWindowIcon(QIcon(self.script_path + '../images/logo.png'))
+        self._hasfocus = False
 
         # ros class
         self.ros = ROSManager(self)
@@ -219,7 +221,7 @@ class MainWindow(QMainWindow):
         self.key_board_event.add_listener(self.visual_joystick)
         self.key_board_event.start()
         # UI JOYSTICK
-        self.widget = Joystick()
+        self.widget = Joystick(self)
         self.widget.ros_fun.connect(self.visual_joystick)
         self.resize(self.widget.pixmap.width(), self.widget.pixmap.height())
         self.setFixedSize(self.widget.pixmap.width(), self.widget.pixmap.height())
@@ -227,10 +229,19 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.widget)
         self.ros_commands = set()
         self.was_added_new_key = False
+        self.widget.change_state()
+        self.installEventFilter(self)
+
+    def eventFilter(self, object, event):
+        if event.type() in [QtCore.QEvent.WindowActivate, QtCore.QEvent.WindowDeactivate, QtCore.QEvent.FocusIn, QtCore.QEvent.FocusOut]:
+            self._hasfocus = (event.type() in [QtCore.QEvent.WindowActivate, QtCore.QEvent.FocusIn])
+            self.widget.change_state()
+        # ---
+        return False
 
     @property
     def inFocus(self):
-        return QApplication.focusWidget() is not None
+        return self._hasfocus
 
     def visual_joystick(self, commands):
         active = self.isActiveWindow()
@@ -248,8 +259,9 @@ class MainWindow(QMainWindow):
 class Joystick(QWidget):
     ros_fun = pyqtSignal(set)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, parent, *args, **kwargs):
         super(Joystick, self).__init__(*args, **kwargs)
+        self._parent = parent
         # GUI stuff init
         self.label_up = None
         self.label_left = None
@@ -257,6 +269,7 @@ class Joystick(QWidget):
         self.label_right = None
         self.label_stop = None
         self.main_label = None
+        self.label_publisher = None
         self.pixmap = None
         # state init
         self.state_right = True
@@ -315,6 +328,8 @@ class Joystick(QWidget):
             self.label_left.setHidden(True)
             self.label_right.setHidden(True)
             self.label_stop.setHidden(False)
+        # ---
+        self.label_publisher.setHidden(not self._parent.inFocus)
 
     def create_d_pad(self):
         self.label_up = QLabel(self)
@@ -322,6 +337,7 @@ class Joystick(QWidget):
         self.label_down = QLabel(self)
         self.label_right = QLabel(self)
         self.label_stop = QLabel(self)
+        self.label_publisher = QLabel(self)
         img = QPixmap(self.script_path + '../images/d-pad-pressed.png')
         img = img.scaled(SCREEN_SIZE, SCREEN_SIZE, Qt.KeepAspectRatio)
         t = QTransform()
@@ -332,9 +348,15 @@ class Joystick(QWidget):
         self.label_down.setPixmap(img.transformed(t))
         t.rotate(90)
         self.label_left.setPixmap(img.transformed(t))
+        # e-stop
         img = QPixmap(self.script_path + '../images/d-e-stop.png')
         img = img.scaled(SCREEN_SIZE, SCREEN_SIZE, Qt.KeepAspectRatio)
         self.label_stop.setPixmap(img)
+        # publisher icon
+        img = QPixmap(self.script_path + '../images/d-publisher.png')
+        img = img.scaled(SCREEN_SIZE, SCREEN_SIZE, Qt.KeepAspectRatio)
+        self.label_publisher.setPixmap(img)
+        # ---
         self.change_state()
 
     def create_up_button(self):
