@@ -7,3 +7,4 @@ main:
   trafficsigns:    !include trafficsigns.yaml
   groundtags:      !include groundtags.yaml
   vehicles:        !include vehicles.yaml
+  cameras:         !include cameras.yaml

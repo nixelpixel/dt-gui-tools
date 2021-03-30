@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import QMessageBox, QDesktopWidget, QFormLayout, QVBoxLayou
     QLabel, QComboBox
 from duckietown_world.structure.bases import _Frame
 from duckietown_world.structure.duckietown_map import DuckietownMap
-from duckietown_world.structure.objects import Watchtower, Citizen, Tile, TrafficSign, GroundTag, Vehicle
+from duckietown_world.structure.objects import Watchtower, Citizen, Tile, TrafficSign, GroundTag, Vehicle, Camera
 
 import map
 import mapviewer
@@ -615,7 +615,9 @@ class duck_window(QtWidgets.QMainWindow):
                 if item_name == "duckie":
                     obj = Citizen(self.get_random_name("map_1/duckie"), x=1, y=1)
                 elif item_name == "watchtower":
-                    obj = Watchtower(self.get_random_name("map_1/watchtower"), x=1, y=1)
+                    name = self.get_random_name("map_1/watchtower")
+                    obj = Watchtower(name, x=1, y=1)
+                    self.dm.add(Camera(self.get_random_name(f"{name}/camera")))
                 elif type_of_element == "sign":
                     obj = TrafficSign(self.get_random_name("map_1/{}".format(get_canonical_sign_name(item_name))), x=1, y=1)
                     obj.obj.type = get_canonical_sign_name(item_name)
@@ -623,7 +625,9 @@ class duck_window(QtWidgets.QMainWindow):
                 elif item_name == "apriltag":
                     obj = GroundTag(self.get_random_name("map_1/grountag"), x=1, y=1)
                 elif item_name == "duckiebot":
-                    obj = Vehicle(self.get_random_name("map_1/vehicle"), x=1, y=1)
+                    name = self.get_random_name("map_1/vehicle")
+                    obj = Vehicle(name, x=1, y=1)
+                    self.dm.add(Camera(f"{name}/camera"))
                 if obj:
                     obj.frame.relative_to = "map_1"
                     self.dm.add(obj)
@@ -676,8 +680,12 @@ class duck_window(QtWidgets.QMainWindow):
     def delete_button_clicked(self):
         if not self.map.get_tile_layer().visible:
             return
-        self.editor.save(self.map)
-        self.editor.deleteSelection(self.mapviewer.tileSelection, MapTile(self.ui.delete_fill.currentData()))
+        self.mapviewer.remove_last_obj()
+        #print(self.active_items)
+        #print(self.ui.delete_fill.currentData(), self.mapviewer.tileSelection)
+        #self.dm.
+        #self.editor.save(self.map)
+        #self.editor.deleteSelection(self.mapviewer.tileSelection, MapTile(self.ui.delete_fill.currentData()))
         self.mapviewer.scene().update()
         self.update_layer_tree()
 
@@ -698,6 +706,10 @@ class duck_window(QtWidgets.QMainWindow):
         selection = self.mapviewer.raw_selection
         item_layer = self.map.get_objects_from_layers()  # TODO: add self.current_layer for editing only it's objects?
         new_selected_obj = False
+        for layer in self.dm:
+            print(layer)
+            #for item in layer:
+            #    print(item)
         for item in item_layer:
             x, y = item.position
             if x > selection[0] and x < selection[2] and y > selection[1] and y < selection[3]:
@@ -754,48 +766,7 @@ class duck_window(QtWidgets.QMainWindow):
         self.mapviewer.scene().update()
 
     def create_form(self, active_object_data: tuple):
-        '''
-                def accept():
-            if 'tag_type' in edit_obj:
-                tag_type = edit_obj['tag_type'].text()
-                if 'tag_id' in edit_obj and (not edit_obj['tag_id'].text().isdigit() or int(edit_obj['tag_id'].text()) not in self.duckietown_types_apriltags[tag_type]):
-                    msgBox = QMessageBox()
-                    msgBox.setText("tag id or tag type is uncorrect!")
-                    msgBox.exec()
-                    return
-                if tag_type not in self.duckietown_types_apriltags.keys() or int(edit_obj['tag_id'].text()) not in self.duckietown_types_apriltags[tag_type]:
-                    msgBox = QMessageBox()
-                    msgBox.setText("tag id or tag type is uncorrect!")
-                    msgBox.exec()
-                    return
-            elif 'tag_id' in edit_obj:
-                if not edit_obj['tag_id'].text().isdigit() or not int(edit_obj['tag_id'].text()) in self.duckietown_types_apriltags['TrafficSign']:
-                    msgBox = QMessageBox()
-                    msgBox.setText("tag id is uncorrect!")
-                    msgBox.exec()
-                    return
-            for attr_name, attr in editable_attrs.items():
-                if attr_name == 'pos':
-                    active_object.position[0] = float(edit_obj['x'].text())
-                    active_object.position[1] = float(edit_obj['y'].text())
-                    continue
-                if type(attr) == bool:
-                    active_object.__setattr__(attr_name, edit_obj[attr_name].isChecked())
-                    continue
-                if type(attr) == float:
-                    active_object.__setattr__(attr_name, float(edit_obj[attr_name].text()))
-                if type(attr) == int:
-                    active_object.__setattr__(attr_name, int(edit_obj[attr_name].text()))
-                else:
-                    active_object.__setattr__(attr_name, edit_obj[attr_name].text())
-            dialog.close()
-            self.mapviewer.scene().update()
-            self.update_layer_tree()
 
-        def reject():
-            dialog.close()
-
-        '''
         active_object, (name, tp) = active_object_data
         assert tp is _Frame
 
@@ -863,18 +834,28 @@ class duck_window(QtWidgets.QMainWindow):
         layout.addRow(QLabel("{}.X".format("pose")), x_edit)
         layout.addRow(QLabel("{}.Y".format("pose")), y_edit)
         editable_values = obj.dict()
-        print('ATTR SHOW: ', editable_values)
+        print('ATTR SHOW: ', editable_values, name)
+
+        if "vehicle" in name:
+            cam = self.dm.get_objects_by_name(name+"/camera")
+            print(cam)
+            print()
         for attr_name in sorted(editable_values.keys()):
             attr = editable_values[attr_name]
             new_edit = QLineEdit(str(attr))
 
             edit_obj[attr_name] = new_edit
+
+
             if attr_name == 'id':
                 type_id = list(self.duckietown_types_apriltags.keys())[0]
                 for type_sign in self.duckietown_types_apriltags.keys():
-                    if int(attr) in self.duckietown_types_apriltags[type_sign]:
-                        type_id = type_sign
-                        break
+                    try:
+                        if int(attr) in self.duckietown_types_apriltags[type_sign]:
+                            type_id = type_sign
+                            break
+                    except:
+                        pass
                 print(type_id)
                 combo_id.addItems(["{} ({})".format(i.id, i.type) for i in self.duckietown_types_apriltags[type_id]])
                 combo_id.setLineEdit(new_edit)
@@ -886,52 +867,7 @@ class duck_window(QtWidgets.QMainWindow):
                 layout.addRow(QLabel("{}".format(attr_name)), new_edit)
             else:
                 layout.addRow(QLabel("{}".format(attr_name)), new_edit)
-        '''
-        for attr_name in sorted(editable_attrs):
-            attr = editable_attrs[attr_name]
-            if attr_name == 'pos':
-                x_edit = QLineEdit(str(attr[0]))
-                y_edit = QLineEdit(str(attr[1]))
-                edit_obj['x'] = x_edit
-                edit_obj['y'] = y_edit
-                layout.addRow(QLabel("{}.X".format(attr_name)), x_edit)
-                layout.addRow(QLabel("{}.Y".format(attr_name)), y_edit)
-                continue
-            elif attr_name == 'tag_id':
-                edit = QLineEdit(str(attr))
-                edit_obj[attr_name] = edit
-                tag_id = int(attr)
-                type_id = list(self.duckietown_types_apriltags.keys())[0]
-                for type_sign in self.duckietown_types_apriltags.keys():
-                    if tag_id in self.duckietown_types_apriltags[type_sign]:
-                        type_id = type_sign
-                        break
-                
-                combo_id.addItems([str(i) for i in self.duckietown_types_apriltags[type_id]])
-                combo_id.setLineEdit(edit)
-                combo_id.setEditText(str(attr))
-                layout.addRow(QLabel(attr_name), combo_id)
-                continue
-            elif attr_name == 'tag_type':
-                edit = QLineEdit(str(attr))
-                edit_obj[attr_name] = edit
-                combo_type = QComboBox(self)
-                combo_type.addItems([str(i) for i in self.duckietown_types_apriltags.keys()])
-                combo_type.activated[str].connect(change_combo_id)
-                combo_type.setLineEdit(edit)
-                combo_type.setEditText(attr)
-                layout.addRow(QLabel(attr_name), combo_type)
-                continue
-            if type(attr) == bool:
-                check = QCheckBox()
-                check.setChecked(attr)
-                edit_obj[attr_name] = check
-                layout.addRow(QLabel(attr_name), check)
-                continue
-            edit = QLineEdit(str(attr))
-            edit_obj[attr_name] = edit
-            layout.addRow(QLabel(attr_name), edit)
-        '''
+
         formGroupBox.setLayout(layout)
         # layout
         mainLayout = QVBoxLayout()

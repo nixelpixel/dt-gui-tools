@@ -129,6 +129,10 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
             self.rmbPressed = False
         self.scene().update()
 
+    def remove_last_obj(self):
+        print(self.drag_obj)
+        self.drag_obj = None
+
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
         x, y = event.x(), event.y()
         x_map = self.get_x_from_view(x)
