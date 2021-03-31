@@ -30,7 +30,7 @@ class Thread(QThread):
                 im_pil = self.get_modified_picture(im_pil)
                 # PIL -> QImage
                 qt_img = ImageQt(im_pil)
-                finish_img = qt_img#QtGui.QPixmap.fromImage(qt_img)
+                finish_img = qt_img #QtGui.QPixmap.fromImage(qt_img)
                 #
 
                 convertToQtFormat = QImage(rgbImage.data, w, h, bytesPerLine, QImage.Format_RGB888)
@@ -38,11 +38,17 @@ class Thread(QThread):
                 self.changePixmap.emit(p)
 
     def get_modified_picture(self, picture):
-        img1 = Image.open("/code/catkin_ws/src/dt-gui-tools/packages/image_creator/"+"duck_pict1.jpg").convert("RGBA")
-        img1.thumbnail((640, 480), Image.ANTIALIAS)
-        picture.thumbnail((640, 480), Image.ANTIALIAS)
-        picture.paste(img1, (0,0), img1)
+        img1 = Image.open("/code/catkin_ws/src/dt-gui-tools/packages/image_creator/"+"t.png").convert("RGBA")
+        p_width, p_height = picture.size
+        img1 = img1.resize((p_width, p_height), Image.LANCZOS)
+        picture.paste(img1, None, img1)
         return picture
+        #img1.thumbnail((640, 480), Image.ANTIALIAS)
+        #picture.thumbnail((640, 480), Image.ANTIALIAS)
+        #picture.paste(img1, (0,0), img1)
+        #return picture
+        
+        
         #img2 = Image.open()
 
 class App(QWidget):
