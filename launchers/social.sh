@@ -13,12 +13,11 @@ dt-launchfile-init
 # NOTE: Use `dt-exec COMMAND` to run the main process (blocking process)
 
 
-# set locale for app
+# set locale
 locale=${1:-'en'}
 
 # launching app
-cd $DT_REPO_PATH/packages/image_creator/
-dt-exec python3 app.py ${HOSTNAME}
+dt-exec python3 -m social_app.main "${VEHICLE_NAME}"
 
 # ----------------------------------------------------------------------------
 # YOUR CODE ABOVE THIS LINE

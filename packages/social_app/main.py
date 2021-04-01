@@ -1,3 +1,4 @@
+import argparse
 import os
 import cv2
 import sys
@@ -15,11 +16,11 @@ from sensor_msgs.msg import CompressedImage
 class ROSSpin(QThread):
     changeROSImage = pyqtSignal(np.ndarray)
 
-    def __init__(self):
+    def __init__(self, robot_name: str):
         super().__init__()
         rospy.init_node('ImageCreator', anonymous=False)
         self.bridge = CvBridge()
-        self.image_compressed = rospy.Subscriber(f"/{sys.argv[1]}/camera_node/image/compressed",
+        self.image_compressed = rospy.Subscriber(f"/{robot_name}/camera_node/image/compressed",
                                                  CompressedImage, self.callback, queue_size=1)
 
     def callback(self, picture: CompressedImage):
@@ -28,7 +29,8 @@ class ROSSpin(QThread):
 
 
 class App(QWidget):
-    def __init__(self):
+
+    def __init__(self, robot_name: str):
         super().__init__()
         self.w, self.h = 640, 480
         self.filter_image = None
@@ -36,8 +38,16 @@ class App(QWidget):
         script_path = os.path.dirname(__file__)
         self.script_path = (script_path + "/") if script_path else ""
         self.save_image = None
+        # gui components
+        self.top_layout = None
+        self.middle_layout = None
+        self.label_filter = None
+        self.label_mask = None
+        self.bot_layout = None
+        self.ros = None
+        # ---
         self.initUI()
-        self.init_ROS()
+        self.init_ROS(robot_name)
 
     @pyqtSlot(np.ndarray)
     def setImage(self, image: np.ndarray):
@@ -74,7 +84,7 @@ class App(QWidget):
     def initUI(self):
         self.setWindowTitle("Image Creator From Duckiebot")
         self.setGeometry(300, 300, self.w + 300, self.h + 200)
-        self.resize(2 * self.w + 100, 1.5 * self.h)
+        self.resize(2 * self.w + 100, int(1.5 * self.h))
         windowLayout = QVBoxLayout()
         self.create_top_layout()
         self.create_middle_layout()
@@ -132,17 +142,20 @@ class App(QWidget):
             cv2.imwrite(path, self.save_image)
         print('SAVE PICTURE')
 
-    def init_ROS(self):
-        self.ros = ROSSpin()
+    def init_ROS(self, robot_name):
+        self.ros = ROSSpin(robot_name)
         self.ros.changeROSImage.connect(self.setImage)
         self.ros.start()
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("robot", type=str, help="Robot's name")
+    parsed = parser.parse_args()
+    # ---
     app = QApplication(sys.argv)
-    window = App()
+    window = App(parsed.robot)
     window.show()
-    print(sys.argv[1])
     app.exec_()
     window.ros.terminate()
     window.ros.wait()
