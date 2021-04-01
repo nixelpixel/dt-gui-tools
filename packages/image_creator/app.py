@@ -23,7 +23,6 @@ class ROSSpin(QThread):
                                                  CompressedImage, self.callback, queue_size=1)
 
     def callback(self, picture: CompressedImage):
-        rospy.loginfo("ROS CALLBACK")
         image = self.bridge.compressed_imgmsg_to_cv2(picture, "bgr8")
         self.changeROSImage.emit(image)
 
@@ -45,7 +44,6 @@ class App(QWidget):
         self.callback(image)
 
     def callback(self, bot_image: np.ndarray):
-        rospy.loginfo("APP CALLBACK FROM ROS")
         bot_image = cv2.resize(bot_image, (self.w, self.h))
         if self.mask_image is not None:
             mask_image = self.convert_cv_qt(self.add_mask(bot_image))
@@ -97,7 +95,6 @@ class App(QWidget):
         return combo
 
     def changed_filter(self, text):
-        print('CHANGED FILTER')
         path = self.script_path + 'filters/' + text + "/"
         mask, filter = path + "mask.png", path + "filter.png"
         self.mask_image = cv2.imread(mask, cv2.COLOR_BGR2RGB)
@@ -131,12 +128,9 @@ class App(QWidget):
 
     def save_picture(self):
         if self.save_image is not None:
-            print(self.save_image)
             path = f"./pictures/picture_{datetime.now().strftime('%m_%d_%Y_%H_%M_%S')}.jpg"
-            print(path)
             cv2.imwrite(path, self.save_image)
         print('SAVE PICTURE')
-        # self.filter.save ....
 
     def init_ROS(self):
         self.ros = ROSSpin()
