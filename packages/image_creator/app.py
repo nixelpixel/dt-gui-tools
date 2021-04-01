@@ -11,6 +11,7 @@ from PyQt5.QtCore import QThread, Qt, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QImage, QPixmap
 from PIL import Image
 from PIL.ImageQt import ImageQt
+from cv_bridge import CvBridge
 
 # /<bot>/camera_node/image/compressed
 from sensor_msgs.msg import CompressedImage
@@ -23,11 +24,13 @@ class ROSSpin(QThread):
         QThread.__init__(self, parent)
         self._parent = parent
         rospy.init_node('ImageCreator', anonymous=False)
-
-    def run(self):
         self.image_compressed = rospy.Subscriber(f"/{sys.argv[1]}/camera_node/image/compressed",
                                                  CompressedImage, self.callback, queue_size=1)
-        # rospy.spin()
+
+    #def run(self):
+    #    pass
+
+    # rospy.spin()
 
     def callback(self, picture: CompressedImage):
         rospy.loginfo("ROS CALLBACK")
@@ -105,6 +108,7 @@ class App(QWidget):
         self.mask_image = None
         script_path = os.path.dirname(__file__)
         self.script_path = (script_path + "/") if script_path else ""
+        self.bridge = CvBridge()
         self.initUI()
 
     @pyqtSlot(CompressedImage)
@@ -114,28 +118,35 @@ class App(QWidget):
     def callback(self, ros_data: CompressedImage):
         rospy.loginfo("APP CALLBACK FROM ROS")
         #### direct conversion to CV2 ####
-        np_arr = np.fromstring(ros_data.data, np.uint8)
-        bot_image = cv2.imdecode(np_arr, cv2.COLOR_BGR2RGB)
-
+        #np_arr = np.fromstring(ros_data.data, np.uint8)
+        #bot_image = cv2.imdecode(np_arr, cv2.COLOR_BGR2RGB)
+        rospy.loginfo("Before bridge")
+        bot_image = self.bridge.compressed_imgmsg_to_cv2(ros_data, "bgr8")
         # cv2 -> pill
+        rospy.loginfo("before fromarray")
         bot_image_pil = Image.fromarray(bot_image)
 
         # join mask + raw pict
+        rospy.loginfo("Before modif mask")
         bot_image_pil_mask = self.get_modified_picture_by_mask(bot_image_pil)
+        rospy.loginfo("Before modif filter")
         bot_image_pil_filter = self.get_modified_picture_by_filter(bot_image_pil)
 
+        rospy.loginfo("Before convert RGB")
         bot_image_pil_mask.convert("RGB")
         bot_image_pil_filter.convert("RGB")
+        rospy.loginfo("After convert rgb")
         # PIL -> QImage
+
         mask_qt_img = ImageQt(bot_image_pil_mask)
         mask = mask_qt_img.scaled(self.w, self.h, Qt.KeepAspectRatio)
 
         filter_qt_img = ImageQt(bot_image_pil_filter)
-        filter = filter_qt_img.scaled(self.w, self.h, Qt.KeepAspectRatio)
+        filter_img = filter_qt_img.scaled(self.w, self.h, Qt.KeepAspectRatio)
 
         #mask.convertTo(QtGui.QColor.Rgb) #?
         self.set_picture_mask(mask)
-        self.set_picture_filter(filter)
+        self.set_picture_filter(filter_img)
 
     def get_modified_picture_by_mask(self, picture):
         if self.mask_image:
@@ -161,9 +172,11 @@ class App(QWidget):
         return source
 
     def set_picture_mask(self, image):
+        rospy.loginfo("P-MASK")
         self.set_picture_raw(self.label_mask, image)
 
     def set_picture_filter(self, image):
+        rospy.loginfo("P-FILTER")
         self.set_picture_raw(self.label_filter, image)
 
     def set_picture_raw(self, dst, image):
@@ -184,7 +197,7 @@ class App(QWidget):
         windowLayout.addLayout(self.middle_layout)
         windowLayout.addLayout(self.bot_layout)
         self.setLayout(windowLayout)
-        # self.init_ROS()
+        self.init_ROS()
         self.show()
 
     def createComboBox(self):
@@ -233,17 +246,19 @@ class App(QWidget):
         # self.filter.save ....
 
     def init_ROS(self):
-        th = ROSSpin(self)
-        th.changeROSImage.connect(self.setImage)
-        th.start()
+        self.ros = ROSSpin(self)
+        self.ros.changeROSImage.connect(self.setImage)
+        self.ros.start()
 
 
 def main():
     app = QApplication(sys.argv)
     window = App()
     print(sys.argv[1])
-    # rospy.spin()
     app.exec_()
+    window.ros.terminate()
+    window.ros.wait()
+    # rospy.spin()
 
 
 if __name__ == '__main__':
