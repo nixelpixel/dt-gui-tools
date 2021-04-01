@@ -18,7 +18,7 @@ locale=${1:-'en'}
 
 # launching app
 cd $DT_REPO_PATH/packages/image_creator/
-dt-exec python3 main.py
+dt-exec python3 app.py ${HOSTNAME}
 
 # ----------------------------------------------------------------------------
 # YOUR CODE ABOVE THIS LINE
