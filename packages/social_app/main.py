@@ -6,11 +6,15 @@ import rospy
 import numpy as np
 from cv_bridge import CvBridge
 from PyQt5 import QtGui
-from PyQt5.QtWidgets import QWidget, QLabel, QApplication, QComboBox, QVBoxLayout, QHBoxLayout, QPushButton, QSplitter
+from PyQt5.QtWidgets import QWidget, QLabel, QApplication, QComboBox, QVBoxLayout, QHBoxLayout, \
+    QPushButton, QSplitter, QGridLayout
 from PyQt5.QtCore import QThread, Qt, pyqtSignal, pyqtSlot
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap, QIcon
 from datetime import datetime
 from sensor_msgs.msg import CompressedImage
+
+
+PICTURES_DIR = "/data/pictures"
 
 
 class ROSSpin(QThread):
@@ -24,7 +28,7 @@ class ROSSpin(QThread):
                                                  CompressedImage, self.callback, queue_size=1)
 
     def callback(self, picture: CompressedImage):
-        image = self.bridge.compressed_imgmsg_to_cv2(picture, "bgr8")
+        image = self.bridge.compressed_imgmsg_to_cv2(picture, "bgra8")
         self.changeROSImage.emit(image)
 
 
@@ -71,20 +75,22 @@ class App(QWidget):
         return cv2.addWeighted(img, 1, self.mask_image, 1, 0)
 
     def add_filter(self, img):
-        return cv2.addWeighted(img, 1, self.filter_image, 1, 0)
+        return self.overlay_transparent(img, self.filter_image)
 
     def convert_cv_qt(self, cv_img):
-        rgb_image = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
+        rgb_image = cv2.cvtColor(cv_img, cv2.COLOR_BGRA2RGBA)
         h, w, ch = rgb_image.shape
         bytes_per_line = ch * w
-        convert_to_Qt_format = QtGui.QImage(rgb_image.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
+        convert_to_Qt_format = QtGui.QImage(rgb_image.data, w, h, bytes_per_line, QtGui.QImage.Format_RGBX8888)
         p = convert_to_Qt_format.scaled(self.w, self.h, Qt.KeepAspectRatio)
         return QPixmap.fromImage(p)
 
     def initUI(self):
-        self.setWindowTitle("Image Creator From Duckiebot")
+        self.setWindowTitle("Duckietown Social App")
+        self.setWindowIcon(QIcon(os.path.join(self.script_path, 'images', 'icon.png')))
         self.setGeometry(300, 300, self.w + 300, self.h + 200)
-        self.resize(2 * self.w + 100, int(1.5 * self.h))
+        self.resize(2 * self.w, int(1.2 * self.h))
+        self.setFixedSize(self.size())
         windowLayout = QVBoxLayout()
         self.create_top_layout()
         self.create_middle_layout()
@@ -99,22 +105,26 @@ class App(QWidget):
         filters = []
         for filter in os.listdir(self.script_path + "filters"):
             if os.path.isdir(self.script_path + 'filters/' + filter):
-                filters.append(filter)
+                filters.append(filter.replace('_', ' ').title())
         combo.addItems(filters)
+        combo.setCurrentIndex(filters.index('None'))
         combo.activated[str].connect(self.changed_filter)
         return combo
 
     def changed_filter(self, text):
-        path = self.script_path + 'filters/' + text + "/"
+        path = self.script_path + 'filters/' + text.lower().replace(' ', '') + "/"
         mask, filter = path + "mask.png", path + "filter.png"
-        self.mask_image = cv2.imread(mask, cv2.COLOR_BGR2RGB)
+        self.mask_image = cv2.imread(mask, cv2.IMREAD_UNCHANGED)
         self.mask_image = cv2.resize(self.mask_image, (self.w, self.h))
-        self.filter_image = cv2.imread(filter, cv2.COLOR_BGR2RGB)
+        self.filter_image = cv2.imread(filter, cv2.IMREAD_UNCHANGED)
         self.filter_image = cv2.resize(self.filter_image, (self.w, self.h))
 
     def create_top_layout(self):
-        self.top_layout = QHBoxLayout()
-        self.top_layout.addWidget(self.createComboBox())
+        self.top_layout = QGridLayout()
+        self.top_layout.addWidget(QLabel('Filter:', self), 0, 0, 1, 1, Qt.AlignRight)
+        self.top_layout.addWidget(self.createComboBox(), 0, 1, 1, 19)
+        self.top_layout.addWidget(QLabel('Mask:', self), 1, 0)
+        self.top_layout.addWidget(QLabel('Result:', self), 1, 10)
 
     def create_middle_layout(self):
         self.middle_layout = QHBoxLayout()
@@ -128,17 +138,17 @@ class App(QWidget):
         splitter.addWidget(self.label_mask)
         splitter.addWidget(self.label_filter)
         self.middle_layout.addWidget(splitter)
-        # self.middle_layout.addWidget(self.label_mask)
 
     def create_bot_layout(self):
         self.bot_layout = QHBoxLayout()
-        button_save = QPushButton('Save picture', self)
+        button_save = QPushButton('Take picture', self)
         button_save.clicked.connect(self.save_picture)
         self.bot_layout.addWidget(button_save)
 
     def save_picture(self):
         if self.save_image is not None:
-            path = f"./pictures/picture_{datetime.now().strftime('%m_%d_%Y_%H_%M_%S')}.jpg"
+            filename = datetime.now().strftime('%m_%d_%Y_%H_%M_%S')
+            path = os.path.join(PICTURES_DIR, f"{filename}.jpg")
             cv2.imwrite(path, self.save_image)
         print('SAVE PICTURE')
 
@@ -147,6 +157,15 @@ class App(QWidget):
         self.ros.changeROSImage.connect(self.setImage)
         self.ros.start()
 
+    @staticmethod
+    def overlay_transparent(bg_img, fg_img):
+        bg_img = cv2.cvtColor(bg_img, cv2.COLOR_BGRA2BGR)
+        b, g, r, mask = cv2.split(fg_img)
+        overlay = cv2.merge((b, g, r))
+        img1_bg = cv2.bitwise_and(bg_img, bg_img, mask=cv2.bitwise_not(mask))
+        img2_fg = cv2.bitwise_and(overlay, overlay, mask=mask)
+        return cv2.add(img1_bg, img2_fg)
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -154,13 +173,14 @@ def main():
     parsed = parser.parse_args()
     # ---
     app = QApplication(sys.argv)
+    app.setApplicationName("Duckietown Social App")
     window = App(parsed.robot)
     window.show()
     app.exec_()
     window.ros.terminate()
     window.ros.wait()
-    # rospy.spin()
 
 
 if __name__ == '__main__':
+    os.makedirs(PICTURES_DIR, exist_ok=True)
     main()
