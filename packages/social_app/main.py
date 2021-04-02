@@ -63,6 +63,7 @@ class App(QWidget):
             mask_image = self.convert_cv_qt(self.add_mask(bot_image))
         else:
             mask_image = self.convert_cv_qt(bot_image)
+        self.save_image = bot_image
         if self.filter_image is not None:
             self.save_image = self.add_filter(bot_image)
             filter_image = self.convert_cv_qt(self.save_image)
@@ -148,8 +149,9 @@ class App(QWidget):
     def save_picture(self):
         if self.save_image is not None:
             filename = datetime.now().strftime('%m_%d_%Y_%H_%M_%S')
-            path = os.path.join(PICTURES_DIR, f"{filename}.jpg")
+            path = os.path.join(PICTURES_DIR, f"dt-social-{filename}.jpg")
             cv2.imwrite(path, self.save_image)
+            os.chmod(path, 0o777)
         print('SAVE PICTURE')
 
     def init_ROS(self, robot_name):
