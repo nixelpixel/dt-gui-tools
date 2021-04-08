@@ -16,7 +16,7 @@ dt-launchfile-init
 JUPYTER_WS="/jupyter_ws"
 JUPYTER_PWD=quackquack
 JUPYTER_TOKEN=$(python3 -c "from notebook.auth import passwd; print(passwd('${JUPYTER_PWD}'))")
-JUPYTER_CMD="jupyter notebook --NotebookApp.password='${JUPYTER_TOKEN}' --NotebookApp.allow_password_change=False"
+JUPYTER_CMD="jupyter lab --NotebookApp.password='${JUPYTER_TOKEN}' --NotebookApp.allow_password_change=False"
 
 # configure environment
 set +e
