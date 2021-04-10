@@ -20,7 +20,6 @@ JUPYTER_CMD="jupyter lab --NotebookApp.password='${JUPYTER_TOKEN}' --NotebookApp
 
 # configure environment
 set +e
-umask g+r,g+w
 
 # read arguments
 args=""
@@ -33,36 +32,24 @@ JUPYTER_CMD="${JUPYTER_CMD} ${args}"
 if [ ! -d "${JUPYTER_WS}" ]; then
     mkdir -p "${JUPYTER_WS}"
 fi
-cd "${JUPYTER_WS}"
+cd "${JUPYTER_WS}" || exit
+
+# check HOME
+if [ "${UID}" -ne "0" ] && [ "${HOME}" = "/" ]; then
+    # we are not root but the HOME was not set, redirect HOME to /tmp
+    HOME=/tmp
+    export HOME
+fi
 
 # check volume
 mountpoint -q "${JUPYTER_WS}"
 if [ $? -ne 0 ]; then
     echo "WARNING: The path '${JUPYTER_WS}' is not a VOLUME. All the changes will be deleted with the container."
-    dt-exec ${JUPYTER_CMD}
-else
-    # from this point on, if something goes wrong, exit
-    set -e
-
-    # get _USERID of the ws dir
-    _USERID=$(stat -c %u "${JUPYTER_WS}")
-    _USERNAME='jupyter'
-
-    # check if we have a user with that ID already
-    if [ ! "$(getent passwd "${_USERID}")" ]; then
-      echo "Creating a user '${_USERNAME}' with UID:${_USERID}"
-      # create user
-      useradd --create-home --uid ${_USERID} ${_USERNAME}
-    else
-      USER_STR=$(getent group ${_USERID})
-      readarray -d : -t strarr <<< "$USER_STR"
-      _USERNAME="${strarr[0]}"
-      echo "A user with UID:${_USERID} (i.e., ${_USERNAME}) already exists. Reusing it."
-    fi
-
-    # launching app
-    sudo -u "${_USERNAME}" bash -c "${JUPYTER_CMD}"
 fi
+
+# run jupyter
+dt-exec ${JUPYTER_CMD}
+
 
 # ----------------------------------------------------------------------------
 # YOUR CODE ABOVE THIS LINE
