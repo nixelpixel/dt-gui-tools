@@ -22,6 +22,13 @@ JUPYTER_CMD="jupyter lab --NotebookApp.password='${JUPYTER_TOKEN}' --NotebookApp
 set +e
 umask g+r,g+w
 
+# read arguments
+args=""
+for arg in "$@"; do
+    args="${args} --${arg}"
+done
+JUPYTER_CMD="${JUPYTER_CMD} ${args}"
+
 # create directory if it does not exist
 if [ ! -d "${JUPYTER_WS}" ]; then
     mkdir -p "${JUPYTER_WS}"
