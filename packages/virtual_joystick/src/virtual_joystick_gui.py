@@ -8,7 +8,7 @@ from PyQt5 import QtCore
 from PyQt5.QtCore import QSize, pyqtSignal, Qt
 from PyQt5.QtCore import QThread, QTimer
 from PyQt5.QtGui import QIcon, QPixmap, QTransform
-from PyQt5.QtWidgets import QWidget, QApplication, QPushButton, QLabel, QMainWindow
+from PyQt5.QtWidgets import QWidget, QApplication, QPushButton, QLabel, QMainWindow, QSlider, QHBoxLayout
 from pynput.keyboard import Listener
 
 import rospy
@@ -212,6 +212,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(title)
         self.setWindowIcon(QIcon(self.script_path + '../images/logo.png'))
         self._hasfocus = False
+        #self.create_slider()
 
         # ros class
         self.ros = ROSManager(self)
@@ -223,8 +224,14 @@ class MainWindow(QMainWindow):
         # UI JOYSTICK
         self.widget = Joystick(self)
         self.widget.ros_fun.connect(self.visual_joystick)
-        self.resize(self.widget.pixmap.width(), self.widget.pixmap.height())
-        self.setFixedSize(self.widget.pixmap.width(), self.widget.pixmap.height())
+        self.resize(self.widget.pixmap.width() + 20, self.widget.pixmap.height())
+        self.setFixedSize(self.widget.pixmap.width() + 20, self.widget.pixmap.height())
+        ####
+        #hbox = QHBoxLayout(self)
+        #self.create_slider()
+        #hbox.addWidget(self.widget)
+        #hbox.addWidget(self.sld)
+        #self.setLayout(hbox)
         ####
         self.setCentralWidget(self.widget)
         self.ros_commands = set()
@@ -307,6 +314,22 @@ class Joystick(QWidget):
         self.create_right_button()
         self.create_down_button()
         self.create_d_pad()
+        self.create_slider()
+
+    def create_slider(self):
+        #hbox = QHBoxLayout(self)
+        self.sld = QSlider(Qt.Vertical, self)
+        self.sld.setFocusPolicy(Qt.NoFocus)
+        self.sld.setRange(0, 100)
+        self.sld.setValue(100)
+        self.sld.setPageStep(1)
+        self.sld.setGeometry(0, 0, SCREEN_SIZE * 2 + 20, SCREEN_SIZE)
+        self.sld.valueChanged.connect(self.changeSlider)
+
+    def changeSlider(self, value):
+        global speed_norm, speed_tang
+        speed_norm = value / 100
+        speed_tang = value / 100
 
     def light_d_pad(self, commands):
         self.state_left = not (KEY_LEFT in commands)
