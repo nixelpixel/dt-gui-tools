@@ -8,7 +8,7 @@ from PyQt5 import QtCore
 from PyQt5.QtCore import QSize, pyqtSignal, Qt
 from PyQt5.QtCore import QThread, QTimer
 from PyQt5.QtGui import QIcon, QPixmap, QTransform
-from PyQt5.QtWidgets import QWidget, QApplication, QPushButton, QLabel, QMainWindow, QSlider, QHBoxLayout
+from PyQt5.QtWidgets import QWidget, QApplication, QPushButton, QLabel, QMainWindow, QSlider
 from pynput.keyboard import Listener
 
 import rospy
@@ -212,7 +212,6 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(title)
         self.setWindowIcon(QIcon(self.script_path + '../images/logo.png'))
         self._hasfocus = False
-        #self.create_slider()
 
         # ros class
         self.ros = ROSManager(self)
@@ -226,12 +225,6 @@ class MainWindow(QMainWindow):
         self.widget.ros_fun.connect(self.visual_joystick)
         self.resize(self.widget.pixmap.width() + 20, self.widget.pixmap.height())
         self.setFixedSize(self.widget.pixmap.width() + 20, self.widget.pixmap.height())
-        ####
-        #hbox = QHBoxLayout(self)
-        #self.create_slider()
-        #hbox.addWidget(self.widget)
-        #hbox.addWidget(self.sld)
-        #self.setLayout(hbox)
         ####
         self.setCentralWidget(self.widget)
         self.ros_commands = set()
@@ -317,7 +310,6 @@ class Joystick(QWidget):
         self.create_slider()
 
     def create_slider(self):
-        #hbox = QHBoxLayout(self)
         self.sld = QSlider(Qt.Vertical, self)
         self.sld.setFocusPolicy(Qt.NoFocus)
         self.sld.setRange(0, 100)
