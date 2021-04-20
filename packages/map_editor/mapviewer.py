@@ -280,6 +280,7 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
             frame_obj = self.dm.frames[obj_name]
             x, y = 0, 0
             frame_of_pose = frame_obj
+            yaw = frame_obj.pose.yaw
             while frame_of_pose:
                 x += frame_of_pose.pose.x
                 y += frame_of_pose.pose.y
@@ -287,11 +288,16 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
             # - width / 2
             # - height / 2
             x, y = self.get_x_to_view(x), self.get_y_to_view(y)
+            draw_obj = QtCore.QRectF(x - width / 2,
+                                     y - height / 2,
+                                     width, height)
+            tf = QTransform()
+            tf.rotate(yaw)
+            print(f"Rotate {yaw}")
+            img: QtGui.QImage = self.objects[object.type].transformed(tf)
             painter.drawImage(
-                QtCore.QRectF(x - width / 2,
-                              y - height / 2,
-                              width, height),
-                self.objects[object.type])
+                draw_obj,
+                img)
 
     def draw_groundtags(self, width, height, painter):
         self.raw_draw_objects(width, height, painter, self.dm.groundtags, "apriltag")
@@ -307,6 +313,7 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
             frame_obj = self.dm.frames[obj_name]
             x, y = 0, 0
             frame_of_pose = frame_obj
+            yaw = frame_obj.pose.yaw
             while frame_of_pose:
                 x += frame_of_pose.pose.x
                 y += frame_of_pose.pose.y
@@ -314,16 +321,13 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
             # - width / 2
             # - height / 2
             x, y = self.get_x_to_view(x), self.get_y_to_view(y)
-            painter.drawImage(
-                QtCore.QRectF(x - width / 2,
+            draw_obj = QtCore.QRectF(x - width / 2,
                               y - height / 2,
-                              width, height),
-                self.objects[type_name])
-
-        # for layer_object in layer_data:
-        #
-        #    painter.drawImage(
-        #        QtCore.QRectF(self.map.gridSize * self.sc * layer_object.position[0] - width / 2,
-        #                      self.map.gridSize * self.sc * layer_object.position[1] - height / 2,
-        #                      width, height),
-        #        self.objects[layer_object.kind]) if layer_object.kind in self.objects else None
+                              width, height)
+            tf = QTransform()
+            tf.rotate(yaw)
+            print(f"Rotate {yaw}")
+            img: QtGui.QImage = self.objects[type_name].transformed(tf)
+            painter.drawImage(
+                draw_obj,
+                img)

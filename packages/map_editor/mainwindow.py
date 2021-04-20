@@ -5,10 +5,11 @@ import functools
 import json
 
 from PyQt5.QtWidgets import QMessageBox, QDesktopWidget, QFormLayout, QVBoxLayout, QLineEdit, QGroupBox, \
-    QLabel, QComboBox
+    QLabel, QComboBox, QFrame, QGridLayout
 from duckietown_world.structure.bases import _Frame
 from duckietown_world.structure.duckietown_map import DuckietownMap
-from duckietown_world.structure.objects import Watchtower, Citizen, Tile, TrafficSign, GroundTag, Vehicle, Camera
+from duckietown_world.structure.objects import Watchtower, Citizen, Tile, TrafficSign, GroundTag, Vehicle, Camera, \
+    _Camera
 
 import map
 import mapviewer
@@ -39,8 +40,15 @@ DEFAULT_TILE_SIZE = 0.585
 _translate = QtCore.QCoreApplication.translate
 EPS = .1  # step for move
 
-#rot_val = {'E': 0, 'S': 90, 'W': 180, 'N': 270, None: 0}
+# rot_val = {'E': 0, 'S': 90, 'W': 180, 'N': 270, None: 0}
 rot_val = {'E': 0, 'S': 270, 'W': 180, 'N': 90, None: 0}
+
+
+class QHLine(QFrame):
+    def __init__(self):
+        super(QHLine, self).__init__()
+        self.setFrameShape(QFrame.HLine)
+        self.setFrameShadow(QFrame.Sunken)
 
 
 class duck_window(QtWidgets.QMainWindow):
@@ -547,8 +555,8 @@ class duck_window(QtWidgets.QMainWindow):
                 tile = Tile("{}/tile_{}_{}".format(self.dm.get_context(), i, j))
                 tile.obj.i = i
                 tile.obj.j = j
-                tile.frame.pose.x = int(i) * 0.585 + 0.585/2
-                tile.frame.pose.y = int(j) * 0.585 + 0.585/2
+                tile.frame.pose.x = int(i) * 0.585 + 0.585 / 2
+                tile.frame.pose.y = int(j) * 0.585 + 0.585 / 2
                 tile.obj.orientation = 'E'
                 tile.frame.relative_to = self.dm.get_context()
                 tile.frame.dm = self.dm
@@ -608,9 +616,9 @@ class duck_window(QtWidgets.QMainWindow):
                 self.editor.save(self.map)
                 # adding object
                 print(item_name)
-                #print(self.info_json['info'][item_name])
+                # print(self.info_json['info'][item_name])
                 type_of_element = self.info_json['info'][item_name]['type']
-                #print(self.duckietown_types_apriltags)
+                # print(self.duckietown_types_apriltags)
                 obj = None
                 if item_name == "duckie":
                     obj = Citizen(self.get_random_name("map_1/duckie"), x=1, y=1)
@@ -619,7 +627,8 @@ class duck_window(QtWidgets.QMainWindow):
                     obj = Watchtower(name, x=1, y=1)
                     self.dm.add(Camera(self.get_random_name(f"{name}/camera")))
                 elif type_of_element == "sign":
-                    obj = TrafficSign(self.get_random_name("map_1/{}".format(get_canonical_sign_name(item_name))), x=1, y=1)
+                    obj = TrafficSign(self.get_random_name("map_1/{}".format(get_canonical_sign_name(item_name))), x=1,
+                                      y=1)
                     obj.obj.type = get_canonical_sign_name(item_name)
                     obj.obj.id = utils.get_id_by_type(item_name)
                 elif item_name == "apriltag":
@@ -681,11 +690,11 @@ class duck_window(QtWidgets.QMainWindow):
         if not self.map.get_tile_layer().visible:
             return
         self.mapviewer.remove_last_obj()
-        #print(self.active_items)
-        #print(self.ui.delete_fill.currentData(), self.mapviewer.tileSelection)
-        #self.dm.
-        #self.editor.save(self.map)
-        #self.editor.deleteSelection(self.mapviewer.tileSelection, MapTile(self.ui.delete_fill.currentData()))
+        # print(self.active_items)
+        # print(self.ui.delete_fill.currentData(), self.mapviewer.tileSelection)
+        # self.dm.
+        # self.editor.save(self.map)
+        # self.editor.deleteSelection(self.mapviewer.tileSelection, MapTile(self.ui.delete_fill.currentData()))
         self.mapviewer.scene().update()
         self.update_layer_tree()
 
@@ -708,7 +717,7 @@ class duck_window(QtWidgets.QMainWindow):
         new_selected_obj = False
         for layer in self.dm:
             print(layer)
-            #for item in layer:
+            # for item in layer:
             #    print(item)
         for item in item_layer:
             x, y = item.position
@@ -773,24 +782,28 @@ class duck_window(QtWidgets.QMainWindow):
         def accept():
             active_object.pose.x = float(edit_obj['x'].text())
             active_object.pose.y = float(edit_obj['y'].text())
+            active_object.pose.yaw = float(edit_obj['yaw'].text())
             new_type = None
+            print(f"ACCEPT: {cam_obj}")
             for key in editable_values:
-                print(key)
-                new_value = edit_obj[key].text().split()[0]
-                if key == 'id' and len(edit_obj[key].text().split()) > 1:
-                    new_type = edit_obj[key].text().split()[1][1:-1]
-                if key == 'type' and new_type:
-                    obj[key] = get_canonical_sign_name(new_type)# new_type
-                    continue
-                if new_value.isdigit():
-                    new_value = int(new_value)
                 try:
-                    if isinstance(new_value, str):
-                        new_value = float(new_value)
-                except ValueError:
-                    pass
-                obj[key] = new_value
-
+                    print(key)
+                    new_value = edit_obj[key].text().split()[0]
+                    if key == 'id' and len(edit_obj[key].text().split()) > 1:
+                        new_type = edit_obj[key].text().split()[1][1:-1]
+                    if key == 'type' and new_type:
+                        obj[key] = get_canonical_sign_name(new_type)  # new_type
+                        continue
+                    if new_value.isdigit():
+                        new_value = int(new_value)
+                    try:
+                        if isinstance(new_value, str):
+                            new_value = float(new_value)
+                    except ValueError:
+                        pass
+                    obj[key] = new_value
+                except Exception as e:
+                    print(e)
             dialog.close()
             self.mapviewer.scene().update()
             self.update_layer_tree()
@@ -803,6 +816,7 @@ class duck_window(QtWidgets.QMainWindow):
         del info_object[(name, tp)]
         _, type_object = list(info_object.keys())[0]
         obj = info_object[(name, type_object)]
+        cam_obj = None
 
         dialog = QtWidgets.QDialog(self)
         dialog.setWindowTitle('Change attribute of object')
@@ -829,25 +843,24 @@ class duck_window(QtWidgets.QMainWindow):
 
         x_edit = QLineEdit(str(active_object.pose.x))
         y_edit = QLineEdit(str(active_object.pose.y))
+        yaw_edit = QLineEdit(str(active_object.pose.yaw))
         edit_obj['x'] = x_edit
         edit_obj['y'] = y_edit
+        edit_obj['yaw'] = yaw_edit
         layout.addRow(QLabel("{}.X".format("pose")), x_edit)
         layout.addRow(QLabel("{}.Y".format("pose")), y_edit)
+        layout.addRow(QLabel("{}.yaw".format("pose")), yaw_edit)
+
         editable_values = obj.dict()
         print('ATTR SHOW: ', editable_values, name)
 
-        if "vehicle" in name:
-            cam = self.dm.get_objects_by_name(name+"/camera")
-            print(cam)
-            print()
         for attr_name in sorted(editable_values.keys()):
             attr = editable_values[attr_name]
             new_edit = QLineEdit(str(attr))
 
             edit_obj[attr_name] = new_edit
 
-
-            if attr_name == 'id':
+            if "vehicle" not in name and attr_name == 'id':
                 type_id = list(self.duckietown_types_apriltags.keys())[0]
                 for type_sign in self.duckietown_types_apriltags.keys():
                     try:
@@ -862,11 +875,63 @@ class duck_window(QtWidgets.QMainWindow):
                 combo_id.setEditText(str(attr))
                 combo_id.currentTextChanged.connect(change_type_from_combo)
                 layout.addRow(QLabel(attr_name), combo_id)
+            elif attr_name == 'id':
+                new_edit.setReadOnly(True)
+                layout.addRow(QLabel("{}".format(attr_name)), new_edit)
             elif attr_name == "type":
                 new_edit.setReadOnly(True)
                 layout.addRow(QLabel("{}".format(attr_name)), new_edit)
             else:
                 layout.addRow(QLabel("{}".format(attr_name)), new_edit)
+
+        if "vehicle" in name:
+            cam = self.dm.get_objects_by_name(name + "/camera")
+            cam_obj: _Camera = cam[list(cam.keys())[0]]
+            print("Camera info ", type(cam), cam.keys(), list(cam.keys())[0], cam)
+            print(cam_obj)
+            layout.addRow(QHLine())
+
+
+            width_camera_edit = QLineEdit(str(cam_obj.width))
+            height_camera_edit = QLineEdit(str(cam_obj.height))
+            framerate_camera_edit = QLineEdit(str(cam_obj.framerate))
+            edit_obj.update({
+                "width": width_camera_edit,
+                "height": height_camera_edit,
+                "framerate": framerate_camera_edit
+            })
+            layout.addRow(QLabel("{}.width".format("camera")), width_camera_edit)
+            layout.addRow(QLabel("{}.height".format("camera")), height_camera_edit)
+            layout.addRow(QLabel("{}.framerate".format("camera")), framerate_camera_edit)
+
+            layout.addRow(QLabel("Camera Matrix"))
+            grid_matrix = QGridLayout()
+            grid_matrix.setColumnStretch(1, 4)
+            grid_matrix.setColumnStretch(2, 4)
+            for row in range(3):
+                for col in range(3):
+                    if cam_obj.camera_matrix:
+                        # TODO: NEED TO TEST
+                        grid_line_edit = QLineEdit(cam_obj.camera_matrix[row][col])
+                    else:
+                        grid_line_edit = QLineEdit("0")
+                    edit_obj[f"camera_matrix_{row}_{col}"] = grid_line_edit
+                    grid_matrix.addWidget(grid_line_edit, row, col)
+
+            layout.addRow(grid_matrix)
+            layout.addRow(QLabel("Camera Distortion"))
+            grid_distortion = QGridLayout()
+            grid_distortion.setColumnStretch(1, 4)
+            grid_distortion.setColumnStretch(2, 4)
+            for idx in range(5):
+                if cam_obj.distortion_parameters:
+                    grid_line_edit = QLineEdit(cam_obj.distortion_parameters[idx])
+                else:
+                    grid_line_edit = QLineEdit("0")
+                edit_obj[f"distortion_parameters_{idx}"] = grid_line_edit
+                grid_distortion.addWidget(grid_line_edit, 0, idx)
+
+            layout.addRow(grid_distortion)
 
         formGroupBox.setLayout(layout)
         # layout
@@ -886,10 +951,10 @@ class duck_window(QtWidgets.QMainWindow):
                 tile.orientation = get_orientation_for_degree(orien_val)
                 frame.pose.yaw = {'E': np.pi * 1.5, 'N': 0, 'W': np.pi, 'S': np.pi * 0.5, None: 0}[tile.orientation]
                 # {'E': 0, 'N': np.pi * 0.5, 'W': np.pi, 'S': np.pi * 1.5, None: 0}[tile.orientation]
-                #for key in rot_val:
-                    #if rot_val[key] == orien_val:
-                    #    tile.orientation = key
-                    #    frame.pose.yaw = {'E': 0, 'N': np.pi * 0.5, 'W': np.pi, 'S': np.pi * 1.5, None: 0}[key]
+                # for key in rot_val:
+                # if rot_val[key] == orien_val:
+                #    tile.orientation = key
+                #    frame.pose.yaw = {'E': 0, 'N': np.pi * 0.5, 'W': np.pi, 'S': np.pi * 1.5, None: 0}[key]
         self.mapviewer.scene().update()
 
     def add_apriltag(self, apriltag: GroundAprilTagObject):
