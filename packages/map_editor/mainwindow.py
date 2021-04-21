@@ -787,21 +787,53 @@ class duck_window(QtWidgets.QMainWindow):
             print(f"ACCEPT: {cam_obj}")
             for key in editable_values:
                 try:
-                    print(key)
-                    new_value = edit_obj[key].text().split()[0]
-                    if key == 'id' and len(edit_obj[key].text().split()) > 1:
-                        new_type = edit_obj[key].text().split()[1][1:-1]
-                    if key == 'type' and new_type:
-                        obj[key] = get_canonical_sign_name(new_type)  # new_type
-                        continue
-                    if new_value.isdigit():
-                        new_value = int(new_value)
-                    try:
-                        if isinstance(new_value, str):
-                            new_value = float(new_value)
-                    except ValueError:
-                        pass
-                    obj[key] = new_value
+                    print("Key - ", key)
+                    if key in ["width", "height", "framerate", "distortion_parameters", "camera_matrix"]:  # cam obj
+                        if key in ["width", "height", "framerate"]:
+                            cam_obj[key] = int(edit_obj[key].text().split()[0])
+                        elif key == "distortion_parameters":
+                            if not cam_obj.distortion_parameters:
+                                cam_obj["distortion_parameters"] = [] #[0 for _ in range(5)]
+
+                            for idx in range(5):
+                                val = float(edit_obj[f"distortion_parameters_{idx}"].text().split()[0])
+                                if len(cam_obj.distortion_parameters) < 5:
+                                    cam_obj.distortion_parameters.append(val)#.insert(idx, val)
+                                else:
+                                    cam_obj.distortion_parameters[idx] = val
+                        elif key == "camera_matrix":
+                            print('MATRIX1   ', cam_obj.camera_matrix)
+                            if not cam_obj.camera_matrix:
+                                cam_obj["camera_matrix"] = []
+                            print('MATRIX2   ', cam_obj.camera_matrix)
+                            if not cam_obj.camera_matrix:
+                                for _ in range(3):
+                                    cam_obj.camera_matrix.append([])
+                            print('MATRIX3   ', cam_obj.camera_matrix)
+                            for row in range(3):
+                                for col in range(3):
+                                    val = float(edit_obj[f"camera_matrix_{row}_{col}"].text().split()[0])
+                                    if len(cam_obj.camera_matrix[row]) < 3:
+                                        cam_obj.camera_matrix[row].append(val)
+                                    else:
+                                        cam_obj.camera_matrix[row][col] = val
+                            print('MATRIX1   ', cam_obj.camera_matrix)
+                    else:
+                        new_value = edit_obj[key].text().split()[0]
+                        if key == 'id' and len(edit_obj[key].text().split()) > 1:
+                            new_type = edit_obj[key].text().split()[1][1:-1]
+                        if key == 'type' and new_type:
+                            obj[key] = get_canonical_sign_name(new_type)  # new_type
+                            continue
+                        if new_value.isdigit():
+                            new_value = int(new_value)
+                        try:
+                            if isinstance(new_value, str):
+                                new_value = float(new_value)
+                        except ValueError:
+                            pass
+                        print(f"New value {new_value} for key {key}")
+                        obj[key] = new_value
                 except Exception as e:
                     print(e)
             dialog.close()
@@ -887,6 +919,7 @@ class duck_window(QtWidgets.QMainWindow):
         if "vehicle" in name:
             cam = self.dm.get_objects_by_name(name + "/camera")
             cam_obj: _Camera = cam[list(cam.keys())[0]]
+            editable_values.update(cam_obj.dict())
             print("Camera info ", type(cam), cam.keys(), list(cam.keys())[0], cam)
             print(cam_obj)
             layout.addRow(QHLine())
@@ -912,7 +945,7 @@ class duck_window(QtWidgets.QMainWindow):
                 for col in range(3):
                     if cam_obj.camera_matrix:
                         # TODO: NEED TO TEST
-                        grid_line_edit = QLineEdit(cam_obj.camera_matrix[row][col])
+                        grid_line_edit = QLineEdit(str(cam_obj.camera_matrix[row][col]))
                     else:
                         grid_line_edit = QLineEdit("0")
                     edit_obj[f"camera_matrix_{row}_{col}"] = grid_line_edit
@@ -925,7 +958,7 @@ class duck_window(QtWidgets.QMainWindow):
             grid_distortion.setColumnStretch(2, 4)
             for idx in range(5):
                 if cam_obj.distortion_parameters:
-                    grid_line_edit = QLineEdit(cam_obj.distortion_parameters[idx])
+                    grid_line_edit = QLineEdit(str(cam_obj.distortion_parameters[idx]))
                 else:
                     grid_line_edit = QLineEdit("0")
                 edit_obj[f"distortion_parameters_{idx}"] = grid_line_edit
