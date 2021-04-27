@@ -6,6 +6,8 @@ import json
 
 from PyQt5.QtWidgets import QMessageBox, QDesktopWidget, QFormLayout, QVBoxLayout, QLineEdit, QGroupBox, \
     QLabel, QComboBox, QFrame, QGridLayout
+
+from dm_api import add_region
 from duckietown_world.structure.bases import _Frame
 from duckietown_world.structure.duckietown_map import DuckietownMap
 from duckietown_world.structure.objects import Watchtower, Citizen, Tile, TrafficSign, GroundTag, Vehicle, Camera, \
@@ -62,6 +64,8 @@ class duck_window(QtWidgets.QMainWindow):
     def __init__(self, args, elem_info="doc/info.json"):
         super().__init__()
         # active items in editor
+        self.distortion_view_one_string_mode = True
+        self.region_create = False
         self.active_items = []
         self.dm = get_dt_world()
         self.tile_size = DEFAULT_TILE_SIZE
@@ -142,6 +146,8 @@ class duck_window(QtWidgets.QMainWindow):
         change_info = self.ui.change_info
         change_map = self.ui.change_map
         change_layer = self.ui.change_layer
+        distortion_view = self.ui.distortion_view
+        create_region = self.ui.region_create
 
         #  Initialize floating blocks
         block_widget = self.ui.block_widget
@@ -163,6 +169,8 @@ class duck_window(QtWidgets.QMainWindow):
         calc_param.triggered.connect(self.calc_param_triggered)
         calc_materials.triggered.connect(self.calc_materials_triggered)
         about_author.triggered.connect(self.about_author_triggered)
+        distortion_view.triggered.connect(self.change_distortion_view_triggered)
+        create_region.triggered.connect(self.create_region)
         exit.triggered.connect(self.exit_triggered)
 
         change_blocks.toggled.connect(self.change_blocks_toggled)
@@ -315,6 +323,13 @@ class duck_window(QtWidgets.QMainWindow):
         self.mapviewer.scene().update()
         self.update_layer_tree()
 
+    def create_region(self):
+        self.region_create = True
+        print('Create REGION ', self.region_create)
+
+    def change_distortion_view_triggered(self):
+        self.distortion_view_one_string_mode = not self.distortion_view_one_string_mode
+
     #  Save map
     def save_map_triggered(self):
         save_map(self)
@@ -325,9 +340,7 @@ class duck_window(QtWidgets.QMainWindow):
         path_folder = save_map_as(self)
         if path_folder:
             map_final = self.dm.dump(self.dm)
-            # print(map_final)
-            # for i in map_final:
-            #    print('aaaa ', i)
+
             for layer_name in map_final:
                 with open(path_folder + f'/{layer_name}.yaml', 'w+') as file:
                     file.write(map_final[layer_name])
@@ -719,6 +732,11 @@ class duck_window(QtWidgets.QMainWindow):
             print(layer)
             # for item in layer:
             #    print(item)
+        print(selection)
+        if self.region_create:
+            self.region_create = False
+            add_region(selection)
+
         for item in item_layer:
             x, y = item.position
             if x > selection[0] and x < selection[2] and y > selection[1] and y < selection[3]:
@@ -729,6 +747,7 @@ class duck_window(QtWidgets.QMainWindow):
             # save map if new objects are selected
             self.editor.save(self.map)
         key = e.key()
+        print('KEY ', key,  " ", QtCore.Qt.ALT, " ", e.modifiers())
         if key == QtCore.Qt.Key_Q:
             # clear object buffer
             self.active_items = []
@@ -795,12 +814,21 @@ class duck_window(QtWidgets.QMainWindow):
                             if not cam_obj.distortion_parameters:
                                 cam_obj["distortion_parameters"] = [] #[0 for _ in range(5)]
 
-                            for idx in range(5):
-                                val = float(edit_obj[f"distortion_parameters_{idx}"].text().split()[0])
-                                if len(cam_obj.distortion_parameters) < 5:
-                                    cam_obj.distortion_parameters.append(val)#.insert(idx, val)
-                                else:
-                                    cam_obj.distortion_parameters[idx] = val
+                            if self.distortion_view_one_string_mode:
+                                dk = edit_obj[f"distortion_parameters"].text().replace(" ", "").split(",")
+                                for idx, val in enumerate(dk):
+                                    val = float(val)
+                                    if len(cam_obj.distortion_parameters) < 5:
+                                        cam_obj.distortion_parameters.append(val)
+                                    else:
+                                        cam_obj.distortion_parameters[idx] = val
+                            else:
+                                for idx in range(5):
+                                    val = float(edit_obj[f"distortion_parameters_{idx}"].text().split()[0])
+                                    if len(cam_obj.distortion_parameters) < 5:
+                                        cam_obj.distortion_parameters.append(val)#.insert(idx, val)
+                                    else:
+                                        cam_obj.distortion_parameters[idx] = val
                         elif key == "camera_matrix":
                             print('MATRIX1   ', cam_obj.camera_matrix)
                             if not cam_obj.camera_matrix:
@@ -952,19 +980,33 @@ class duck_window(QtWidgets.QMainWindow):
                     grid_matrix.addWidget(grid_line_edit, row, col)
 
             layout.addRow(grid_matrix)
-            layout.addRow(QLabel("Camera Distortion"))
+            #layout.addRow(QLabel("Camera Distortion"))
             grid_distortion = QGridLayout()
             grid_distortion.setColumnStretch(1, 4)
             grid_distortion.setColumnStretch(2, 4)
-            for idx in range(5):
-                if cam_obj.distortion_parameters:
-                    grid_line_edit = QLineEdit(str(cam_obj.distortion_parameters[idx]))
-                else:
-                    grid_line_edit = QLineEdit("0")
-                edit_obj[f"distortion_parameters_{idx}"] = grid_line_edit
-                grid_distortion.addWidget(grid_line_edit, 0, idx)
+            if self.distortion_view_one_string_mode:
+                dist_k = []
+                for idx in range(5):
+                    if cam_obj.distortion_parameters:
+                        str_k = str(cam_obj.distortion_parameters[idx]) + (", " if idx != 4 else "")
+                    else:
+                        str_k = "0" + (", " if idx != 4 else "")
+                    dist_k.append(str_k)
+                #for kfc in dist_k:
+                edit_str_dist = QLineEdit("".join(dist_k))
+                edit_obj["distortion_parameters"] = edit_str_dist
+                layout.addRow(QLabel("Camera Distortion"), edit_str_dist)
+            else:
+                layout.addRow(QLabel("Camera Distortion"))
+                for idx in range(5):
+                    if cam_obj.distortion_parameters:
+                        grid_line_edit = QLineEdit(str(cam_obj.distortion_parameters[idx]))
+                    else:
+                        grid_line_edit = QLineEdit("0")
+                    edit_obj[f"distortion_parameters_{idx}"] = grid_line_edit
+                    grid_distortion.addWidget(grid_line_edit, 0, idx)
 
-            layout.addRow(grid_distortion)
+                layout.addRow(grid_distortion)
 
         formGroupBox.setLayout(layout)
         # layout
