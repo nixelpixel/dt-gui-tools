@@ -5,13 +5,13 @@ import functools
 import json
 
 from PyQt5.QtWidgets import QMessageBox, QDesktopWidget, QFormLayout, QVBoxLayout, QLineEdit, QGroupBox, \
-    QLabel, QComboBox, QFrame, QGridLayout
+    QLabel, QComboBox, QFrame, QGridLayout, QPushButton, QHBoxLayout
 
 from dm_api import add_region
 from duckietown_world.structure.bases import _Frame
 from duckietown_world.structure.duckietown_map import DuckietownMap
 from duckietown_world.structure.objects import Watchtower, Citizen, Tile, TrafficSign, GroundTag, Vehicle, Camera, \
-    _Camera
+    _Camera, _Group
 
 import map
 import mapviewer
@@ -68,6 +68,8 @@ class duck_window(QtWidgets.QMainWindow):
         self.distortion_view_one_string_mode = True
         self.region_create = False
         self.active_items = []
+        self.active_group = None
+        self.name_of_editable_obj = None
         self.dm = get_dt_world()
         self.tile_size = DEFAULT_TILE_SIZE
         self.duckie_manager = ManagerDuckietownMaps()
@@ -799,6 +801,8 @@ class duck_window(QtWidgets.QMainWindow):
     def create_form(self, active_object_data: tuple):
 
         active_object, (name, tp) = active_object_data
+        print(name, 'GFDGFDGFGFGFGF')
+        self.name_of_editable_obj = name
         assert tp is _Frame
 
         def accept():
@@ -1013,16 +1017,23 @@ class duck_window(QtWidgets.QMainWindow):
         layout.addRow(QHLine())
         combo_groups = QComboBox(self)
         ##### DEV FOR GROUP ####
-        groups = []
+        groups = ["No chosen"]
         for ((nm, _), group) in self.dm.groups:
-            groups.append(f"{nm} - {group.description}")
+            groups.append(f"{nm} [{group.description}]")
             print(nm, group.description)
         combo_groups.addItems([i for i in groups])
-        #combo_id.setLineEdit(new_edit)
+
         combo_groups.setEditText("Choose group")
+        combo_groups.currentTextChanged.connect(self.change_active_group)
         layout.addRow(QLabel("Choose group"), combo_groups)
-        btn = Qpush
-        #combo_id.currentTextChanged.connect(change_type_from_combo)
+        add_group = QPushButton("Add in group", self)
+        add_group.clicked.connect(self.add_group_triggered)
+        del_group = QPushButton("Del in group", self)
+        del_group.clicked.connect(self.del_group_triggered)
+        hl = QHBoxLayout()
+        hl.addWidget(add_group)
+        hl.addWidget(del_group)
+        layout.addRow(hl)
         ########################
         formGroupBox.setLayout(layout)
         # layout
@@ -1031,6 +1042,22 @@ class duck_window(QtWidgets.QMainWindow):
         mainLayout.addWidget(buttonBox)
         dialog.setLayout(mainLayout)
         dialog.exec_()
+
+    def add_group_triggered(self):
+        print(self.active_group)
+        print(self.name_of_editable_obj)
+        members = self.active_group.members
+        if self.name_of_editable_obj not in members:
+            members.append(self.name_of_editable_obj)
+
+    def del_group_triggered(self):
+        if self.name_of_editable_obj in self.active_group.members:
+            self.active_group.members.remove(self.name_of_editable_obj)
+
+    def change_active_group(self, value: str):
+        print(value)
+        print(self.dm.get_object(value.split()[0], _Group))
+        self.active_group = self.dm.get_object(value.split()[0], _Group)
 
     def rotateSelectedTiles(self):
         self.editor.save(self.map)
