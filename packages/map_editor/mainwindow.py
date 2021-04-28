@@ -23,6 +23,7 @@ from classes.mapObjects import GroundAprilTagObject
 from duckietown_world.structure.utils import get_degree_for_orientation, get_orientation_for_degree, \
     get_canonical_sign_name
 from forms.default_forms import question_form_yes_no
+from forms.new_region import NewGroupForm
 from forms.new_tag_object import NewTagForm
 from forms.start_info import StartInfoForm
 from infowindow import info_window
@@ -95,6 +96,7 @@ class duck_window(QtWidgets.QMainWindow):
         #####  Forms   #############
         self.new_tag_class = NewTagForm(self.duckietown_types_apriltags)
         self.init_info_form = StartInfoForm()
+        self.new_group_form = NewGroupForm()
         ############################
         map_name = "maps/empty"
         self.dm = get_dt_world(map_name)
@@ -325,6 +327,7 @@ class duck_window(QtWidgets.QMainWindow):
 
     def create_region(self):
         self.region_create = True
+        self.new_group_form.show()
         print('Create REGION ', self.region_create)
 
     def change_distortion_view_triggered(self):
@@ -1007,7 +1010,20 @@ class duck_window(QtWidgets.QMainWindow):
                     grid_distortion.addWidget(grid_line_edit, 0, idx)
 
                 layout.addRow(grid_distortion)
-
+        layout.addRow(QHLine())
+        combo_groups = QComboBox(self)
+        ##### DEV FOR GROUP ####
+        groups = []
+        for ((nm, _), group) in self.dm.groups:
+            groups.append(f"{nm} - {group.description}")
+            print(nm, group.description)
+        combo_groups.addItems([i for i in groups])
+        #combo_id.setLineEdit(new_edit)
+        combo_groups.setEditText("Choose group")
+        layout.addRow(QLabel("Choose group"), combo_groups)
+        btn = Qpush
+        #combo_id.currentTextChanged.connect(change_type_from_combo)
+        ########################
         formGroupBox.setLayout(layout)
         # layout
         mainLayout = QVBoxLayout()

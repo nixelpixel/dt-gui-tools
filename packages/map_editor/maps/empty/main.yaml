@@ -8,3 +8,4 @@ main:
   groundtags:      !include groundtags.yaml
   vehicles:        !include vehicles.yaml
   cameras:         !include cameras.yaml
+  groups:          !include groups.yaml
