@@ -75,8 +75,22 @@ class App(QWidget):
     def add_mask(self, img):
         return cv2.addWeighted(img, 1, self.mask_image, 1, 0)
 
-    def add_filter(self, img):
-        return self.overlay_transparent(img, self.filter_image)
+    def add_filter(self, img1):
+        img2 = self.filter_image
+        rows,cols,channels = img2.shape
+        roi = img1[0:rows, 0:cols ]
+        
+        img2gray = cv2.cvtColor(img2,cv2.COLOR_BGR2GRAY)
+        ret, mask = cv2.threshold(img2gray, 0, 255, cv2.THRESH_BINARY)
+        mask_inv = cv2.bitwise_not(mask)
+
+        img1_bg = cv2.bitwise_and(roi,roi,mask = mask_inv)
+        
+        img2_fg = cv2.bitwise_and(img2,img2,mask = mask)
+        
+        dst = cv2.add(img1_bg,img2_fg)
+        img1[0:rows, 0:cols ] = dst
+        return img1
 
     def convert_cv_qt(self, cv_img):
         rgb_image = cv2.cvtColor(cv_img, cv2.COLOR_BGRA2RGBA)
@@ -85,7 +99,7 @@ class App(QWidget):
         convert_to_Qt_format = QtGui.QImage(rgb_image.data, w, h, bytes_per_line, QtGui.QImage.Format_RGBX8888)
         p = convert_to_Qt_format.scaled(self.w, self.h, Qt.KeepAspectRatio)
         return QPixmap.fromImage(p)
-
+    
     def initUI(self):
         self.setWindowTitle("Duckietown Social App")
         self.setWindowIcon(QIcon(os.path.join(self.script_path, 'images', 'icon.png')))
