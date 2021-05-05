@@ -16,5 +16,3 @@ jupyterlab
 matplotlib
 numpy
 scipy
-
-
