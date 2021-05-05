@@ -36,6 +36,8 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
     offsetX = 0
     offsetY = 0
     sc = 1
+    i_tile = 0
+    j_tile = 0
     rmbPressed = False
     lmbPressed = False
     drag_mode = False
@@ -78,7 +80,9 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
 
     def get_x_from_view(self, x_view: float) -> float:
         logger.debug((x_view - self.offsetX) / self.sc / self.map.gridSize * self.tile_size)
-        return (x_view - self.offsetX) / self.sc / self.map.gridSize * self.tile_size
+        print('X F V', x_view - self.offsetX,  x_view)
+        print((x_view - self.offsetX) / self.sc / self.map.gridSize * self.tile_size)
+        return self.i_tile * self.tile_size - (x_view - self.offsetX) / self.sc / self.map.gridSize * self.tile_size
 
     def get_y_from_view(self, y_view: float) -> float:
         logger.debug((len(self.dm.tiles.only_tiles()[0]) - (y_view - self.offsetY) / self.sc / self.map.gridSize) \
@@ -87,7 +91,11 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
                * self.tile_size
 
     def get_x_to_view(self, x_real: float) -> float:
-        return (x_real + 0) * self.sc * self.map.gridSize / self.tile_size
+        print('LEN -', self.i_tile * self.tile_size)
+        print(x_real)
+        print((x_real + 0) * self.sc * self.map.gridSize / self.tile_size)
+
+        return (self.i_tile * self.tile_size - x_real + 0) * self.sc * self.map.gridSize / self.tile_size
 
     def get_y_to_view(self, y_real: float) -> float:
         return ((len(self.dm.tiles.only_tiles()[0]) - y_real / self.tile_size) + 0) * self.sc * self.map.gridSize
@@ -313,7 +321,7 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
             frame_obj = self.dm.frames[obj_name]
             x, y = 0, 0
             frame_of_pose = frame_obj
-            yaw = frame_obj.pose.yaw
+            yaw = - (np.rad2deg(frame_obj.pose.yaw) + 90)
             while frame_of_pose:
                 x += frame_of_pose.pose.x
                 y += frame_of_pose.pose.y

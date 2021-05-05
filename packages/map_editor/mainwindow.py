@@ -3,6 +3,7 @@ import codecs
 import copy
 import functools
 import json
+import numpy as np
 
 from PyQt5.QtWidgets import QMessageBox, QDesktopWidget, QFormLayout, QVBoxLayout, QLineEdit, QGroupBox, \
     QLabel, QComboBox, QFrame, QGridLayout, QPushButton, QHBoxLayout
@@ -568,6 +569,7 @@ class duck_window(QtWidgets.QMainWindow):
         event.accept()
 
     def create_empty_map(self, i_size: int, j_size: int) -> None:
+        self.mapviewer.i_tile, self.mapviewer.j_tile = i_size, j_size
         for i in range(i_size):
             for j in range(j_size):
                 tile = Tile("{}/tile_{}_{}".format(self.dm.get_context(), i, j))
@@ -808,7 +810,7 @@ class duck_window(QtWidgets.QMainWindow):
         def accept():
             active_object.pose.x = float(edit_obj['x'].text())
             active_object.pose.y = float(edit_obj['y'].text())
-            active_object.pose.yaw = float(edit_obj['yaw'].text())
+            active_object.pose.yaw = float(np.deg2rad(float(edit_obj['yaw'].text())))
             new_type = None
             print(f"ACCEPT: {cam_obj}")
             for key in editable_values:
@@ -910,7 +912,7 @@ class duck_window(QtWidgets.QMainWindow):
 
         x_edit = QLineEdit(str(active_object.pose.x))
         y_edit = QLineEdit(str(active_object.pose.y))
-        yaw_edit = QLineEdit(str(active_object.pose.yaw))
+        yaw_edit = QLineEdit(str(np.rad2deg(active_object.pose.yaw)))
         edit_obj['x'] = x_edit
         edit_obj['y'] = y_edit
         edit_obj['yaw'] = yaw_edit
