@@ -82,7 +82,8 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
         logger.debug((x_view - self.offsetX) / self.sc / self.map.gridSize * self.tile_size)
         print('X F V', x_view - self.offsetX,  x_view)
         print((x_view - self.offsetX) / self.sc / self.map.gridSize * self.tile_size)
-        return self.i_tile * self.tile_size - (x_view - self.offsetX) / self.sc / self.map.gridSize * self.tile_size
+        #return self.i_tile * self.tile_size - (x_view - self.offsetX) / self.sc / self.map.gridSize * self.tile_size
+        return (x_view - self.offsetX) / self.sc / self.map.gridSize * self.tile_size
 
     def get_y_from_view(self, y_view: float) -> float:
         logger.debug((len(self.dm.tiles.only_tiles()[0]) - (y_view - self.offsetY) / self.sc / self.map.gridSize) \
@@ -95,7 +96,8 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
         print(x_real)
         print((x_real + 0) * self.sc * self.map.gridSize / self.tile_size)
 
-        return (self.i_tile * self.tile_size - x_real + 0) * self.sc * self.map.gridSize / self.tile_size
+        #return (self.i_tile * self.tile_size - x_real + 0) * self.sc * self.map.gridSize / self.tile_size
+        return (x_real + 0) * self.sc * self.map.gridSize / self.tile_size
 
     def get_y_to_view(self, y_real: float) -> float:
         return ((len(self.dm.tiles.only_tiles()[0]) - y_real / self.tile_size) + 0) * self.sc * self.map.gridSize
@@ -229,7 +231,6 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
                              , self.mouseCurX - self.mouseStartX, self.mouseCurY - self.mouseStartY)
 
     def draw_tiles(self, layer_data, painter: QtGui.QPainter, global_transform):
-        rot_val = {'E': 0, 'S': 270, 'W': 180, 'N': 90, None: 0}
         tiles = self.dm.tiles.only_tiles()
         for i in range(len(tiles)):
             for j in range(len(tiles[0])):
@@ -237,16 +238,8 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
                 orientation = tile.orientation
                 painter.scale(self.sc, self.sc)
                 painter.translate(tile.i * self.map.gridSize, (len(tiles[0]) - 1 - tile.j) * self.map.gridSize)
-                #painter.rotate(rot_val[orientation])
-                #if orientation == "S":
-                #    painter.translate(0, -self.map.gridSize)
-                #elif orientation == "N":
-                #    painter.translate(-self.map.gridSize, 0)
-                #elif orientation == "W":
-                #    painter.translate(-self.map.gridSize, -self.map.gridSize)
 
                 my_transform = QTransform()
-                #my_transform.rotate(rot_val[orientation])
                 my_transform.rotate(get_degree_for_orientation(orientation))
                 img = self.tileSprites[tile.type].transformed(my_transform)
                 painter.drawImage(QtCore.QRectF(0, 0, self.map.gridSize, self.map.gridSize),
@@ -274,6 +267,13 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
         self.draw_traffic_signs(width, height, painter)
         self.draw_groundtags(width, height, painter)
         self.draw_vehicles(width, height, painter)
+        self.draw_decorations(width, height, painter)
+
+    def draw_decorations(self, width, height, painter):
+        print('DECORATIONS')
+        print(self.dm.decorations)
+        if self.dm.decorations:
+            self.raw_draw_objects(width, height, painter, self.dm.decorations)
 
     def draw_citizens(self, width, height, painter):
         self.raw_draw_objects(width, height, painter, self.dm.citizens, "duckie")
@@ -288,7 +288,7 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
             frame_obj = self.dm.frames[obj_name]
             x, y = 0, 0
             frame_of_pose = frame_obj
-            yaw = frame_obj.pose.yaw
+            yaw = - np.rad2deg(frame_obj.pose.yaw)
             while frame_of_pose:
                 x += frame_of_pose.pose.x
                 y += frame_of_pose.pose.y
@@ -302,6 +302,7 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
             tf = QTransform()
             tf.rotate(yaw)
             print(f"Rotate {yaw}")
+            print(self.objects)
             img: QtGui.QImage = self.objects[object.type].transformed(tf)
             painter.drawImage(
                 draw_obj,
@@ -315,13 +316,14 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
         if self.dm.vehicles:
             self.raw_draw_objects(width, height, painter, self.dm.vehicles, "duckiebot")
 
-    def raw_draw_objects(self, width, height, painter, arr_objects, type_name):
-        for info, object in arr_objects:
+    def raw_draw_objects(self, width, height, painter, arr_objects, type_name=None):
+        for info, obj in arr_objects:
             obj_name, obj_type = info
             frame_obj = self.dm.frames[obj_name]
+            print('OBJ ', obj)
             x, y = 0, 0
             frame_of_pose = frame_obj
-            yaw = - (np.rad2deg(frame_obj.pose.yaw) + 90)
+            yaw = - (np.rad2deg(frame_obj.pose.yaw) )
             while frame_of_pose:
                 x += frame_of_pose.pose.x
                 y += frame_of_pose.pose.y
@@ -335,7 +337,10 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
             tf = QTransform()
             tf.rotate(yaw)
             print(f"Rotate {yaw}")
-            img: QtGui.QImage = self.objects[type_name].transformed(tf)
+            if type_name is not None:
+                img: QtGui.QImage = self.objects[type_name].transformed(tf)
+            else:
+                img: QtGui.QImage = self.objects[obj.type].transformed(tf)
             painter.drawImage(
                 draw_obj,
                 img)

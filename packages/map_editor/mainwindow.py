@@ -1,9 +1,11 @@
+from os import path
 # -*- coding: utf-8 -*-
 import codecs
 import copy
 import functools
 import json
 import numpy as np
+import os
 
 from PyQt5.QtWidgets import QMessageBox, QDesktopWidget, QFormLayout, QVBoxLayout, QLineEdit, QGroupBox, \
     QLabel, QComboBox, QFrame, QGridLayout, QPushButton, QHBoxLayout
@@ -13,7 +15,7 @@ from duckietown_world.structure.bases import _Frame
 from duckietown_world.structure.duckietown_map import DuckietownMap
 from duckietown_world.structure.objects import Watchtower, Citizen, Tile, TrafficSign, GroundTag, Vehicle, Camera, \
     _Camera, _Group
-
+from duckietown_world.structure.old_format.convert import convert_new_format, dump
 import map
 import mapviewer
 import utils
@@ -153,6 +155,7 @@ class duck_window(QtWidgets.QMainWindow):
         change_layer = self.ui.change_layer
         distortion_view = self.ui.distortion_view
         create_region = self.ui.region_create
+        import_old_format = self.ui.import_old_format
 
         #  Initialize floating blocks
         block_widget = self.ui.block_widget
@@ -176,6 +179,7 @@ class duck_window(QtWidgets.QMainWindow):
         about_author.triggered.connect(self.about_author_triggered)
         distortion_view.triggered.connect(self.change_distortion_view_triggered)
         create_region.triggered.connect(self.create_region)
+        import_old_format.triggered.connect(self.import_old_format)
         exit.triggered.connect(self.exit_triggered)
 
         change_blocks.toggled.connect(self.change_blocks_toggled)
@@ -300,10 +304,34 @@ class duck_window(QtWidgets.QMainWindow):
                                                        QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
         if new_map_dir:
             dm2_test = get_new_dt_world(new_map_dir)
+            print(dm2_test)
             self.duckie_manager.add_map(new_map_dir.split('/')[-1], dm2_test)
+            self.reset_duckietown_map(dm2_test)
+            print(new_map_dir.split('/')[-1])
             self.mapviewer.offsetX = self.mapviewer.offsetY = 0
             self.mapviewer.scene().update()
             self.update_layer_tree()
+
+    def import_old_format(self):
+        old_format_map = QFileDialog.getOpenFileName(self, 'Open map(old format)', '.')
+        path, _ = old_format_map
+        print(path)
+        with open(path) as file:
+            new_format_map = convert_new_format(file.read())
+        print(new_format_map)
+        #if not path.exists(os.getcwd()+"/output"):
+        map_path = os.getcwd()+"/output"
+        try:
+            os.makedirs(map_path)
+        except:
+            pass
+        dump(new_format_map)
+        dm = get_new_dt_world(map_path)
+        self.duckie_manager.add_map(map_path.split('/')[-1], dm)
+        self.reset_duckietown_map(dm)
+        self.mapviewer.offsetX = self.mapviewer.offsetY = 0
+        self.mapviewer.scene().update()
+        self.update_layer_tree()
 
     #  Open map
     def create_map_triggered(self):

@@ -9,3 +9,4 @@ main:
   vehicles:        !include vehicles.yaml
   cameras:         !include cameras.yaml
   groups:          !include groups.yaml
+  decorations:     !include decorations.yaml
