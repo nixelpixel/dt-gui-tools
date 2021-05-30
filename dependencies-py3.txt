@@ -3,8 +3,6 @@ numpy
 
 # Duckietown World
 git+https://github.com/duckietown/duckietown-world@ente-devel-map-format-divided
-#@add_citizens
-#@ente-devel-map-format-divided
 
 # Map editor
 PyQt5
