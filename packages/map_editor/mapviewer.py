@@ -212,17 +212,10 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
 
         # Draw tile layer
         tile_layer = self.map.get_tile_layer()
-        # print(self.dm.tiles)
-        # print(self.dm.tile_maps)
-        # print(self.dm.citizens)
         if tile_layer and tile_layer.visible:
             self.draw_tiles(tile_layer.data, painter, global_transform)
-        # painter.scale(self.sc, self.sc)
         # Draw layer w/ objects
         self.draw_objects(painter)
-
-        # for layer in self.map.get_object_layers(only_visible=True):
-        #    self.draw_objects(layer.get_objects(), painter)
 
         painter.resetTransform()
         painter.setPen(QtGui.QColor('black'))
@@ -270,8 +263,6 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
         self.draw_decorations(width, height, painter)
 
     def draw_decorations(self, width, height, painter):
-        print('DECORATIONS')
-        print(self.dm.decorations)
         if self.dm.decorations:
             self.raw_draw_objects(width, height, painter, self.dm.decorations)
 
@@ -293,8 +284,6 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
                 x += frame_of_pose.pose.x
                 y += frame_of_pose.pose.y
                 frame_of_pose = self.dm.frames[frame_of_pose.relative_to]
-            # - width / 2
-            # - height / 2
             x, y = self.get_x_to_view(x), self.get_y_to_view(y)
             draw_obj = QtCore.QRectF(x - width / 2,
                                      y - height / 2,
@@ -328,8 +317,6 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
                 x += frame_of_pose.pose.x
                 y += frame_of_pose.pose.y
                 frame_of_pose = self.dm.frames[frame_of_pose.relative_to]
-            # - width / 2
-            # - height / 2
             x, y = self.get_x_to_view(x), self.get_y_to_view(y)
             draw_obj = QtCore.QRectF(x - width / 2,
                               y - height / 2,

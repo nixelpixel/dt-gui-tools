@@ -10,7 +10,6 @@ import os
 from PyQt5.QtWidgets import QMessageBox, QDesktopWidget, QFormLayout, QVBoxLayout, QLineEdit, QGroupBox, \
     QLabel, QComboBox, QFrame, QGridLayout, QPushButton, QHBoxLayout
 
-from dm_api import add_region
 from duckietown_world.structure.bases import _Frame
 from duckietown_world.structure.duckietown_map import DuckietownMap
 from duckietown_world.structure.objects import Watchtower, Citizen, Tile, TrafficSign, GroundTag, Vehicle, Camera, \
@@ -319,7 +318,6 @@ class duck_window(QtWidgets.QMainWindow):
         with open(path) as file:
             new_format_map = convert_new_format(file.read())
         print(new_format_map)
-        #if not path.exists(os.getcwd()+"/output"):
         map_path = os.getcwd()+"/output"
         try:
             os.makedirs(map_path)
@@ -505,16 +503,6 @@ class duck_window(QtWidgets.QMainWindow):
             :return: -
             """
 
-            # layer = self.map.get_layer_by_type_name(item.text())
-            # print(item.text(), layer)
-            # if not layer:
-
-            #    logger.debug("Not found layer: {}".format(item.text()))
-            #    return
-
-            # layer.visible = not layer.visible
-            # logger.debug('Layer: {}; visible: {}'.format(item.text(), layer.visible))
-            # self.map.set_layer(layer)
             dm = self.duckie_manager.get_map(item.text())
             self.reset_duckietown_map(dm)
             self.mapviewer.scene().update()
@@ -522,16 +510,6 @@ class duck_window(QtWidgets.QMainWindow):
             item_model.clear()
             item_model.setHorizontalHeaderLabels(['Maps'])
             self.show_maps_menu(layer_tree_view.model().invisibleRootItem())
-
-            # self.update_layer_tree()
-
-        # def reset_ui_dm(item):
-        #    print('1 ', item.text())
-        #    dm = self.duckie_manager.get_map(item.text())
-        #    print(dm)
-        #    self.reset_duckietown_map(dm)
-        #    self.mapviewer.scene().update()
-        #    print('2')
 
         layer_tree_view = self.ui.layer_tree
         item_model = layer_tree_view.model()
@@ -542,8 +520,6 @@ class duck_window(QtWidgets.QMainWindow):
         except TypeError:
             pass  # only 1st time in update_layer_tree
         item_model.itemChanged.connect(signal_check_state)
-        # item_model.itemChanged.connect(signal_check_state)
-        # item_model.itemChanged.connect(reset_ui_dm)
         item_model.setHorizontalHeaderLabels(['Maps'])
         root_item = layer_tree_view.model().invisibleRootItem()
 
@@ -558,19 +534,6 @@ class duck_window(QtWidgets.QMainWindow):
             layer_item.setCheckState(
                 QtCore.Qt.Checked if self.duckie_manager.is_active == map_name else QtCore.Qt.Unchecked)
             root_item.appendRow(layer_item)
-            # if layer.type == LayerType.TILES:
-            #    tile_elements = []
-            #    for row in layer.data:
-            #        for tile in row:
-            #            tile_elements.append(tile.kind)
-            #    layer_elements = utils.count_elements(tile_elements)
-            # elif layer.type in (LayerType.TRAFFIC_SIGNS, LayerType.GROUND_APRILTAG):
-            #    layer_elements = utils.count_elements(['{}{}'.format(elem.kind, elem.tag_id) for elem in layer.data])
-            # else:
-            #    layer_elements = utils.count_elements([elem.kind for elem in layer.data])
-            # for kind, counter in layer_elements.most_common():
-            #    item = QtGui.QStandardItem("{} ({})".format(kind, counter))
-            #    layer_item.appendRow(item)
             layer_item.sortChildren(0)
 
     #  MessageBox to exit
@@ -738,11 +701,6 @@ class duck_window(QtWidgets.QMainWindow):
         if not self.map.get_tile_layer().visible:
             return
         self.mapviewer.remove_last_obj()
-        # print(self.active_items)
-        # print(self.ui.delete_fill.currentData(), self.mapviewer.tileSelection)
-        # self.dm.
-        # self.editor.save(self.map)
-        # self.editor.deleteSelection(self.mapviewer.tileSelection, MapTile(self.ui.delete_fill.currentData()))
         self.mapviewer.scene().update()
         self.update_layer_tree()
 
@@ -765,12 +723,9 @@ class duck_window(QtWidgets.QMainWindow):
         new_selected_obj = False
         for layer in self.dm:
             print(layer)
-            # for item in layer:
-            #    print(item)
         print(selection)
         if self.region_create:
             self.region_create = False
-            add_region(selection)
 
         for item in item_layer:
             x, y = item.position
@@ -794,8 +749,6 @@ class duck_window(QtWidgets.QMainWindow):
             for map_name in self.duckie_manager.get_maps_name():
                 if map_name == "maps/test":
                     self.reset_duckietown_map(self.duckie_manager.get_map(map_name))
-                # print(map_name)
-                # print(self.duckie_manager.get_map(map_name))
 
         if self.active_items:
             if key == QtCore.Qt.Key_Backspace:
@@ -1098,11 +1051,6 @@ class duck_window(QtWidgets.QMainWindow):
                 orien_val = get_degree_for_orientation(tile.orientation) - 90  # (rot_val[tile.orientation] + 90) % 360
                 tile.orientation = get_orientation_for_degree(orien_val)
                 frame.pose.yaw = {'E': np.pi * 1.5, 'N': 0, 'W': np.pi, 'S': np.pi * 0.5, None: 0}[tile.orientation]
-                # {'E': 0, 'N': np.pi * 0.5, 'W': np.pi, 'S': np.pi * 1.5, None: 0}[tile.orientation]
-                # for key in rot_val:
-                # if rot_val[key] == orien_val:
-                #    tile.orientation = key
-                #    frame.pose.yaw = {'E': 0, 'N': np.pi * 0.5, 'W': np.pi, 'S': np.pi * 1.5, None: 0}[key]
         self.mapviewer.scene().update()
 
     def add_apriltag(self, apriltag: GroundAprilTagObject):
