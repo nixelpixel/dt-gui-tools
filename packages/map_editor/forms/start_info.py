@@ -34,9 +34,6 @@ class StartInfoForm(QDialog):
             'y': self.nameYEdit.text(),
             'tile_size': self.nameTileSizeEdit.text()
         }
-        print(self.nameXEdit.text())
-        print(self.nameYEdit.text())
-        print(self.nameTileSizeEdit.text())
         self.send_info.emit(info)
         self.close()
 

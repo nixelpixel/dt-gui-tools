@@ -14,9 +14,7 @@ CONFIG_PATH = './doc/apriltagsDB.yaml'
 def get_id_by_type(type_of_obj: str) -> Optional[int]:
     with open(CONFIG_PATH) as file:
         content = yaml.safe_load(file)
-        print(content, type(content))
         for tag in content:
-            print(tag)
             if tag['traffic_sign_type'] == type_of_obj:
                 return int(tag['tag_id'])
 
