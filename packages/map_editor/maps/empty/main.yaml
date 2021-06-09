@@ -10,3 +10,4 @@ main:
   cameras:         !include cameras.yaml
   groups:          !include groups.yaml
   decorations:     !include decorations.yaml
+  environment:    !include environment.yaml
