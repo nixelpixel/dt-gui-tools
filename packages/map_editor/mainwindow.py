@@ -25,6 +25,7 @@ from classes.mapObjects import GroundAprilTagObject
 from duckietown_world.structure.utils import get_degree_for_orientation, get_orientation_for_degree, \
     get_canonical_sign_name
 from forms.default_forms import question_form_yes_no
+from forms.env import EnvForm
 from forms.new_region import NewGroupForm
 from forms.new_tag_object import NewTagForm
 from forms.start_info import StartInfoForm
@@ -101,6 +102,7 @@ class duck_window(QtWidgets.QMainWindow):
         self.new_tag_class = NewTagForm(self.duckietown_types_apriltags)
         self.init_info_form = StartInfoForm()
         self.new_group_form = NewGroupForm()
+        self.env_form = EnvForm()
         ############################
         map_name = "maps/empty"
         self.dm = get_dt_world(map_name)
@@ -155,6 +157,7 @@ class duck_window(QtWidgets.QMainWindow):
         distortion_view = self.ui.distortion_view
         create_region = self.ui.region_create
         import_old_format = self.ui.import_old_format
+        environment = self.ui.env
 
         #  Initialize floating blocks
         block_widget = self.ui.block_widget
@@ -179,6 +182,7 @@ class duck_window(QtWidgets.QMainWindow):
         distortion_view.triggered.connect(self.change_distortion_view_triggered)
         create_region.triggered.connect(self.create_region)
         import_old_format.triggered.connect(self.import_old_format)
+        environment.triggered.connect(self.change_env)
         exit.triggered.connect(self.exit_triggered)
 
         change_blocks.toggled.connect(self.change_blocks_toggled)
@@ -289,6 +293,9 @@ class duck_window(QtWidgets.QMainWindow):
 
         set_fill = self.ui.set_fill
         set_fill.clicked.connect(self.set_default_fill)
+
+    def change_env(self):
+        self.env_form.show()
 
     def center(self):
         qr = self.frameGeometry()
