@@ -345,7 +345,7 @@ class Ui_MainWindow(object):
         self.file.addSeparator()
         self.file.addAction(self.exit)
         self.maps.addAction(self.calc_param)
-        self.maps.addAction(self.calc_materials)
+        #self.maps.addAction(self.calc_materials)
         self.help.addAction(self.about_author)
         self.settings.addAction(self.distortion_view)
         self.utils.addAction(self.region_create)

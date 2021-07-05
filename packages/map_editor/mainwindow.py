@@ -391,8 +391,12 @@ class duck_window(QtWidgets.QMainWindow):
 
     #  Calculate map characteristics
     def calc_param_triggered(self):
-
-        text = get_map_specifications(self)
+        text = ""
+        for info, obj in self.dm.tiles:
+            i, j = obj.i, obj.j
+            type = obj.type
+            orientation = obj.type
+            text += f"{i}-{j}: {type}/{orientation}\n"
         self.show_info(self.param_window, _translate("MainWindow", "Map characteristics"), text)
 
     #  Calculate map materials
@@ -404,8 +408,7 @@ class duck_window(QtWidgets.QMainWindow):
     def about_author_triggered(self):
         text = '''
         - Select an object using the left mouse button\n
-        - when object is selected you can change pos, using WASD: W(UP), A(LEFT), D(RIGHT), S(DOWN)\n
-        - reset object tracking using `Q`\n
+        - when object is selected you can change pos, using mouse\n
         - add apriltag using key `R`\n
         - Edit an object, click on it using the right mouse button\n
         - Authors:\n alskaa;\n dihindee;\n ovc-serega;\n HadronCollider;\n light5551;\n snush.\n\n Contact us on github!
