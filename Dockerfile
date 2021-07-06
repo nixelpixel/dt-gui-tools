@@ -170,4 +170,4 @@ RUN . /opt/ros/${ROS_DISTRO}/setup.sh && \
     --workspace ${CATKIN_WS_DIR}/
 
 # remove dataclasses
-RUN pip3 uninstall dataclasses
+RUN pip3 uninstall -y dataclasses
