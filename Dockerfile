@@ -168,3 +168,6 @@ RUN git clone https://github.com/ros-perception/image_pipeline.git
 RUN . /opt/ros/${ROS_DISTRO}/setup.sh && \
   catkin build \
     --workspace ${CATKIN_WS_DIR}/
+
+# remove dataclasses
+RUN pip3 uninstall dataclasses
