@@ -637,29 +637,28 @@ class duck_window(QtWidgets.QMainWindow):
                 self.editor.save(self.map)
                 # adding object
                 print(item_name)
-                # print(self.info_json['info'][item_name])
                 type_of_element = self.info_json['info'][item_name]['type']
-                # print(self.duckietown_types_apriltags)
                 obj = None
                 if item_name == "duckie":
-                    obj = Citizen(self.get_random_name("map_1/duckie"), x=1, y=1)
+                    obj = Citizen(f"{self.dm.get_context()}/duckie_{len(self.dm.citizens.dict())}", x=1, y=1)
                 elif item_name == "watchtower":
-                    name = self.get_random_name("map_1/watchtower")
+                    name = f"{self.dm.get_context()}/watchtower_{len(self.dm.watchtowers.dict())}"
                     obj = Watchtower(name, x=1, y=1)
-                    self.dm.add(Camera(self.get_random_name(f"{name}/camera")))
+                    self.dm.add(Camera(f"{name}/camera"))
                 elif type_of_element == "sign":
-                    obj = TrafficSign(self.get_random_name("map_1/{}".format(get_canonical_sign_name(item_name))), x=1,
-                                      y=1)
+                    name = f"{self.dm.get_context()}/{get_canonical_sign_name(item_name)}_{len(self.dm.trafficsigns.dict())}"
+                    obj = TrafficSign(name, x=1, y=1)
                     obj.obj.type = get_canonical_sign_name(item_name)
                     obj.obj.id = utils.get_id_by_type(item_name)
                 elif item_name == "apriltag":
-                    obj = GroundTag(self.get_random_name("map_1/grountag"), x=1, y=1)
+                    name = f"{self.dm.get_context()}/grountag_{len(self.dm.groundtags.dict())}"
+                    obj = GroundTag(name, x=1, y=1)
                 elif item_name == "duckiebot":
-                    name = self.get_random_name("map_1/vehicle")
+                    name = f"{self.dm.get_context()}/vehicle_{len(self.dm.vehicles.dict())}"
                     obj = Vehicle(name, x=1, y=1)
                     self.dm.add(Camera(f"{name}/camera"))
                 if obj:
-                    obj.frame.relative_to = "map_1"
+                    obj.frame.relative_to = self.dm.get_context()
                     self.dm.add(obj)
 
                 # TODO: need to understand what's the type and create desired class, not general
