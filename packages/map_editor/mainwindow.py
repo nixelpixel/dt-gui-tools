@@ -147,7 +147,6 @@ class duck_window(QtWidgets.QMainWindow):
         open_map = self.ui.open_map
         save_map = self.ui.save_map
         save_map_as = self.ui.save_map_as
-        #export_png = self.ui.export_png
         calc_param = self.ui.calc_param
         about_author = self.ui.about_author
         exit = self.ui.exit
@@ -176,7 +175,6 @@ class duck_window(QtWidgets.QMainWindow):
         open_map.triggered.connect(self.open_map_triggered)
         save_map.triggered.connect(self.save_map_triggered)
         save_map_as.triggered.connect(self.save_map_as_triggered)
-        #export_png.triggered.connect(self.export_png_triggered)
         calc_param.triggered.connect(self.calc_param_triggered)
         about_author.triggered.connect(self.about_author_triggered)
         distortion_view.triggered.connect(self.change_distortion_view_triggered)
@@ -230,7 +228,6 @@ class duck_window(QtWidgets.QMainWindow):
         a2.triggered.connect(self.open_map_triggered)
         a3.triggered.connect(self.save_map_triggered)
         a4.triggered.connect(self.save_map_as_triggered)
-        #a5.triggered.connect(self.export_png_triggered)
 
         b1.triggered.connect(self.copy_button_clicked)
         b2.triggered.connect(self.cut_button_clicked)
@@ -349,7 +346,6 @@ class duck_window(QtWidgets.QMainWindow):
             self.create_empty_map(i, j)
             self.dm.tile_maps['map_1'].x = self.tile_size
             self.dm.tile_maps['map_1'].y = self.tile_size
-            # self.dm.tile_maps['map_1']
             self.mapviewer.tile_size = self.tile_size
             self.mapviewer.scene().update()
             self.update_layer_tree()
