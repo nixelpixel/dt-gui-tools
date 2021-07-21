@@ -641,7 +641,7 @@ class duck_window(QtWidgets.QMainWindow):
                     obj.obj.type = get_canonical_sign_name(item_name)
                     obj.obj.id = utils.get_id_by_type(item_name)
                 elif item_name == "apriltag":
-                    name = f"{self.dm.get_context()}/grountag_{len(self.dm.groundtags.dict())}"
+                    name = f"{self.dm.get_context()}/groundtag_{len(self.dm.groundtags.dict())}"
                     obj = GroundTag(name, x=1, y=1)
                 elif item_name == "duckiebot":
                     name = f"{self.dm.get_context()}/vehicle_{len(self.dm.vehicles.dict())}"
