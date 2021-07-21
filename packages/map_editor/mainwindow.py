@@ -21,9 +21,12 @@ import utils
 from DTWorld import get_dt_world
 from DTWorld import get_new_dt_world
 from IOManager import *
+import logging
 from classes.mapObjects import GroundAprilTagObject
 from duckietown_world.structure.utils import get_degree_for_orientation, get_orientation_for_degree, \
     get_canonical_sign_name
+
+from classes.mapTile import MapTile
 from forms.default_forms import question_form_yes_no
 from forms.env import EnvForm
 from forms.new_region import NewGroupForm
@@ -119,7 +122,6 @@ class duck_window(QtWidgets.QMainWindow):
         viewer.repaint()
         self.initUi()
 
-        init_map(self)
         self.update_layer_tree()
 
     def get_translation(self, elem):
@@ -145,9 +147,7 @@ class duck_window(QtWidgets.QMainWindow):
         open_map = self.ui.open_map
         save_map = self.ui.save_map
         save_map_as = self.ui.save_map_as
-        export_png = self.ui.export_png
         calc_param = self.ui.calc_param
-        calc_materials = self.ui.calc_materials
         about_author = self.ui.about_author
         exit = self.ui.exit
         change_blocks = self.ui.change_blocks
@@ -175,9 +175,7 @@ class duck_window(QtWidgets.QMainWindow):
         open_map.triggered.connect(self.open_map_triggered)
         save_map.triggered.connect(self.save_map_triggered)
         save_map_as.triggered.connect(self.save_map_as_triggered)
-        export_png.triggered.connect(self.export_png_triggered)
         calc_param.triggered.connect(self.calc_param_triggered)
-        calc_materials.triggered.connect(self.calc_materials_triggered)
         about_author.triggered.connect(self.about_author_triggered)
         distortion_view.triggered.connect(self.change_distortion_view_triggered)
         create_region.triggered.connect(self.create_region)
@@ -230,7 +228,6 @@ class duck_window(QtWidgets.QMainWindow):
         a2.triggered.connect(self.open_map_triggered)
         a3.triggered.connect(self.save_map_triggered)
         a4.triggered.connect(self.save_map_as_triggered)
-        a5.triggered.connect(self.export_png_triggered)
 
         b1.triggered.connect(self.copy_button_clicked)
         b2.triggered.connect(self.cut_button_clicked)
@@ -349,7 +346,6 @@ class duck_window(QtWidgets.QMainWindow):
             self.create_empty_map(i, j)
             self.dm.tile_maps['map_1'].x = self.tile_size
             self.dm.tile_maps['map_1'].y = self.tile_size
-            # self.dm.tile_maps['map_1']
             self.mapviewer.tile_size = self.tile_size
             self.mapviewer.scene().update()
             self.update_layer_tree()
@@ -371,8 +367,7 @@ class duck_window(QtWidgets.QMainWindow):
 
     #  Save map
     def save_map_triggered(self):
-        save_map(self)
-        logger.debug("Save")
+        self.save_map_as_triggered()
 
     #  Save map as
     def save_map_as_triggered(self):
@@ -385,10 +380,6 @@ class duck_window(QtWidgets.QMainWindow):
                     file.write(map_final[layer_name])
             print('FINAL PATH, ', path_folder)
 
-    #  Export to png
-    def export_png_triggered(self):
-        export_png(self)
-
     #  Calculate map characteristics
     def calc_param_triggered(self):
         text = ""
@@ -398,11 +389,6 @@ class duck_window(QtWidgets.QMainWindow):
             orientation = obj.type
             text += f"{i}-{j}: {type}/{orientation}\n"
         self.show_info(self.param_window, _translate("MainWindow", "Map characteristics"), text)
-
-    #  Calculate map materials
-    def calc_materials_triggered(self):
-        text = get_map_materials(self)
-        self.show_info(self.mater_window, _translate("MainWindow", "Map material"), text)
 
     #  Help: About
     def about_author_triggered(self):
@@ -427,7 +413,7 @@ class duck_window(QtWidgets.QMainWindow):
             if ret == QMessageBox.Cancel:
                 return
             if ret == QMessageBox.Save:
-                save_map(self)
+                self.save_map_as_triggered()
 
     #  Hide Block menu
     def change_blocks_toggled(self):
@@ -651,7 +637,7 @@ class duck_window(QtWidgets.QMainWindow):
                     obj.obj.type = get_canonical_sign_name(item_name)
                     obj.obj.id = utils.get_id_by_type(item_name)
                 elif item_name == "apriltag":
-                    name = f"{self.dm.get_context()}/grountag_{len(self.dm.groundtags.dict())}"
+                    name = f"{self.dm.get_context()}/groundtag_{len(self.dm.groundtags.dict())}"
                     obj = GroundTag(name, x=1, y=1)
                 elif item_name == "duckiebot":
                     name = f"{self.dm.get_context()}/vehicle_{len(self.dm.vehicles.dict())}"

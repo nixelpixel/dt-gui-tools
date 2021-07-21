@@ -4,10 +4,11 @@ main:
   tile_maps:       !include tile_maps.yaml
   watchtowers:     !include watchtowers.yaml
   citizens:        !include citizens.yaml
-  trafficsigns:    !include trafficsigns.yaml
-  groundtags:      !include groundtags.yaml
+  traffic_signs:   !include traffic_signs.yaml
+  ground_tags:     !include ground_tags.yaml
+  vehicle_tags:    !include vehicle_tags.yaml
   vehicles:        !include vehicles.yaml
   cameras:         !include cameras.yaml
   groups:          !include groups.yaml
   decorations:     !include decorations.yaml
-  environment:    !include environment.yaml
+  environment:     !include environment.yaml

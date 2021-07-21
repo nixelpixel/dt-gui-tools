@@ -26,6 +26,7 @@ def main(app_args):
 
     # Create main window
     window = duck_window(args)
+
     window.show()
     app.exec_()
 

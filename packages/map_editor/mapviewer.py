@@ -274,7 +274,7 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
             self.raw_draw_objects(width, height, painter, self.dm.watchtowers, "watchtower")
 
     def draw_traffic_signs(self, width, height, painter):
-        for info, object in self.dm.trafficsigns:
+        for info, object in self.dm.traffic_signs:
             obj_name, obj_type = info
             frame_obj = self.dm.frames[obj_name]
             x, y = 0, 0
@@ -298,10 +298,9 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
                 img)
 
     def draw_groundtags(self, width, height, painter):
-        self.raw_draw_objects(width, height, painter, self.dm.groundtags, "apriltag")
+        self.raw_draw_objects(width, height, painter, self.dm.ground_tags, "apriltag")
 
     def draw_vehicles(self, width, height, painter):
-        print(self.dm.vehicles)
         if self.dm.vehicles:
             self.raw_draw_objects(width, height, painter, self.dm.vehicles, "duckiebot")
 
