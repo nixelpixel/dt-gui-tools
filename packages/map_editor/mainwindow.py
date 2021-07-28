@@ -787,20 +787,20 @@ class duck_window(QtWidgets.QMainWindow):
         assert tp is _Frame
 
         def accept():
-            active_object.pose.x = float(edit_obj['x'].text())
-            active_object.pose.y = float(edit_obj['y'].text())
-            active_object.pose.yaw = float(np.deg2rad(float(edit_obj['yaw'].text())))
-            new_type = None
-            print(f"ACCEPT: {cam_obj}")
-            for key in editable_values:
-                try:
+            try:
+                active_object.pose.x = float(edit_obj['x'].text())
+                active_object.pose.y = float(edit_obj['y'].text())
+                active_object.pose.yaw = float(np.deg2rad(float(edit_obj['yaw'].text())))
+                new_type = None
+                print(f"ACCEPT: {cam_obj}")
+                for key in editable_values:
                     print("Key - ", key)
                     if key in ["width", "height", "framerate", "distortion_parameters", "camera_matrix"]:  # cam obj
                         if key in ["width", "height", "framerate"]:
                             cam_obj[key] = int(edit_obj[key].text().split()[0])
                         elif key == "distortion_parameters":
                             if not cam_obj.distortion_parameters:
-                                cam_obj["distortion_parameters"] = [] #[0 for _ in range(5)]
+                                cam_obj["distortion_parameters"] = []
 
                             if self.distortion_view_one_string_mode:
                                 dk = edit_obj[f"distortion_parameters"].text().replace(" ", "").split(",")
@@ -814,7 +814,7 @@ class duck_window(QtWidgets.QMainWindow):
                                 for idx in range(5):
                                     val = float(edit_obj[f"distortion_parameters_{idx}"].text().split()[0])
                                     if len(cam_obj.distortion_parameters) < 5:
-                                        cam_obj.distortion_parameters.append(val)#.insert(idx, val)
+                                        cam_obj.distortion_parameters.append(val)
                                     else:
                                         cam_obj.distortion_parameters[idx] = val
                         elif key == "camera_matrix":
@@ -847,8 +847,12 @@ class duck_window(QtWidgets.QMainWindow):
                             pass
                         print(f"New value {new_value} for key {key}")
                         obj[key] = new_value
-                except Exception as e:
-                    print(e)
+            except Exception as e:
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Critical)
+                msg.setText(str(e))
+                msg.setWindowTitle("Error")
+                msg.exec_()
             dialog.close()
             self.mapviewer.scene().update()
             self.update_layer_tree()
