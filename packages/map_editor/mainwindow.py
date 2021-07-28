@@ -632,12 +632,12 @@ class duck_window(QtWidgets.QMainWindow):
                     obj = Watchtower(name, x=1, y=1)
                     self.dm.add(Camera(f"{name}/camera"))
                 elif type_of_element == "sign":
-                    name = f"{self.dm.get_context()}/{get_canonical_sign_name(item_name)}_{len(self.dm.trafficsigns.dict())}"
+                    name = f"{self.dm.get_context()}/{get_canonical_sign_name(item_name)}_{len(self.dm.traffic_signs.dict())}"
                     obj = TrafficSign(name, x=1, y=1)
                     obj.obj.type = get_canonical_sign_name(item_name)
                     obj.obj.id = utils.get_id_by_type(item_name)
                 elif item_name == "apriltag":
-                    name = f"{self.dm.get_context()}/groundtag_{len(self.dm.groundtags.dict())}"
+                    name = f"{self.dm.get_context()}/groundtag_{len(self.dm.ground_tags.dict())}"
                     obj = GroundTag(name, x=1, y=1)
                 elif item_name == "duckiebot":
                     name = f"{self.dm.get_context()}/vehicle_{len(self.dm.vehicles.dict())}"
@@ -969,29 +969,17 @@ class duck_window(QtWidgets.QMainWindow):
             grid_distortion = QGridLayout()
             grid_distortion.setColumnStretch(1, 4)
             grid_distortion.setColumnStretch(2, 4)
-            if self.distortion_view_one_string_mode:
-                dist_k = []
-                for idx in range(5):
-                    if cam_obj.distortion_parameters:
-                        str_k = str(cam_obj.distortion_parameters[idx]) + (", " if idx != 4 else "")
-                    else:
-                        str_k = "0" + (", " if idx != 4 else "")
-                    dist_k.append(str_k)
-                #for kfc in dist_k:
-                edit_str_dist = QLineEdit("".join(dist_k))
-                edit_obj["distortion_parameters"] = edit_str_dist
-                layout.addRow(QLabel("Camera Distortion"), edit_str_dist)
-            else:
-                layout.addRow(QLabel("Camera Distortion"))
-                for idx in range(5):
-                    if cam_obj.distortion_parameters:
-                        grid_line_edit = QLineEdit(str(cam_obj.distortion_parameters[idx]))
-                    else:
-                        grid_line_edit = QLineEdit("0")
-                    edit_obj[f"distortion_parameters_{idx}"] = grid_line_edit
-                    grid_distortion.addWidget(grid_line_edit, 0, idx)
+            layout.addRow(QLabel("Camera Distortion"))
+            for idx in range(5):
+                if cam_obj.distortion_parameters:
+                    grid_line_edit = QLineEdit(str(cam_obj.distortion_parameters[idx]))
+                else:
+                    grid_line_edit = QLineEdit("0")
+                edit_obj[f"distortion_parameters_{idx}"] = grid_line_edit
+                grid_distortion.addWidget(grid_line_edit, 0, idx)
 
-                layout.addRow(grid_distortion)
+            layout.addRow(grid_distortion)
+
         layout.addRow(QHLine())
         combo_groups = QComboBox(self)
         ##### DEV FOR GROUP ####
