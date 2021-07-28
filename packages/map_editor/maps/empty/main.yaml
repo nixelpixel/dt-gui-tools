@@ -12,3 +12,4 @@ main:
   groups:          !include groups.yaml
   decorations:     !include decorations.yaml
   environment:     !include environment.yaml
+  lights:          !include lights.yaml

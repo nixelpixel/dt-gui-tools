@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import QMessageBox, QDesktopWidget, QFormLayout, QVBoxLayou
 from duckietown_world.structure.bases import _Frame
 from duckietown_world.structure.duckietown_map import DuckietownMap
 from duckietown_world.structure.objects import Watchtower, Citizen, Tile, TrafficSign, GroundTag, Vehicle, Camera, \
-    _Camera, _Group
+    _Camera, _Group, Decoration
 from duckietown_world.structure.old_format.convert import convert_new_format, dump
 import map
 import mapviewer
@@ -632,17 +632,21 @@ class duck_window(QtWidgets.QMainWindow):
                     obj = Watchtower(name, x=1, y=1)
                     self.dm.add(Camera(f"{name}/camera"))
                 elif type_of_element == "sign":
-                    name = f"{self.dm.get_context()}/{get_canonical_sign_name(item_name)}_{len(self.dm.trafficsigns.dict())}"
+                    name = f"{self.dm.get_context()}/{get_canonical_sign_name(item_name)}_{len(self.dm.traffic_signs.dict())}"
                     obj = TrafficSign(name, x=1, y=1)
                     obj.obj.type = get_canonical_sign_name(item_name)
                     obj.obj.id = utils.get_id_by_type(item_name)
                 elif item_name == "apriltag":
-                    name = f"{self.dm.get_context()}/groundtag_{len(self.dm.groundtags.dict())}"
+                    name = f"{self.dm.get_context()}/groundtag_{len(self.dm.ground_tags.dict())}"
                     obj = GroundTag(name, x=1, y=1)
                 elif item_name == "duckiebot":
                     name = f"{self.dm.get_context()}/vehicle_{len(self.dm.vehicles.dict())}"
                     obj = Vehicle(name, x=1, y=1)
                     self.dm.add(Camera(f"{name}/camera"))
+                else:  # block for decorations
+                    name = f"{self.dm.get_context()}/{item_name}_{len(self.dm.decorations.dict())}"
+                    obj = Decoration(name, x=1, y=1)
+                    obj.obj.type = item_name
                 if obj:
                     obj.frame.relative_to = self.dm.get_context()
                     self.dm.add(obj)
@@ -779,25 +783,24 @@ class duck_window(QtWidgets.QMainWindow):
     def create_form(self, active_object_data: tuple):
 
         active_object, (name, tp) = active_object_data
-        print(name, 'GFDGFDGFGFGFGF')
         self.name_of_editable_obj = name
         assert tp is _Frame
 
         def accept():
-            active_object.pose.x = float(edit_obj['x'].text())
-            active_object.pose.y = float(edit_obj['y'].text())
-            active_object.pose.yaw = float(np.deg2rad(float(edit_obj['yaw'].text())))
-            new_type = None
-            print(f"ACCEPT: {cam_obj}")
-            for key in editable_values:
-                try:
+            try:
+                active_object.pose.x = float(edit_obj['x'].text())
+                active_object.pose.y = float(edit_obj['y'].text())
+                active_object.pose.yaw = float(np.deg2rad(float(edit_obj['yaw'].text())))
+                new_type = None
+                print(f"ACCEPT: {cam_obj}")
+                for key in editable_values:
                     print("Key - ", key)
                     if key in ["width", "height", "framerate", "distortion_parameters", "camera_matrix"]:  # cam obj
                         if key in ["width", "height", "framerate"]:
                             cam_obj[key] = int(edit_obj[key].text().split()[0])
                         elif key == "distortion_parameters":
                             if not cam_obj.distortion_parameters:
-                                cam_obj["distortion_parameters"] = [] #[0 for _ in range(5)]
+                                cam_obj["distortion_parameters"] = []
 
                             if self.distortion_view_one_string_mode:
                                 dk = edit_obj[f"distortion_parameters"].text().replace(" ", "").split(",")
@@ -811,18 +814,15 @@ class duck_window(QtWidgets.QMainWindow):
                                 for idx in range(5):
                                     val = float(edit_obj[f"distortion_parameters_{idx}"].text().split()[0])
                                     if len(cam_obj.distortion_parameters) < 5:
-                                        cam_obj.distortion_parameters.append(val)#.insert(idx, val)
+                                        cam_obj.distortion_parameters.append(val)
                                     else:
                                         cam_obj.distortion_parameters[idx] = val
                         elif key == "camera_matrix":
-                            print('MATRIX1   ', cam_obj.camera_matrix)
                             if not cam_obj.camera_matrix:
                                 cam_obj["camera_matrix"] = []
-                            print('MATRIX2   ', cam_obj.camera_matrix)
                             if not cam_obj.camera_matrix:
                                 for _ in range(3):
                                     cam_obj.camera_matrix.append([])
-                            print('MATRIX3   ', cam_obj.camera_matrix)
                             for row in range(3):
                                 for col in range(3):
                                     val = float(edit_obj[f"camera_matrix_{row}_{col}"].text().split()[0])
@@ -847,8 +847,12 @@ class duck_window(QtWidgets.QMainWindow):
                             pass
                         print(f"New value {new_value} for key {key}")
                         obj[key] = new_value
-                except Exception as e:
-                    print(e)
+            except Exception as e:
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Critical)
+                msg.setText(str(e))
+                msg.setWindowTitle("Error")
+                msg.exec_()
             dialog.close()
             self.mapviewer.scene().update()
             self.update_layer_tree()
@@ -914,9 +918,14 @@ class duck_window(QtWidgets.QMainWindow):
                             break
                     except:
                         pass
-                print(type_id)
-                combo_id.addItems(["{} ({})".format(i.id, i.type) for i in self.duckietown_types_apriltags[type_id]])
+                if "sign" not in name:
+                    for type_tag in self.duckietown_types_apriltags:
+                        combo_id.addItems(["{}".format(i.id) for i in self.duckietown_types_apriltags[type_tag]])
+                else:
+                    combo_id.addItems(
+                        ["{} ({})".format(i.id, i.type) for i in self.duckietown_types_apriltags[type_id]])
                 combo_id.setLineEdit(new_edit)
+                new_edit.setReadOnly(True)
                 combo_id.setEditText(str(attr))
                 combo_id.currentTextChanged.connect(change_type_from_combo)
                 layout.addRow(QLabel(attr_name), combo_id)
@@ -965,33 +974,20 @@ class duck_window(QtWidgets.QMainWindow):
                     grid_matrix.addWidget(grid_line_edit, row, col)
 
             layout.addRow(grid_matrix)
-            #layout.addRow(QLabel("Camera Distortion"))
             grid_distortion = QGridLayout()
             grid_distortion.setColumnStretch(1, 4)
             grid_distortion.setColumnStretch(2, 4)
-            if self.distortion_view_one_string_mode:
-                dist_k = []
-                for idx in range(5):
-                    if cam_obj.distortion_parameters:
-                        str_k = str(cam_obj.distortion_parameters[idx]) + (", " if idx != 4 else "")
-                    else:
-                        str_k = "0" + (", " if idx != 4 else "")
-                    dist_k.append(str_k)
-                #for kfc in dist_k:
-                edit_str_dist = QLineEdit("".join(dist_k))
-                edit_obj["distortion_parameters"] = edit_str_dist
-                layout.addRow(QLabel("Camera Distortion"), edit_str_dist)
-            else:
-                layout.addRow(QLabel("Camera Distortion"))
-                for idx in range(5):
-                    if cam_obj.distortion_parameters:
-                        grid_line_edit = QLineEdit(str(cam_obj.distortion_parameters[idx]))
-                    else:
-                        grid_line_edit = QLineEdit("0")
-                    edit_obj[f"distortion_parameters_{idx}"] = grid_line_edit
-                    grid_distortion.addWidget(grid_line_edit, 0, idx)
+            layout.addRow(QLabel("Camera Distortion: [k1, k2, p1, p2, k3]"))
+            for idx in range(5):
+                if cam_obj.distortion_parameters:
+                    grid_line_edit = QLineEdit(str(cam_obj.distortion_parameters[idx]))
+                else:
+                    grid_line_edit = QLineEdit("0")
+                edit_obj[f"distortion_parameters_{idx}"] = grid_line_edit
+                grid_distortion.addWidget(grid_line_edit, 0, idx)
 
-                layout.addRow(grid_distortion)
+            layout.addRow(grid_distortion)
+
         layout.addRow(QHLine())
         combo_groups = QComboBox(self)
         ##### DEV FOR GROUP ####
@@ -1022,20 +1018,18 @@ class duck_window(QtWidgets.QMainWindow):
         dialog.exec_()
 
     def add_group_triggered(self):
-        print(self.active_group)
-        print(self.name_of_editable_obj)
-        members = self.active_group.members
-        if self.name_of_editable_obj not in members:
-            members.append(self.name_of_editable_obj)
+        if self.active_group:
+            members = self.active_group.members
+            if self.name_of_editable_obj not in members:
+                members.append(self.name_of_editable_obj)
 
     def del_group_triggered(self):
-        if self.name_of_editable_obj in self.active_group.members:
+        if self.active_group and self.name_of_editable_obj in self.active_group.members:
             self.active_group.members.remove(self.name_of_editable_obj)
 
     def change_active_group(self, value: str):
-        print(value)
-        print(self.dm.get_object(value.split()[0], _Group))
-        self.active_group = self.dm.get_object(value.split()[0], _Group)
+        if self.active_group:
+            self.active_group = self.dm.get_object(value.split()[0], _Group)
 
     def rotateSelectedTiles(self):
         self.editor.save(self.map)
