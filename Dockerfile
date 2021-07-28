@@ -1,24 +1,24 @@
 # parameters
 ARG REPO_NAME="dt-gui-tools"
-ARG DESCRIPTION="Provides access to GUI-based ROS tools (e.g., rviz, rqt_image_view)"
+ARG DESCRIPTION="Provides access to GUI-based tools (e.g., rviz, rqt_image_view)"
 ARG MAINTAINER="Andrea F. Daniele (afdaniele@ttic.edu)"
 # pick an icon from: https://fontawesome.com/v4.7.0/icons/
 ARG ICON="desktop"
 
 # novnc and websockify versions to use
-ARG NOVNC_VERSION="35dd3c2"
+ARG NOVNC_VERSION="9fe2fd0"
 ARG WEBSOCKIFY_VERSION="3646575"
 
 # ==================================================>
 # ==> Do not change the code below this line
 ARG ARCH=arm32v7
-ARG DISTRO=ente
+ARG DISTRO=daffy
 ARG BASE_TAG=${DISTRO}-${ARCH}
 ARG BASE_IMAGE=dt-core
 ARG LAUNCHER=default
 
 # define base image
-FROM duckietown/${BASE_IMAGE}:${BASE_TAG} as base
+FROM duckietown/${BASE_IMAGE}:${BASE_TAG} as BASE
 
 # recall all arguments
 ARG ARCH
@@ -56,7 +56,7 @@ RUN dt-apt-install ${REPO_PATH}/dependencies-apt.txt
 
 # install python3 dependencies
 COPY ./dependencies-py3.txt "${REPO_PATH}/"
-RUN pip3 install -r ${REPO_PATH}/dependencies-py3.txt
+RUN pip3 install --use-feature=2020-resolver -r ${REPO_PATH}/dependencies-py3.txt
 
 # copy the source code
 COPY ./packages "${REPO_PATH}/packages"
@@ -87,13 +87,9 @@ LABEL org.duckietown.label.module.type="${REPO_NAME}" \
 # <== Do not change the code above this line
 # <==================================================
 
-## nvidia-container-runtime
-ENV NVIDIA_VISIBLE_DEVICES ${NVIDIA_VISIBLE_DEVICES:-all}
-ENV NVIDIA_DRIVER_CAPABILITIES ${NVIDIA_DRIVER_CAPABILITIES:+$NVIDIA_DRIVER_CAPABILITIES,}graphics
-
-# install ffmpeg
-COPY assets/vnc/install-ffmpeg /tmp/
-RUN /tmp/install-ffmpeg ${ARCH}
+# configure ffmpeg
+RUN mkdir /usr/local/ffmpeg \
+    && ln -s /usr/bin/ffmpeg /usr/local/ffmpeg/ffmpeg
 
 # install backend dependencies
 COPY assets/vnc/install-backend-deps /tmp/
@@ -107,20 +103,22 @@ COPY assets/vnc/image /
 #### => Substep: Frontend builder
 ##
 ##  NOTE:   This substep always runs in an amd64 image regardless of the architecture of
-##          final image. As a result, this Dockerfile can be run only on amd64 machines
+##          the final image. As a result, this Dockerfile can be run only on amd64 machines
 ##          with QEMU enabled.
 ##
 ##
-FROM ubuntu:xenial as builder
+FROM ubuntu:focal as builder
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         curl \
+        git \
         ca-certificates \
-        git
+        gnupg \
+        patch
 
 # nodejs
-RUN curl -sL https://deb.nodesource.com/setup_9.x | bash - \
+RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - \
     && apt-get install -y \
         nodejs
 
@@ -144,15 +142,32 @@ RUN git clone https://github.com/novnc/websockify /src/web/static/websockify \
 COPY assets/vnc/web /src/web
 RUN cd /src/web \
     && yarn \
-    && npm run build
+    && yarn build
+RUN sed -i 's#app/locale/#novnc/app/locale/#' /src/web/dist/static/novnc/app/ui.js
 ##
 ##
 #### <= Substep: Frontend builder
 
 
 # jump back to the base image and copy frontend from builder stage
-FROM base
+FROM BASE
 COPY --from=builder /src/web/dist/ /usr/local/lib/web/frontend/
+
+# make websockify executable
+RUN ln -sf /usr/local/lib/web/frontend/static/websockify \
+        /usr/local/lib/web/frontend/static/novnc/utils/websockify \
+    && chmod +x /usr/local/lib/web/frontend/static/websockify/run
 
 # configure novnc
 ENV HTTP_PORT 8087
+
+# get the image_pipeline (this is needed to avoid issues with python2 shebang)
+RUN git clone https://github.com/ros-perception/image_pipeline.git
+
+# build packages
+RUN . /opt/ros/${ROS_DISTRO}/setup.sh && \
+  catkin build \
+    --workspace ${CATKIN_WS_DIR}/
+
+# remove dataclasses
+RUN pip3 uninstall -y dataclasses

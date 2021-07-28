@@ -28,7 +28,10 @@ class State(object):
 
     def _update_health(self):
         health = True
-        output = gsp.check_output(['supervisorctl', 'status'])
+        output = gsp.check_output([
+            'supervisorctl', '-c', '/etc/supervisor/supervisord.conf',
+            'status'
+        ], encoding='UTF-8')
         for line in output.strip().split('\n'):
             if not line.startswith('web') and line.find('RUNNING') < 0:
                 health = False
@@ -62,19 +65,22 @@ class State(object):
             'sed -i \'s#'
             '^exec /usr/bin/Xvfb.*$'
             '#'
-            'exec /usr/bin/Xvfb :1 -screen 0 {}x{}x16'
+            'exec /usr/bin/Xvfb :99 -screen 0 {}x{}x24'
             '#\' /usr/local/bin/xvfb.sh'
         ).format(w, h), shell=True)
         self.size_changed_count += 1
 
     def apply_and_restart(self):
-        gsp.check_call(['supervisorctl', 'restart', 'x:'])
+        gsp.check_call([
+            'supervisorctl', '-c', '/etc/supervisor/supervisord.conf',
+            'restart', 'x:'
+        ])
         self._w = self._h = self._health = None
         self.notify()
 
     def switch_video(self, onoff):
         xenvs = {
-            'DISPLAY': ':1',
+            'DISPLAY': ':99',
         }
         try:
             cmd = 'nofb' if onoff else 'fb'
@@ -86,7 +92,7 @@ class State(object):
         if self._w is not None and self._h is not None:
             return
         xenvs = {
-            'DISPLAY': ':1',
+            'DISPLAY': ':99',
         }
         try:
             output = gsp.check_output([
@@ -106,6 +112,9 @@ class State(object):
                     self.notify()
         except gsp.CalledProcessError as e:
             log.warn('failed to get dispaly size: ' + str(e))
+
+    def reset_size(self):
+        self.size_changed_count = 0
 
     @property
     def w(self):
