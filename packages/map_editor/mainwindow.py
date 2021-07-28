@@ -914,8 +914,12 @@ class duck_window(QtWidgets.QMainWindow):
                             break
                     except:
                         pass
-                for type_tag in self.duckietown_types_apriltags:
-                    combo_id.addItems(["{}".format(i.id) for i in self.duckietown_types_apriltags[type_tag]])
+                if "sign" not in name:
+                    for type_tag in self.duckietown_types_apriltags:
+                        combo_id.addItems(["{}".format(i.id) for i in self.duckietown_types_apriltags[type_tag]])
+                else:
+                    combo_id.addItems(
+                        ["{} ({})".format(i.id, i.type) for i in self.duckietown_types_apriltags[type_id]])
                 combo_id.setLineEdit(new_edit)
                 combo_id.setEditText(str(attr))
                 combo_id.currentTextChanged.connect(change_type_from_combo)
