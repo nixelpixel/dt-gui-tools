@@ -783,7 +783,6 @@ class duck_window(QtWidgets.QMainWindow):
     def create_form(self, active_object_data: tuple):
 
         active_object, (name, tp) = active_object_data
-        print(name, 'GFDGFDGFGFGFGF')
         self.name_of_editable_obj = name
         assert tp is _Frame
 
@@ -819,14 +818,11 @@ class duck_window(QtWidgets.QMainWindow):
                                     else:
                                         cam_obj.distortion_parameters[idx] = val
                         elif key == "camera_matrix":
-                            print('MATRIX1   ', cam_obj.camera_matrix)
                             if not cam_obj.camera_matrix:
                                 cam_obj["camera_matrix"] = []
-                            print('MATRIX2   ', cam_obj.camera_matrix)
                             if not cam_obj.camera_matrix:
                                 for _ in range(3):
                                     cam_obj.camera_matrix.append([])
-                            print('MATRIX3   ', cam_obj.camera_matrix)
                             for row in range(3):
                                 for col in range(3):
                                     val = float(edit_obj[f"camera_matrix_{row}_{col}"].text().split()[0])
@@ -969,7 +965,6 @@ class duck_window(QtWidgets.QMainWindow):
                     grid_matrix.addWidget(grid_line_edit, row, col)
 
             layout.addRow(grid_matrix)
-            #layout.addRow(QLabel("Camera Distortion"))
             grid_distortion = QGridLayout()
             grid_distortion.setColumnStretch(1, 4)
             grid_distortion.setColumnStretch(2, 4)
@@ -1014,20 +1009,18 @@ class duck_window(QtWidgets.QMainWindow):
         dialog.exec_()
 
     def add_group_triggered(self):
-        print(self.active_group)
-        print(self.name_of_editable_obj)
-        members = self.active_group.members
-        if self.name_of_editable_obj not in members:
-            members.append(self.name_of_editable_obj)
+        if self.active_group:
+            members = self.active_group.members
+            if self.name_of_editable_obj not in members:
+                members.append(self.name_of_editable_obj)
 
     def del_group_triggered(self):
-        if self.name_of_editable_obj in self.active_group.members:
+        if self.active_group and self.name_of_editable_obj in self.active_group.members:
             self.active_group.members.remove(self.name_of_editable_obj)
 
     def change_active_group(self, value: str):
-        print(value)
-        print(self.dm.get_object(value.split()[0], _Group))
-        self.active_group = self.dm.get_object(value.split()[0], _Group)
+        if self.active_group:
+            self.active_group = self.dm.get_object(value.split()[0], _Group)
 
     def rotateSelectedTiles(self):
         self.editor.save(self.map)
