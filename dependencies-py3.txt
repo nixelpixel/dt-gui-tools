@@ -2,7 +2,7 @@
 numpy
 
 # Duckietown World
-git+https://github.com/duckietown/duckietown-world@ente-devel-map-format-divided
+#duckietown-world-ente
 
 # Map editor
 PyQt5
