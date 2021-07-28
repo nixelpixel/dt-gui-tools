@@ -973,7 +973,7 @@ class duck_window(QtWidgets.QMainWindow):
             grid_distortion = QGridLayout()
             grid_distortion.setColumnStretch(1, 4)
             grid_distortion.setColumnStretch(2, 4)
-            layout.addRow(QLabel("Camera Distortion"))
+            layout.addRow(QLabel("Camera Distortion: [k1, k2, p1, p2, k3]"))
             for idx in range(5):
                 if cam_obj.distortion_parameters:
                     grid_line_edit = QLineEdit(str(cam_obj.distortion_parameters[idx]))
