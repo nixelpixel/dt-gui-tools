@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import QMessageBox, QDesktopWidget, QFormLayout, QVBoxLayou
 from duckietown_world.structure.bases import _Frame
 from duckietown_world.structure.duckietown_map import DuckietownMap
 from duckietown_world.structure.objects import Watchtower, Citizen, Tile, TrafficSign, GroundTag, Vehicle, Camera, \
-    _Camera, _Group
+    _Camera, _Group, Decoration
 from duckietown_world.structure.old_format.convert import convert_new_format, dump
 import map
 import mapviewer
@@ -643,6 +643,10 @@ class duck_window(QtWidgets.QMainWindow):
                     name = f"{self.dm.get_context()}/vehicle_{len(self.dm.vehicles.dict())}"
                     obj = Vehicle(name, x=1, y=1)
                     self.dm.add(Camera(f"{name}/camera"))
+                else:  # block for decorations
+                    name = f"{self.dm.get_context()}/{item_name}_{len(self.dm.decorations.dict())}"
+                    obj = Decoration(name, x=1, y=1)
+                    obj.obj.type = item_name
                 if obj:
                     obj.frame.relative_to = self.dm.get_context()
                     self.dm.add(obj)
