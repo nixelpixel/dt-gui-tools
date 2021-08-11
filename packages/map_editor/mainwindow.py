@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import QMessageBox, QDesktopWidget, QFormLayout, QVBoxLayou
 from duckietown_world.structure.bases import _Frame
 from duckietown_world.structure.duckietown_map import DuckietownMap
 from duckietown_world.structure.objects import Watchtower, Citizen, Tile, TrafficSign, GroundTag, Vehicle, Camera, \
-    _Camera, _Group, Decoration
+    _Camera, _Group, Decoration, Light, VehicleTag
 from duckietown_world.structure.old_format.convert import convert_new_format, dump
 import map
 import mapviewer
@@ -642,7 +642,15 @@ class duck_window(QtWidgets.QMainWindow):
                 elif item_name == "duckiebot":
                     name = f"{self.dm.get_context()}/vehicle_{len(self.dm.vehicles.dict())}"
                     obj = Vehicle(name, x=1, y=1)
-                    self.dm.add(Camera(f"{name}/camera"))
+                    duckiebot_objs = [
+                        Camera(f"{name}/camera"),
+                        Light(f"{name}/light_{len(self.dm.lights.dict())}"),
+                        VehicleTag(f"{name}/vehicletag_{len(self.dm.vehicle_tags.dict())}")
+                    ]
+                    for sub_obj in duckiebot_objs:
+                        print(sub_obj)
+                        sub_obj.frame.relative_to = name
+                        self.dm.add(sub_obj)
                 else:  # block for decorations
                     name = f"{self.dm.get_context()}/{item_name}_{len(self.dm.decorations.dict())}"
                     obj = Decoration(name, x=1, y=1)
@@ -801,18 +809,15 @@ class duck_window(QtWidgets.QMainWindow):
                         elif key == "distortion_parameters":
                             if not cam_obj.distortion_parameters:
                                 cam_obj["distortion_parameters"] = []
-
                             if self.distortion_view_one_string_mode:
-                                dk = edit_obj[f"distortion_parameters"].text().replace(" ", "").split(",")
-                                for idx, val in enumerate(dk):
-                                    val = float(val)
+                                for idx in range(5):
+                                    val = float(edit_obj[f"distortion_parameters_{idx}"].text().split()[0])
                                     if len(cam_obj.distortion_parameters) < 5:
                                         cam_obj.distortion_parameters.append(val)
                                     else:
                                         cam_obj.distortion_parameters[idx] = val
                             else:
                                 for idx in range(5):
-                                    val = float(edit_obj[f"distortion_parameters_{idx}"].text().split()[0])
                                     if len(cam_obj.distortion_parameters) < 5:
                                         cam_obj.distortion_parameters.append(val)
                                     else:
@@ -831,8 +836,12 @@ class duck_window(QtWidgets.QMainWindow):
                                     else:
                                         cam_obj.camera_matrix[row][col] = val
                             print('MATRIX1   ', cam_obj.camera_matrix)
+                    elif key == "vehicle_id":
+                        v_obj.id = int(edit_obj[key].text())
                     else:
-                        new_value = edit_obj[key].text().split()[0]
+                        new_value = ""
+                        if len(edit_obj[key].text()) > 0:
+                            new_value = edit_obj[key].text().split()[0]
                         if key == 'id' and len(edit_obj[key].text().split()) > 1:
                             new_type = edit_obj[key].text().split()[1][1:-1]
                         if key == 'type' and new_type:
@@ -930,7 +939,8 @@ class duck_window(QtWidgets.QMainWindow):
                 combo_id.currentTextChanged.connect(change_type_from_combo)
                 layout.addRow(QLabel(attr_name), combo_id)
             elif attr_name == 'id':
-                new_edit.setReadOnly(True)
+                if "vehicle" not in name:
+                    new_edit.setReadOnly(True)
                 layout.addRow(QLabel("{}".format(attr_name)), new_edit)
             elif attr_name == "type":
                 new_edit.setReadOnly(True)
@@ -987,6 +997,17 @@ class duck_window(QtWidgets.QMainWindow):
                 grid_distortion.addWidget(grid_line_edit, 0, idx)
 
             layout.addRow(grid_distortion)
+            ### end camera ###
+            layout.addRow(QHLine())
+            for ((nm, tp), v_obj) in self.dm.vehicle_tags:
+                if nm.startswith(name):
+                    editable_values.update({"vehicle_id": obj.id})
+                    vehicle_tag_id_edit = QLineEdit(str(v_obj.id))
+                    edit_obj.update({
+                        "vehicle_id": vehicle_tag_id_edit
+                    })
+                    layout.addRow(QLabel("Vehicle id"), vehicle_tag_id_edit)
+
 
         layout.addRow(QHLine())
         combo_groups = QComboBox(self)
