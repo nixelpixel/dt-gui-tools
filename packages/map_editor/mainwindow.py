@@ -648,7 +648,6 @@ class duck_window(QtWidgets.QMainWindow):
                         VehicleTag(f"{name}/vehicletag_{len(self.dm.vehicle_tags.dict())}")
                     ]
                     for sub_obj in duckiebot_objs:
-                        print(sub_obj)
                         sub_obj.frame.relative_to = name
                         self.dm.add(sub_obj)
                 else:  # block for decorations
