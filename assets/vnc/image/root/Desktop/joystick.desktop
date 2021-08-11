@@ -1,0 +1,11 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=Joystick
+GenericName=Joystick
+Comment=Virtual Joystick
+TryExec=dt-launcher-joystick
+Exec=dt-launcher-joystick
+Icon=/root/.icons/keyboard_control.png
+Type=Application
+Categories=robot;robotics;control;joy;joystick;
+Keywords=robot;robotics;control;joy;joystick;
