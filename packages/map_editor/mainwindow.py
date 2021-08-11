@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import QMessageBox, QDesktopWidget, QFormLayout, QVBoxLayou
 from duckietown_world.structure.bases import _Frame
 from duckietown_world.structure.duckietown_map import DuckietownMap
 from duckietown_world.structure.objects import Watchtower, Citizen, Tile, TrafficSign, GroundTag, Vehicle, Camera, \
-    _Camera, _Group, Decoration
+    _Camera, _Group, Decoration, Light, VehicleTag
 from duckietown_world.structure.old_format.convert import convert_new_format, dump
 import map
 import mapviewer
@@ -642,7 +642,15 @@ class duck_window(QtWidgets.QMainWindow):
                 elif item_name == "duckiebot":
                     name = f"{self.dm.get_context()}/vehicle_{len(self.dm.vehicles.dict())}"
                     obj = Vehicle(name, x=1, y=1)
-                    self.dm.add(Camera(f"{name}/camera"))
+                    duckiebot_objs = [
+                        Camera(f"{name}/camera"),
+                        Light(f"{name}/light_{len(self.dm.lights.dict())}"),
+                        VehicleTag(f"{name}/vehicletag_{len(self.dm.vehicle_tags.dict())}")
+                    ]
+                    for sub_obj in duckiebot_objs:
+                        print(sub_obj)
+                        sub_obj.frame.relative_to = name
+                        self.dm.add(sub_obj)
                 else:  # block for decorations
                     name = f"{self.dm.get_context()}/{item_name}_{len(self.dm.decorations.dict())}"
                     obj = Decoration(name, x=1, y=1)
@@ -831,8 +839,12 @@ class duck_window(QtWidgets.QMainWindow):
                                     else:
                                         cam_obj.camera_matrix[row][col] = val
                             print('MATRIX1   ', cam_obj.camera_matrix)
+                    elif key == "vehicle_id":
+                        v_obj.id = int(edit_obj[key].text())
                     else:
-                        new_value = edit_obj[key].text().split()[0]
+                        new_value = ""
+                        if len(edit_obj[key].text()) > 0:
+                            new_value = edit_obj[key].text().split()[0]
                         if key == 'id' and len(edit_obj[key].text().split()) > 1:
                             new_type = edit_obj[key].text().split()[1][1:-1]
                         if key == 'type' and new_type:
@@ -848,6 +860,7 @@ class duck_window(QtWidgets.QMainWindow):
                         print(f"New value {new_value} for key {key}")
                         obj[key] = new_value
             except Exception as e:
+                print(e)
                 msg = QMessageBox()
                 msg.setIcon(QMessageBox.Critical)
                 msg.setText(str(e))
@@ -930,7 +943,8 @@ class duck_window(QtWidgets.QMainWindow):
                 combo_id.currentTextChanged.connect(change_type_from_combo)
                 layout.addRow(QLabel(attr_name), combo_id)
             elif attr_name == 'id':
-                new_edit.setReadOnly(True)
+                if "vehicle" not in name:
+                    new_edit.setReadOnly(True)
                 layout.addRow(QLabel("{}".format(attr_name)), new_edit)
             elif attr_name == "type":
                 new_edit.setReadOnly(True)
@@ -945,7 +959,6 @@ class duck_window(QtWidgets.QMainWindow):
             print("Camera info ", type(cam), cam.keys(), list(cam.keys())[0], cam)
             print(cam_obj)
             layout.addRow(QHLine())
-
 
             width_camera_edit = QLineEdit(str(cam_obj.width))
             height_camera_edit = QLineEdit(str(cam_obj.height))
@@ -987,6 +1000,21 @@ class duck_window(QtWidgets.QMainWindow):
                 grid_distortion.addWidget(grid_line_edit, 0, idx)
 
             layout.addRow(grid_distortion)
+            ### end camera ###
+            layout.addRow(QHLine())
+            print('VEHICLE '* 10)
+            for ((nm, tp), v_obj) in self.dm.vehicle_tags:
+                if nm.startswith(name):
+                    print(v_obj, '!'*20)
+                    editable_values.update({"vehicle_id": obj.id})
+                    vehicle_tag_id_edit = QLineEdit(str(v_obj.id))
+                    edit_obj.update({
+                        "vehicle_id": vehicle_tag_id_edit
+                    })
+                    layout.addRow(QLabel("Vehicle id"), vehicle_tag_id_edit)
+                print(name)
+                print(nm, obj)
+
 
         layout.addRow(QHLine())
         combo_groups = QComboBox(self)
