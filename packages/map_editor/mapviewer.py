@@ -5,9 +5,8 @@ from typing import Tuple, Dict
 from PyQt5.QtGui import QTransform
 from PyQt5.QtWidgets import QGraphicsView
 from PyQt5 import QtCore, QtGui, QtWidgets
-from duckietown_world.structure.objects import Tile, _Tile
 from duckietown_world.structure.utils import get_degree_for_orientation, get_canonical_sign_name
-
+from dt_maps.types.tiles import Tile
 from map import DuckietownMap
 from utils import get_list_dir_with_path
 from classes.mapObjects import MapBaseObject
@@ -15,6 +14,7 @@ import numpy as np
 import duckietown_world.structure as st
 from DTWorld import get_dt_world
 import os
+from dt_maps import Map
 
 logger = logging.getLogger('root')
 
@@ -58,7 +58,8 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
         QGraphicsView.__init__(self)
         map_name = os.path.abspath("maps/tm1")
         # print(map_name)
-        self.dm = get_dt_world(map_name)
+        self.dm = Map.from_disk("test", "./maps/tm1")
+        #self.dm = get_dt_world(map_name)
         self.setScene(QtWidgets.QGraphicsScene())
         # load tiles
         for filename, file_path in get_list_dir_with_path(TILES_DIR_PATH):
@@ -224,43 +225,46 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
                              , self.mouseCurX - self.mouseStartX, self.mouseCurY - self.mouseStartY)
 
     def draw_tiles(self, layer_data, painter: QtGui.QPainter, global_transform):
-        tiles = self.dm.tiles.only_tiles()
-        for i in range(len(tiles)):
-            for j in range(len(tiles[0])):
-                tile = tiles[i][j]
-                orientation = tile.orientation
-                painter.scale(self.sc, self.sc)
-                painter.translate(tile.i * self.map.gridSize, (len(tiles[0]) - 1 - tile.j) * self.map.gridSize)
+        tiles = self.dm.layers.tiles.values()
+        #for i in range(len(tiles)):
+        #    for j in range(len(tiles[0])):
+        t1 = 7 # todo: need to know size of map
+        for tile in tiles:
+            #tile = tiles[i][j]
+            orientation = tile.orientation
+            painter.scale(self.sc, self.sc)
+            painter.translate(tile.i * self.map.gridSize, (t1 - 1 - tile.j) * self.map.gridSize)
 
-                my_transform = QTransform()
-                my_transform.rotate(get_degree_for_orientation(orientation))
-                img = self.tileSprites[tile.type].transformed(my_transform)
-                painter.drawImage(QtCore.QRectF(0, 0, self.map.gridSize, self.map.gridSize),
-                                  img)
-                # print(self.tileSelection)
-                if self.is_selected_tile(tile):
-                    painter.setPen(QtGui.QColor('green'))
-                    painter.drawRect(QtCore.QRectF(1, 1, self.map.gridSize - 1, self.map.gridSize - 1))
-                else:
-                    painter.setPen(QtGui.QColor('white'))
-                    painter.drawRect(QtCore.QRectF(0, 0, self.map.gridSize, self.map.gridSize))
-                if tile.j == 0 and tile.i == 0:
-                    painter.setPen(QtGui.QColor('blue'))
-                    painter.drawRect(QtCore.QRectF(1, 1, self.map.gridSize - 1, self.map.gridSize - 1))
-                painter.setTransform(global_transform, False)
+            my_transform = QTransform()
+            my_transform.rotate(get_degree_for_orientation(orientation.value))
+            #print(self.tileSprites)
+            img = self.tileSprites[tile.type.value].transformed(my_transform)
+            painter.drawImage(QtCore.QRectF(0, 0, self.map.gridSize, self.map.gridSize),
+                              img)
+            # print(self.tileSelection)
+            if self.is_selected_tile(tile):
+                painter.setPen(QtGui.QColor('green'))
+                painter.drawRect(QtCore.QRectF(1, 1, self.map.gridSize - 1, self.map.gridSize - 1))
+            else:
+                painter.setPen(QtGui.QColor('white'))
+                painter.drawRect(QtCore.QRectF(0, 0, self.map.gridSize, self.map.gridSize))
+            if tile.j == 0 and tile.i == 0:
+                painter.setPen(QtGui.QColor('blue'))
+                painter.drawRect(QtCore.QRectF(1, 1, self.map.gridSize - 1, self.map.gridSize - 1))
+            painter.setTransform(global_transform, False)
 
-    def is_selected_tile(self, tile: _Tile) -> bool:
+    def is_selected_tile(self, tile: Tile) -> bool:
         return self.tileSelection[0] <= tile.i <= self.tileSelection[2] and self.tileSelection[3] <= tile.j <= \
                self.tileSelection[1]
 
     def draw_objects(self, painter):
         width, height = self.map.gridSize * self.sc / 2, self.map.gridSize * self.sc / 2
-        self.draw_watchtowers(width, height, painter)
-        self.draw_citizens(width, height, painter)
-        self.draw_traffic_signs(width, height, painter)
-        self.draw_groundtags(width, height, painter)
-        self.draw_vehicles(width, height, painter)
-        self.draw_decorations(width, height, painter)
+        #self.draw_watchtowers(width, height, painter)
+        #self.draw_citizens(width, height, painter)
+        #self.draw_traffic_signs(width, height, painter)
+        #self.draw_groundtags(width, height, painter)
+        #self.draw_vehicles(width, height, painter)
+        #self.draw_decorations(width, height, painter)
 
     def draw_decorations(self, width, height, painter):
         if self.dm.decorations:

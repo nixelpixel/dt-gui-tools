@@ -40,6 +40,8 @@ from managerduckietownmaps import ManagerDuckietownMaps
 from mapEditor import MapEditor
 from tag_config import get_duckietown_types
 
+from dt_maps import Map
+
 logger = logging.getLogger('root')
 TILE_TYPES = ('block', 'road')
 DEFAULT_TILE_SIZE = 0.585
@@ -76,10 +78,12 @@ class duck_window(QtWidgets.QMainWindow):
         self.active_items = []
         self.active_group = None
         self.name_of_editable_obj = None
-        self.dm = get_dt_world()
+        # Main object for api to map
+        self.dm = Map.from_disk("test", "./maps/tm1")
+        #get_dt_world()
         self.tile_size = DEFAULT_TILE_SIZE
-        self.duckie_manager = ManagerDuckietownMaps()
-        self.duckie_manager.add_map("maps/empty", self.dm)
+        #self.duckie_manager = ManagerDuckietownMaps()
+        #self.duckie_manager.add_map("maps/empty", self.dm)
 
         #  additional windows for displaying information
         self.author_window = info_window()
@@ -107,9 +111,9 @@ class duck_window(QtWidgets.QMainWindow):
         self.new_group_form = NewGroupForm()
         self.env_form = EnvForm()
         ############################
-        map_name = "maps/empty"
-        self.dm = get_dt_world(map_name)
-        logger.debug(self.dm.get_context())
+        #map_name = "maps/empty"
+        #self.dm = get_dt_world(map_name)
+        #logger.debug(self.dm.get_context())
         self.map = map.DuckietownMap()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
@@ -519,7 +523,7 @@ class duck_window(QtWidgets.QMainWindow):
         item_model.setHorizontalHeaderLabels(['Maps'])
         root_item = layer_tree_view.model().invisibleRootItem()
 
-        self.show_maps_menu(root_item)
+        #self.show_maps_menu(root_item)
         layer_tree_view.expandAll()
 
     def show_maps_menu(self, root_item):
@@ -727,9 +731,9 @@ class duck_window(QtWidgets.QMainWindow):
         selection = self.mapviewer.raw_selection
         item_layer = self.map.get_objects_from_layers()  # TODO: add self.current_layer for editing only it's objects?
         new_selected_obj = False
-        for layer in self.dm:
-            print(layer)
-        print(selection)
+        #for layer in self.dm:
+        #    print(layer)
+        #print(selection)
         if self.region_create:
             self.region_create = False
 
@@ -1081,21 +1085,24 @@ class duck_window(QtWidgets.QMainWindow):
         is_selected_tile = self.mapviewer.is_selected_tile
         if self.drawState == 'brush':
             self.editor.save(self.map)  # TODO: CTRL+Z need to fix because dt-world
-            tiles = self.dm.tiles.only_tiles()
-            for i in range(len(tiles)):
-                for j in range(len(tiles[0])):
-                    tile = tiles[i][j]
-                    if is_selected_tile(tile):
-                        tile.type = self.ui.default_fill.currentData()
-                        tile.orientation = 'E'
+            tiles = self.dm.layers.tiles.values()
+            #.tiles.only_tiles()
+            for tile in tiles:
+                print(tile)
+                print(is_selected_tile(tile))
+                if is_selected_tile(tile):
+                    print(self.ui.default_fill.currentData())
+                    tile.type = self.ui.default_fill.currentData()
+                    tile.orientation = 'E'
+
         self.update_layer_tree()
         self.mapviewer.scene().update()
 
-    def reset_duckietown_map(self, new_dm: DuckietownMap):
-        self.dm = new_dm
-        self.mapviewer.dm = new_dm
-        # self.update_layer_tree()
-        self.mapviewer.scene().update()
+    #ef reset_duckietown_map(self, new_dm: DuckietownMap):
+    #    self.dm = new_dm
+    #    self.mapviewer.dm = new_dm
+    #    # self.update_layer_tree()
+    #    self.mapviewer.scene().update()
 
     def get_random_name(self, begin):
         return "{}_{}".format(

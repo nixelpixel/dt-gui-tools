@@ -3,3 +3,4 @@ tiles:
     i: 0
     j: 0
     type: floor
+    orientation: E
