@@ -2,7 +2,7 @@
 numpy
 
 # Duckietown World
-duckietown-world-ente
+duckietown-world-daffy
 
 # Map editor
 PyQt5
