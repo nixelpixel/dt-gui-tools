@@ -9,7 +9,6 @@ from duckietown_world.structure.utils import get_degree_for_orientation, get_can
 from dt_maps.types.tiles import Tile
 from map import DuckietownMap
 from utils import get_list_dir_with_path
-from classes.mapObjects import MapBaseObject
 import numpy as np
 import duckietown_world.structure as st
 from DTWorld import get_dt_world
@@ -59,6 +58,7 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
         map_name = os.path.abspath("maps/tm1")
         # print(map_name)
         self.dm = Map.from_disk("test", "./maps/tm1")
+        self.size_map = 7
         #self.dm = get_dt_world(map_name)
         self.setScene(QtWidgets.QGraphicsScene())
         # load tiles
@@ -87,9 +87,9 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
         return (x_view - self.offsetX) / self.sc / self.map.gridSize * self.tile_size
 
     def get_y_from_view(self, y_view: float) -> float:
-        logger.debug((len(self.dm.tiles.only_tiles()[0]) - (y_view - self.offsetY) / self.sc / self.map.gridSize) \
+        logger.debug((self.size_map - (y_view - self.offsetY) / self.sc / self.map.gridSize) \
                      * self.tile_size)
-        return (len(self.dm.tiles.only_tiles()[0]) - (y_view - self.offsetY) / self.sc / self.map.gridSize) \
+        return (self.size_map - (y_view - self.offsetY) / self.sc / self.map.gridSize) \
                * self.tile_size
 
     def get_x_to_view(self, x_real: float) -> float:
@@ -101,7 +101,7 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
         return (x_real + 0) * self.sc * self.map.gridSize / self.tile_size
 
     def get_y_to_view(self, y_real: float) -> float:
-        return ((len(self.dm.tiles.only_tiles()[0]) - y_real / self.tile_size) + 0) * self.sc * self.map.gridSize
+        return ((self.size_map - y_real / self.tile_size) + 0) * self.sc * self.map.gridSize
 
     def wheelEvent(self, event: QtGui.QWheelEvent) -> None:
         sf = 2 ** (event.angleDelta().y() / 240)
@@ -171,7 +171,14 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
 
     def find_object(self, x, y) -> Tuple:
         event_x = np.array((x, y))
-        for frame_name, frame in self.dm.frames:
+        try:
+            for frame in self.dm.layers.frames.values():
+                print(frame.key, frame.pose.x, frame.pose.x)
+            print("0"*100)
+        except:  # TODO:
+            pass
+        '''
+        for frame_name, frame in self.dm.layers.frames:
             obj_x = frame.pose.x
             obj_y = frame.pose.y
             obj_array = np.array((obj_x, obj_y))
@@ -179,10 +186,11 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
                 logger.debug('Found frame: {}'.format(frame))
                 try:
                     name, _ = frame_name
-                    print('Tile of frame-{}:'.format(name), self.dm.tiles[name])
+                    #print('Tile of frame-{}:'.format(name), self.dm.tiles[name])
                 except:
                     pass
                 return frame, frame_name
+        '''
         return None, (None, None)
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
@@ -228,16 +236,19 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
         tiles = self.dm.layers.tiles.values()
         #for i in range(len(tiles)):
         #    for j in range(len(tiles[0])):
-        t1 = 7 # todo: need to know size of map
+        #t1 = 7 # todo: need to know size of map
         for tile in tiles:
             #tile = tiles[i][j]
+            if tile.type.value == "3way_left":
+                continue
             orientation = tile.orientation
             painter.scale(self.sc, self.sc)
-            painter.translate(tile.i * self.map.gridSize, (t1 - 1 - tile.j) * self.map.gridSize)
+            painter.translate(tile.i * self.map.gridSize, (self.size_map - 1 - tile.j) * self.map.gridSize)
 
             my_transform = QTransform()
             my_transform.rotate(get_degree_for_orientation(orientation.value))
             #print(self.tileSprites)
+            print(tile.type.value)
             img = self.tileSprites[tile.type.value].transformed(my_transform)
             painter.drawImage(QtCore.QRectF(0, 0, self.map.gridSize, self.map.gridSize),
                               img)

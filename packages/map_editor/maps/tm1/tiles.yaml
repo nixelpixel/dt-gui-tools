@@ -53,7 +53,7 @@ tiles:
     i: 1
     j: 3
     orientation: S
-    type: 3way
+    type: 3way_left
   map_1/tile_1_4:
     i: 1
     j: 4
@@ -113,7 +113,7 @@ tiles:
     i: 3
     j: 1
     orientation: W
-    type: 3way
+    type: 3way_left
   map_1/tile_3_2:
     i: 3
     j: 2
@@ -123,7 +123,7 @@ tiles:
     i: 3
     j: 3
     orientation: N
-    type: 3way
+    type: 3way_left
   map_1/tile_3_4:
     i: 3
     j: 4
@@ -133,7 +133,7 @@ tiles:
     i: 3
     j: 5
     orientation: E
-    type: 3way
+    type: 3way_left
   map_1/tile_3_6:
     i: 3
     j: 6
