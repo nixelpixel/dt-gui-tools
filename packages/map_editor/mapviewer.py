@@ -5,13 +5,11 @@ from typing import Tuple, Dict
 from PyQt5.QtGui import QTransform
 from PyQt5.QtWidgets import QGraphicsView
 from PyQt5 import QtCore, QtGui, QtWidgets
-from duckietown_world.structure.utils import get_degree_for_orientation, get_canonical_sign_name
+from utils import get_degree_for_orientation, get_canonical_sign_name
 from dt_maps.types.tiles import Tile
 from map import DuckietownMap
 from utils import get_list_dir_with_path
 import numpy as np
-import duckietown_world.structure as st
-from DTWorld import get_dt_world
 import os
 from dt_maps import Map
 

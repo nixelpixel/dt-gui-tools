@@ -10,21 +10,19 @@ import os
 from PyQt5.QtWidgets import QMessageBox, QDesktopWidget, QFormLayout, QVBoxLayout, QLineEdit, QGroupBox, \
     QLabel, QComboBox, QFrame, QGridLayout, QPushButton, QHBoxLayout
 
+from dt_maps.types.tiles import Tile
+
 from duckietown_world.structure.bases import _Frame
-from duckietown_world.structure.duckietown_map import DuckietownMap
-from duckietown_world.structure.objects import Watchtower, Citizen, Tile, TrafficSign, GroundTag, Vehicle, Camera, \
+from duckietown_world.structure.objects import Watchtower, Citizen, TrafficSign, GroundTag, Vehicle, Camera, \
     _Camera, _Group, Decoration, Light, VehicleTag
 from duckietown_world.structure.old_format.convert import convert_new_format, dump
 import map
 import mapviewer
 import utils
-from DTWorld import get_dt_world
 from DTWorld import get_new_dt_world
 from IOManager import *
 import logging
 from classes.mapObjects import GroundAprilTagObject
-from duckietown_world.structure.utils import get_degree_for_orientation, get_orientation_for_degree, \
-    get_canonical_sign_name
 
 from classes.mapTile import MapTile
 from forms.default_forms import question_form_yes_no
@@ -36,7 +34,6 @@ from infowindow import info_window
 from layers.layer_type import LayerType
 from layers.relations import get_layer_type_by_object_type
 from main_design import *
-from managerduckietownmaps import ManagerDuckietownMaps
 from mapEditor import MapEditor
 from tag_config import get_duckietown_types
 
@@ -636,9 +633,9 @@ class duck_window(QtWidgets.QMainWindow):
                     obj = Watchtower(name, x=1, y=1)
                     self.dm.add(Camera(f"{name}/camera"))
                 elif type_of_element == "sign":
-                    name = f"{self.dm.get_context()}/{get_canonical_sign_name(item_name)}_{len(self.dm.traffic_signs.dict())}"
+                    name = f"{self.dm.get_context()}/{utils.get_canonical_sign_name(item_name)}_{len(self.dm.traffic_signs.dict())}"
                     obj = TrafficSign(name, x=1, y=1)
-                    obj.obj.type = get_canonical_sign_name(item_name)
+                    obj.obj.type = utils.get_canonical_sign_name(item_name)
                     obj.obj.id = utils.get_id_by_type(item_name)
                 elif item_name == "apriltag":
                     name = f"{self.dm.get_context()}/groundtag_{len(self.dm.ground_tags.dict())}"
@@ -1061,8 +1058,8 @@ class duck_window(QtWidgets.QMainWindow):
         for ((nm, _), tile) in self.dm.tiles:
             if is_selected_tile(tile):
                 frame: _Frame = self.dm.frames[nm]
-                orien_val = get_degree_for_orientation(tile.orientation) - 90  # (rot_val[tile.orientation] + 90) % 360
-                tile.orientation = get_orientation_for_degree(orien_val)
+                orien_val = utils.get_degree_for_orientation(tile.orientation) - 90  # (rot_val[tile.orientation] + 90) % 360
+                tile.orientation = utils.get_orientation_for_degree(orien_val)
                 frame.pose.yaw = {'E': np.pi * 1.5, 'N': 0, 'W': np.pi, 'S': np.pi * 0.5, None: 0}[tile.orientation]
         self.mapviewer.scene().update()
 
