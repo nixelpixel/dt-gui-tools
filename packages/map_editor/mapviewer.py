@@ -244,7 +244,12 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
             painter.translate(tile.i * self.map.gridSize, (self.size_map - 1 - tile.j) * self.map.gridSize)
 
             my_transform = QTransform()
-            my_transform.rotate(get_degree_for_orientation(orientation.value))
+            degree = get_degree_for_orientation(orientation.value)
+            # check, because QTransform().rotate clockwise
+            if not degree / 90 % 2:
+                my_transform.rotate(get_degree_for_orientation(orientation.value))
+            else:
+                my_transform.rotate(get_degree_for_orientation(orientation.value) + 180)
             #print(self.tileSprites)
             print(tile.type.value)
             img = self.tileSprites[tile.type.value].transformed(my_transform)

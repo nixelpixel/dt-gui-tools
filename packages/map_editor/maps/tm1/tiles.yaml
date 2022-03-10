@@ -42,12 +42,12 @@ tiles:
   map_1/tile_1_1:
     i: 1
     j: 1
-    orientation: W
+    orientation: E
     type: curve_right
   map_1/tile_1_2:
     i: 1
     j: 2
-    orientation: E
+    orientation: W
     type: straight
   map_1/tile_1_3:
     i: 1
@@ -57,7 +57,7 @@ tiles:
   map_1/tile_1_4:
     i: 1
     j: 4
-    orientation: E
+    orientation: W
     type: straight
   map_1/tile_1_5:
     i: 1
@@ -117,22 +117,22 @@ tiles:
   map_1/tile_3_2:
     i: 3
     j: 2
-    orientation: E
+    orientation: W
     type: straight
   map_1/tile_3_3:
     i: 3
     j: 3
-    orientation: E
+    orientation: W
     type: 3way_left
   map_1/tile_3_4:
     i: 3
     j: 4
-    orientation: E
+    orientation: W
     type: straight
   map_1/tile_3_5:
     i: 3
     j: 5
-    orientation: E
+    orientation: W
     type: 3way_left
   map_1/tile_3_6:
     i: 3
@@ -197,12 +197,12 @@ tiles:
   map_1/tile_5_4:
     i: 5
     j: 4
-    orientation: W
+    orientation: E
     type: curve_right
   map_1/tile_5_5:
     i: 5
     j: 5
-    orientation: E
+    orientation: W
     type: curve_right
   map_1/tile_5_6:
     i: 5
@@ -222,17 +222,17 @@ tiles:
   map_1/tile_6_2:
     i: 6
     j: 2
-    orientation: E
+    orientation: W
     type: straight
   map_1/tile_6_3:
     i: 6
     j: 3
-    orientation: E
+    orientation: W
     type: straight
   map_1/tile_6_4:
     i: 6
     j: 4
-    orientation: E
+    orientation: W
     type: curve_right
   map_1/tile_6_5:
     i: 6

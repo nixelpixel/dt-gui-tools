@@ -48,9 +48,9 @@ def get_available_translations(lang_dir_path): return {filename[len('lang_'):-le
 def get_degree_for_orientation(orientation: str) -> int:
     degrees: dict = {
         'S': 180,
-        'E': 270,
-        'N': 0,
         'W': 90,
+        'N': 0,
+        'E': 270,
     }
     return degrees[orientation]
 
