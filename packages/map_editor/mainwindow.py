@@ -306,15 +306,14 @@ class duck_window(QtWidgets.QMainWindow):
         logger.debug("Creating a new map")
         new_map_dir = QFileDialog.getExistingDirectory(self, 'Open new map', '.',
                                                        QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
+        print(new_map_dir)
         if new_map_dir:
-            dm2_test = get_new_dt_world(new_map_dir)
-            print(dm2_test)
-            self.duckie_manager.add_map(new_map_dir.split('/')[-1], dm2_test)
-            self.reset_duckietown_map(dm2_test)
-            print(new_map_dir.split('/')[-1])
-            self.mapviewer.offsetX = self.mapviewer.offsetY = 0
-            self.mapviewer.scene().update()
+            new_dm = Map.from_disk("new_map", new_map_dir)
+            self.dm = new_dm
+            self.mapviewer.dm = new_dm
             self.update_layer_tree()
+            self.mapviewer.scene().update()
+
 
     def import_old_format(self):
         old_format_map = QFileDialog.getOpenFileName(self, 'Open map(old format)', '.')
@@ -368,18 +367,25 @@ class duck_window(QtWidgets.QMainWindow):
 
     #  Save map
     def save_map_triggered(self):
+
         self.save_map_as_triggered()
 
     #  Save map as
     def save_map_as_triggered(self):
         path_folder = save_map_as(self)
         if path_folder:
+            self.dm.to_disk()
+        '''
+        if path_folder:
             map_final = self.dm.dump(self.dm)
 
             for layer_name in map_final:
-                with open(path_folder + f'/{layer_name}.yaml', 'w+') as file:
+                with ope    n(path_folder + f'/{layer_name}.yaml', 'w+') as file:
                     file.write(map_final[layer_name])
             print('FINAL PATH, ', path_folder)
+        
+        '''
+
 
     #  Calculate map characteristics
     def calc_param_triggered(self):
