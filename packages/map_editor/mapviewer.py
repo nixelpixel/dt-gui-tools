@@ -273,7 +273,7 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
 
     def draw_objects(self, painter):
         width, height = self.map.gridSize * self.sc / 2, self.map.gridSize * self.sc / 2
-        #self.draw_watchtowers(width, height, painter)
+        self.draw_watchtowers(width, height, painter)
         #self.draw_citizens(width, height, painter)
         #self.draw_traffic_signs(width, height, painter)
         #self.draw_groundtags(width, height, painter)
@@ -288,8 +288,9 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
         self.raw_draw_objects(width, height, painter, self.dm.citizens, "duckie")
 
     def draw_watchtowers(self, width, height, painter):
-        if self.dm.watchtowers is not None:
-            self.raw_draw_objects(width, height, painter, self.dm.watchtowers, "watchtower")
+        print("-------------darw watchtowers")
+        if self.dm.layers.watchtowers is not None:
+            self.raw_draw_objects(width, height, painter, self.dm.layers.watchtowers, "watchtower")
 
     def draw_traffic_signs(self, width, height, painter):
         for info, object in self.dm.traffic_signs:
@@ -323,17 +324,20 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
             self.raw_draw_objects(width, height, painter, self.dm.vehicles, "duckiebot")
 
     def raw_draw_objects(self, width, height, painter, arr_objects, type_name=None):
-        for info, obj in arr_objects:
-            obj_name, obj_type = info
-            frame_obj = self.dm.frames[obj_name]
-            print('OBJ ', obj)
+        for obj_name in arr_objects:
+            frame_obj = self.dm.layers.frames[obj_name]
             x, y = 0, 0
             frame_of_pose = frame_obj
-            yaw = - (np.rad2deg(frame_obj.pose.yaw) )
+            #yaw = - (np.rad2deg(frame_obj.pose.yaw) )
+            yaw = 0
             while frame_of_pose:
+                print(frame_of_pose.relative_to)
                 x += frame_of_pose.pose.x
                 y += frame_of_pose.pose.y
-                frame_of_pose = self.dm.frames[frame_of_pose.relative_to]
+                try:
+                    frame_of_pose = self.dm.layers.frames[frame_of_pose.relative_to]
+                except:
+                    frame_of_pose = None
             x, y = self.get_x_to_view(x), self.get_y_to_view(y)
             draw_obj = QtCore.QRectF(x - width / 2,
                               y - height / 2,
@@ -345,6 +349,4 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
                 img: QtGui.QImage = self.objects[type_name].transformed(tf)
             else:
                 img: QtGui.QImage = self.objects[obj.type].transformed(tf)
-            painter.drawImage(
-                draw_obj,
-                img)
+            painter.drawImage(draw_obj,img)
