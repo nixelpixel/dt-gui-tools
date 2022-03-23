@@ -1,6 +1,7 @@
 frames:
   map_1:
     pose:
+      x: 0.0
       y: 0.0
     relative_to: null
   map_1/duckie1:
@@ -15,5 +16,6 @@ frames:
     relative_to: map_1
   map_1/watchtower1/watchtower2:
     pose:
+      x: 0.0
       y: 0.9
     relative_to: map_1/watchtower1

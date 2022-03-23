@@ -11,6 +11,7 @@ from PyQt5.QtWidgets import QMessageBox, QDesktopWidget, QFormLayout, QVBoxLayou
     QLabel, QComboBox, QFrame, QGridLayout, QPushButton, QHBoxLayout
 
 from dt_maps.types.tiles import Tile
+from dt_maps.types.tiles import TileType, TileOrientation
 
 from duckietown_world.structure.bases import _Frame
 from duckietown_world.structure.objects import Watchtower, Citizen, TrafficSign, GroundTag, Vehicle, Camera, \
@@ -114,7 +115,7 @@ class duck_window(QtWidgets.QMainWindow):
         self.map = map.DuckietownMap()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        viewer = mapviewer.MapViewer()
+        viewer = mapviewer.MapViewer(self.dm)
         self.editor = MapEditor(self.map, self.mapviewer)
         viewer.setMap(self.map)
         self.mapviewer = viewer
@@ -1072,19 +1073,25 @@ class duck_window(QtWidgets.QMainWindow):
         self.update_layer_tree()
 
     def selectionUpdate(self):
+        print("A"*100)
         is_selected_tile = self.mapviewer.is_selected_tile
         if self.drawState == 'brush':
-            self.editor.save(self.map)  # TODO: CTRL+Z need to fix because dt-world
+            #self.editor.save(self.map)  # TODO: CTRL+Z need to fix because dt-world
             tiles = self.dm.layers.tiles.values()
             #.tiles.only_tiles()
             for tile in tiles:
-                print(tile)
-                print(is_selected_tile(tile))
+                print("B"*100)
+                #print(tile)
+                #print(is_selected_tile(tile))
                 if is_selected_tile(tile):
+                    print("C"*100)
+                    print(tile)
+                    #print(self.ui.default_fill.currentData())
                     print(self.ui.default_fill.currentData())
-                    tile.type = self.ui.default_fill.currentData()
+                    tile.type = TileType.STRAIGHT
+                    #self.ui.default_fill.currentData()
                     tile.orientation = 'E'
-
+        print(self.dm.layers.tiles)
         self.update_layer_tree()
         self.mapviewer.scene().update()
 

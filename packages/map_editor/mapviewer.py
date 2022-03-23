@@ -51,11 +51,11 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
     editObjectChanged = QtCore.pyqtSignal(tuple)
     lmbClicked = QtCore.pyqtSignal(int, int)  # click coordinates as an index of the clicked tile
 
-    def __init__(self):
+    def __init__(self, dm):
         QGraphicsView.__init__(self)
         map_name = os.path.abspath("maps/tm1")
         # print(map_name)
-        self.dm = Map.from_disk("test", "./maps/tm1")
+        self.dm = dm#Map.from_disk("test", "./maps/tm1")
         self.size_map = 7
         #self.dm = get_dt_world(map_name)
         self.setScene(QtWidgets.QGraphicsScene())
@@ -251,7 +251,7 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
             else:
                 my_transform.rotate(get_degree_for_orientation(orientation.value) + 180)
             #print(self.tileSprites)
-            print(tile.type.value)
+            #print(tile.type.value)
             img = self.tileSprites[tile.type.value].transformed(my_transform)
             painter.drawImage(QtCore.QRectF(0, 0, self.map.gridSize, self.map.gridSize),
                               img)
@@ -273,7 +273,7 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
 
     def draw_objects(self, painter):
         width, height = self.map.gridSize * self.sc / 2, self.map.gridSize * self.sc / 2
-        #self.draw_watchtowers(width, height, painter)
+        self.draw_watchtowers(width, height, painter)
         #self.draw_citizens(width, height, painter)
         #self.draw_traffic_signs(width, height, painter)
         #self.draw_groundtags(width, height, painter)
@@ -288,8 +288,12 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
         self.raw_draw_objects(width, height, painter, self.dm.citizens, "duckie")
 
     def draw_watchtowers(self, width, height, painter):
-        if self.dm.watchtowers is not None:
-            self.raw_draw_objects(width, height, painter, self.dm.watchtowers, "watchtower")
+        #print("WT - ", self.dm.layers.watchtowers)
+        #print("WT1.x - ", self.dm.layers.frames["map_1/watchtower1"].pose.x)
+        #print("WT1.y - ", self.dm.layers.frames["map_1/watchtower1"].pose.y)
+
+        if self.dm.layers.watchtowers is not None:
+            self.raw_draw_objects(width, height, painter, self.dm.layers.watchtowers, "watchtower")
 
     def draw_traffic_signs(self, width, height, painter):
         for info, object in self.dm.traffic_signs:
@@ -323,24 +327,27 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
             self.raw_draw_objects(width, height, painter, self.dm.vehicles, "duckiebot")
 
     def raw_draw_objects(self, width, height, painter, arr_objects, type_name=None):
-        for info, obj in arr_objects:
-            obj_name, obj_type = info
-            frame_obj = self.dm.frames[obj_name]
-            print('OBJ ', obj)
+        for obj_name in arr_objects:
+            frame_obj = self.dm.layers.frames[obj_name]
             x, y = 0, 0
             frame_of_pose = frame_obj
-            yaw = - (np.rad2deg(frame_obj.pose.yaw) )
+            #yaw = - (np.rad2deg(frame_obj.pose.yaw) )
+            yaw = 0
             while frame_of_pose:
+                #print(frame_of_pose.relative_to)
                 x += frame_of_pose.pose.x
                 y += frame_of_pose.pose.y
-                frame_of_pose = self.dm.frames[frame_of_pose.relative_to]
+                try:
+                    frame_of_pose = self.dm.layers.frames[frame_of_pose.relative_to]
+                except:
+                    frame_of_pose = None
             x, y = self.get_x_to_view(x), self.get_y_to_view(y)
             draw_obj = QtCore.QRectF(x - width / 2,
                               y - height / 2,
                               width, height)
             tf = QTransform()
             tf.rotate(yaw)
-            print(f"Rotate {yaw}")
+            #print(f"Rotate {yaw}")
             if type_name is not None:
                 img: QtGui.QImage = self.objects[type_name].transformed(tf)
             else:
@@ -348,3 +355,5 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
             painter.drawImage(
                 draw_obj,
                 img)
+
+    #def raw_draw_objects(self, width, height, painter, arr_objects, type_name=None):
