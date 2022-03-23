@@ -169,26 +169,21 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
 
     def find_object(self, x, y) -> Tuple:
         event_x = np.array((x, y))
-        try:
-            for frame in self.dm.layers.frames.values():
-                print(frame.key, frame.pose.x, frame.pose.x)
-            print("0"*100)
-        except:  # TODO:
-            pass
-        '''
-        for frame_name, frame in self.dm.layers.frames:
-            obj_x = frame.pose.x
-            obj_y = frame.pose.y
+        for frame_name in self.dm.layers.frames:
+            frame = self.dm.layers.frames[frame_name]
+            obj_x, obj_y = 0, 0
+            while frame:
+                obj_x += frame.pose.x
+                obj_y += frame.pose.y
+                try:
+                    frame = self.dm.layers.frames[frame.relative_to]
+                except:
+                    frame = None
             obj_array = np.array((obj_x, obj_y))
             if np.linalg.norm(obj_array - event_x) < DELTA_EUCLIDEAN_DISTANCE:
-                logger.debug('Found frame: {}'.format(frame))
-                try:
-                    name, _ = frame_name
-                    #print('Tile of frame-{}:'.format(name), self.dm.tiles[name])
-                except:
-                    pass
-                return frame, frame_name
-        '''
+                logger.debug('Found frame: {}'.format(frame_name))
+                return self.dm.layers.frames[frame_name], frame_name
+
         return None, (None, None)
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
