@@ -1,14 +1,17 @@
 from mapViewer import MapViewer
 from mapEditor import MapEditor
-from dataClass import DataClass
+from map_editor_new_architecture.editorState import EditorState
+from map_editor_new_architecture.mapStorage import MapStorage
+
 
 class TriggerHandlers:
     copyBuffer = [[]]
 
-    def __init__(self, map_viewer: MapViewer, data_class: DataClass):
-        self.data_class = data_class
-        self.map_viewer = map_viewer
-        self.map_editor = MapEditor(self.data_class.dm)
+    def __init__(self, args):
+        self.map_viewer = MapViewer()
+        self.map = MapStorage()
+        self.editor_state = EditorState(args)
+        self.map_editor = MapEditor()
 
 
 '''
