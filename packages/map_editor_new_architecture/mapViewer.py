@@ -68,18 +68,21 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget, metaclass=SingletonMeta):
 
         self.world_api = WorldApi()
         self.map = MapStorage()
+
         self.tiles = TileLayer()
         self.watchtowers = WatchtowersHandler()
         self.citizens = CitizensHandler()
+        self.traffic_signs = TrafficSignsHandler()
+        self.ground_tags = GroundTagsHandler()
+        self.vehicles = VehiclesHandler()
+        self.decorations = DecorationsHandler()
 
-        # todo make with cycle
+        handlers_list = [self.tiles, self.watchtowers, self.citizens,
+                         self.traffic_signs, self.ground_tags,
+                         self.vehicles, self.decorations]
 
-        self.tiles.set_next(self.watchtowers).set_next(self.citizens)
-
-        #self.traffic_signs = TrafficSignsHandler()
-        #self.ground_tags = GroundTagsHandler()
-        #self.vehicles = VehiclesHandler()
-        #self.decorations = DecorationsHandler()
+        for i in range(len(handlers_list) - 1):
+            handlers_list[i].set_next(handlers_list[i+1])
 
     def load_tiles_images(self):
         for filename, file_path in get_list_dir_with_path(TILES_DIR_PATH):
