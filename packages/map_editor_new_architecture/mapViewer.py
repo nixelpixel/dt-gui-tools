@@ -11,9 +11,9 @@ from map_editor_new_architecture.drawLayersHandler import WatchtowersHandler, \
     CitizensHandler, TrafficSignsHandler, GroundTagsHandler, VehiclesHandler, \
     DecorationsHandler, TileLayer
 from map_editor_new_architecture.mapStorage import MapStorage
+from map_editor_new_architecture.utils.singletonMeta import SingletonMeta
 from map_editor_new_architecture.worldApi import WorldApi
 from utils import get_list_dir_with_path
-from threading import Lock
 
 
 logger = logging.getLogger('root')
@@ -28,19 +28,7 @@ DELTA_EUCLIDEAN_DISTANCE = .15
 
 # TILE_SIZE = 0.585
 
-class MapViewerMeta(type):
-    _instances = {}
-    _lock: Lock = Lock()
-
-    def __call__(cls, *args, **kwargs):
-        with cls._lock:
-            if cls not in cls._instances:
-                instance = super().__call__(*args, **kwargs)
-                cls._instances[cls] = instance
-        return cls._instances[cls]
-
-
-class MapViewer(QGraphicsView, QtWidgets.QWidget, metaclass=MapViewerMeta):
+class MapViewer(QGraphicsView, QtWidgets.QWidget, metaclass=SingletonMeta):
     map = None
     tileSprites: Dict[str, QtGui.QImage] = {'empty': QtGui.QImage()}
     objects = {get_canonical_sign_name('stop'): QtGui.QImage()}
@@ -83,6 +71,8 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget, metaclass=MapViewerMeta):
         self.tiles = TileLayer()
         self.watchtowers = WatchtowersHandler()
         self.citizens = CitizensHandler()
+
+        # todo make with cycle
 
         self.tiles.set_next(self.watchtowers).set_next(self.citizens)
 

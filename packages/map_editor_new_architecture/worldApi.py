@@ -6,7 +6,7 @@ class WorldApi:
     map_object = None
     offsetX = 0
     offsetY = 0
-    sc = 1
+    scale = 1
     size_map = 7
     tile_size = 0.585
 
@@ -20,8 +20,8 @@ class WorldApi:
     def set_offset_y(self, new_offset_y: int) -> None:
         self.offsetY = new_offset_y
 
-    def set_sc(self, new_sc: int) -> None:
-        self.sc = new_sc
+    def set_sc(self, new_scale: int) -> None:
+        self.scale = new_scale
 
     def set_tile_size(self, new_tile_size: float) -> None:
         self.tile_size = new_tile_size

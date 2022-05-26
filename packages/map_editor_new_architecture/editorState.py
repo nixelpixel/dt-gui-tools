@@ -1,20 +1,11 @@
 from threading import Lock
+
+from map_editor_new_architecture.utils.singletonMeta import SingletonMeta
+
 DEFAULT_TILE_SIZE = 0.585
 
 
-class EditorStateMeta(type):
-    _instances = {}
-    _lock: Lock = Lock()
-
-    def __call__(cls, *args, **kwargs):
-        with cls._lock:
-            if cls not in cls._instances:
-                instance = super().__call__(*args, **kwargs)
-                cls._instances[cls] = instance
-        return cls._instances[cls]
-
-
-class EditorState(metaclass=EditorStateMeta):
+class EditorState(metaclass=SingletonMeta):
     drawState = ''
     copyBuffer = [[]]
 
