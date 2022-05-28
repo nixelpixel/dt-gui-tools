@@ -1,0 +1,3 @@
+
+class QtWindowAPI:
+    pass
