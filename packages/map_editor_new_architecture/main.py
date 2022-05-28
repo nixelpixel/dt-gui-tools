@@ -2,7 +2,7 @@
 import sys
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QTranslator
-from mainWindow import duck_window
+from mainWindow import DuckWindow
 from argparse import ArgumentParser
 from logger import init_logger
 from utils import get_available_translations
@@ -25,7 +25,7 @@ def main(app_args):
     init_translator(app, args.locale_path)
 
     # Create main window
-    window = duck_window(args)
+    window = DuckWindow(args)
 
     window.show()
     app.exec_()
