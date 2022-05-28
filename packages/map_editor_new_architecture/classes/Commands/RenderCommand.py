@@ -1,8 +1,15 @@
-from classes.DtMapCommand import DtMapCommand
+from typing import Any
+
+from dt_maps import Map, MapLayer
+
+from classes.basic.command import Command
 
 
-class RenderCommand(DtMapCommand):
+class RenderCommand(Command):
+    _render_obj = None
 
-    def execute(self) -> None:
-        print(self.dm)
-        print("!"*100)
+    def __init__(self, render_obj):
+        self._render_obj = render_obj
+
+    def execute(self, dm: Map, layer: MapLayer, layer_name: str) -> Any:
+        return True

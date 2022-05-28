@@ -2,15 +2,21 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Optional
 
+from dt_maps import MapLayer
+
 from mapStorage import MapStorage
 
 
 class AbstractLayer(ABC):
-    __layer_name__ = ""
+    _data: MapLayer = None
 
-    def __init__(self, layer_name: str) -> None:
-        self.__layer_name__ = layer_name
-        self._data = MapStorage().map.layers[layer_name]
+    def __init__(self) -> None:
+        self.dm = MapStorage().map
+        self.data = self.dm.layers[self.layer_name()]
+
+    @abstractmethod
+    def layer_name(self) -> str:
+        pass
 
     def render(self) -> None:
         pass

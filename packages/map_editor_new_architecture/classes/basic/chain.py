@@ -1,6 +1,6 @@
 from __future__ import annotations
 from abc import abstractmethod, ABC
-from typing import Optional
+from typing import Optional, Any
 
 from classes.basic.command import Command
 
@@ -11,7 +11,7 @@ class Handler(ABC):
         pass
 
     @abstractmethod
-    def handle(self, command: Command) -> Optional[str]:
+    def handle(self, command: Command) -> Any:
         pass
 
 
@@ -23,7 +23,7 @@ class AbstractHandler(Handler):
         return handler
 
     @abstractmethod
-    def handle(self, command: Command) -> None:
+    def handle(self, command: Command) -> Any:
         if self._next_handler:
             return self._next_handler.handle(command)
         return None

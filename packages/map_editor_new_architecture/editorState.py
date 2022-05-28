@@ -1,6 +1,6 @@
 from threading import Lock
 
-from map_editor_new_architecture.utils.singletonMeta import SingletonMeta
+from utils.singletonMeta import SingletonMeta
 
 DEFAULT_TILE_SIZE = 0.585
 
