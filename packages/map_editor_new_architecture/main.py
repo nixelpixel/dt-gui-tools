@@ -5,7 +5,7 @@ from PyQt5.QtCore import QTranslator
 from mainWindow import DuckWindow
 from argparse import ArgumentParser
 from trash.logger import init_logger
-from utils.windowUtils import get_available_translations
+from utils.window import get_available_translations
 
 logger = init_logger()
 

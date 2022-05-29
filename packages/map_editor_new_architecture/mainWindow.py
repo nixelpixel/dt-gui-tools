@@ -4,10 +4,11 @@ from os import path
 import functools
 import json
 import codecs
-from PyQt5.QtWidgets import QMessageBox, QDesktopWidget, QFormLayout, QVBoxLayout, QLineEdit, QGroupBox, \
+from PyQt5.QtWidgets import QVBoxLayout, QLineEdit, QGroupBox, \
     QLabel, QComboBox, QFrame, QGridLayout, QPushButton, QHBoxLayout
 
 from mapAPI import MapAPI
+from mapViewer import MapViewer
 from windowDesign import *
 
 
@@ -21,8 +22,8 @@ class QHLine(QFrame):
 
 
 class DuckWindow(QtWidgets.QMainWindow):
-    #mapviewer = None
-    #map_api = None
+    map_viewer = None
+    map_api = None
     info_json = None
 
     def __init__(self, args, elem_info="doc/info.json"):
@@ -38,12 +39,12 @@ class DuckWindow(QtWidgets.QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
-        #self.map_api = MapAPI()
+        self.map_api = MapAPI()
+        self.map_viewer = MapViewer()
 
-        #self.mapviewer.setMinimumSize(540, 540)
-        #self.ui.horizontalLayout.addWidget(self.mapviewer)
-        #self.mapviewer.repaint()
-
+        self.map_viewer.setMinimumSize(540, 540)
+        self.ui.horizontalLayout.addWidget(self.map_viewer)
+        self.map_viewer.repaint()
         self.initUi()
         self.update_layer_tree()
 
@@ -209,143 +210,142 @@ class DuckWindow(QtWidgets.QMainWindow):
         set_fill = self.ui.set_fill
         set_fill.clicked.connect(self.set_default_fill)
 
-
     def change_env(self):
-        pass
+        print('')
 
     def center(self):
-        pass
+        print('')
 
     #  Create a new map
     def open_map_triggered(self):
-        pass
+        self.map_api.open_map_triggered()
 
     def import_old_format(self):
-        pass
+        self.map_api.import_old_format()
 
     #  Open map
     def create_map_triggered(self):
-       pass
+       print('create_map_triggered')
 
     def create_region(self):
-        pass
+        print('create_region')
 
     def change_distortion_view_triggered(self):
-        pass
+        print('change_distortion_view_triggered')
 
     #  Save map
     def save_map_triggered(self):
-        pass
+        print('save_map_triggered')
 
     #  Save map as
     def save_map_as_triggered(self):
-        pass
+        print('')
 
     #  Calculate map characteristics
     def calc_param_triggered(self):
-        pass
+        print('calc_param_triggered')
 
     #  Help: About
     def about_author_triggered(self):
-        pass
+        print('about_author_triggered')
 
     #  Exit
     def exit_triggered(self):
-        pass
+        print('exit_triggered')
 
     # Save map before exit
     def save_before_exit(self):
-        pass
+        print('save_before_exit')
 
     #  Hide Block menu
     def change_blocks_toggled(self):
-        pass
+        print('change_blocks_toggled')
 
     #  Change button state
     def blocks_event(self, event):
-        pass
+        print('blocks_event')
 
     #  Hide information menu
     def change_info_toggled(self):
-        pass
+        print('change_info_toggled')
 
     #  Change button state
     def info_event(self, event):
-        pass
+        print('info_event')
 
     #  Hide the menu about map properties
     def change_map_toggled(self):
-        pass
+        print('change_map_toggled')
 
     #  Change button state
     def map_event(self, event):
-        pass
+        print('map_event')
 
     # Layer window
 
     def toggle_layer_window(self):
-        pass
+        print('toggle_layer_window')
 
     def close_layer_window_event(self, event):
-        pass
+        print('close_layer_window_event')
 
     def layer_tree_clicked(self):
-        pass
+        print('layer_tree_clicked')
 
     def layer_tree_double_clicked(self):
-        pass
+        print('layer_tree_double_clicked')
 
     def update_layer_tree(self):
-        pass
+        print('update_layer_tree')
 
     #  Program exit event
     def quit_program_event(self, event):
-        pass
+        print('quit_program_event')
 
     #  Handle a click on an item from a list to a list
     def item_list_clicked(self):
-        pass
+        print('item_list_clicked')
 
     #  Double click initiates as single click action
     def item_list_double_clicked(self):
-        pass
+        print('item_list_double_clicked')
 
     #  Reset to default values
     def set_default_fill(self):
-        pass
+        print('set_default_fill')
 
     #  Copy
     def copy_button_clicked(self):
-        pass
+        print('copy_button_clicked')
 
     #  Cut
     def cut_button_clicked(self):
-        pass
+        print('cut_button_clicked')
 
     #  Paste
     def insert_button_clicked(self):
-        pass
+        print('insert_button_clicked')
 
     #  Delete
     def delete_button_clicked(self):
-        pass
+        print('delete_button_clicked')
 
     #  Undo
     def undo_button_clicked(self):
-        pass
+        print('undo_button_clicked')
 
     #  Brush mode
     def brush_mode(self):
-        pass
+        print('brush_mode')
 
     def trimClicked(self):
-        pass
+        print('trimClicked')
 
     def selectionUpdate(self):
-        pass
+        print('selectionUpdate')
 
     def keyPressEvent(self, e):
-        pass
+        print('keyPressEvent')
 
     def rotateSelectedTiles(self):
-        pass
+        print('rotateSelectedTiles')
