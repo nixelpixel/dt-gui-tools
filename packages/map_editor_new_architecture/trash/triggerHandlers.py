@@ -1,4 +1,4 @@
-from mapViewer import MapViewer
+from trash.mapViewer import MapViewer
 from mapEditor import MapEditor
 from map_editor_new_architecture.editorState import EditorState
 from map_editor_new_architecture.mapStorage import MapStorage

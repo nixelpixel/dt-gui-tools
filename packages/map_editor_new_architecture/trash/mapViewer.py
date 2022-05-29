@@ -1,24 +1,21 @@
 # -*- coding: utf-8 -*-
 import logging
-from typing import Tuple, Dict
+from typing import Dict
 
 from PyQt5.QtWidgets import QGraphicsView
 from PyQt5 import QtCore, QtGui, QtWidgets
-from duckietown_world.structure.utils import get_degree_for_orientation, get_canonical_sign_name
 
-
-from map_editor_new_architecture.drawLayersHandler import WatchtowersHandler, \
+from trash.drawLayersHandler import WatchtowersHandler, \
     CitizensHandler, TrafficSignsHandler, GroundTagsHandler, VehiclesHandler, \
     DecorationsHandler, TileLayer
-from map_editor_new_architecture.mapStorage import MapStorage
-from map_editor_new_architecture.utils.singletonMeta import SingletonMeta
-from map_editor_new_architecture.worldApi import WorldApi
+from mapStorage import MapStorage
+from utils.singletonMeta import SingletonMeta
 from utils import get_list_dir_with_path
 
 
 logger = logging.getLogger('root')
 
-TILES_DIR_PATH = './img/tiles'
+TILES_DIR_PATH = '../img/tiles'
 OBJECT_DIR_PATHS = ['./img/signs',
                     './img/apriltags',
                     './img/objects']
