@@ -8,6 +8,7 @@ from classes.MapDescription import MapDescription
 class MapStorage(metaclass=SingletonMeta):
     """Only this class contains object Map from dt_maps """
     map: Map = None
+    gridSize = 58.5
 
     def __init__(self, map_description: Optional[MapDescription] = None) -> None:
         if map_description:
