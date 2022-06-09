@@ -22,8 +22,6 @@ class Painter:
     def draw_tiles(self, map_viewer, painter: QtGui.QPainter, tiles, global_transform):
         tiles = tiles.values()
         for tile in tiles:
-            if tile.type.value == "3way_left":
-                continue
             orientation = tile.orientation
             painter.scale(map_viewer.scale, map_viewer.scale)
             painter.translate(tile.i * map_viewer.map.gridSize,
