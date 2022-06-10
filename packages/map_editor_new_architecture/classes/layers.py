@@ -1,8 +1,6 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-
 from dt_maps import MapLayer
-
 from mapStorage import MapStorage
 
 

@@ -12,10 +12,8 @@
             "id": "road",
             "elements": [
                 "straight",
-                "curve_left",
                 "curve_right",
                 "3way_left",
-                "3way_right",
                 "4way"
             ]
         },
@@ -217,24 +215,6 @@
             },
             "icon": "img/signs/stop.png"
         },
-        "curve_left": {
-            "lang": {
-                "ru": {
-                    "name": "Левый поворот",
-                    "info": "Поворот налево с двумя полосами движения. Ограничен сплошной белой разметкой. Полосы разграничены прерывистой жёлтой линией."
-                },
-                "en": {
-                    "name": "Left turn",
-                    "info": "Left turn with two lanes. Limited to solid white markings. The stripes are delimited by a dashed yellow line."
-                }
-            },
-            "red": 0,
-            "type": "block",
-            "length": 86,
-            "yellow": 45,
-            "icon": "img/tiles/curve_left.png",
-            "white": 110
-        },
         "duckiebot": {
             "type": "object",
             "lang": {
@@ -376,24 +356,6 @@
                 }
             },
             "icon": "img/objects/duckie.png"
-        },
-        "3way_right": {
-            "lang": {
-                "ru": {
-                    "name": "Т-образный правый перекрёсток",
-                    "info": "Правый Т-образный перекрёсток с красными стоп линиями для остановки машин."
-                },
-                "en": {
-                    "name": "T-shaped right crossroads",
-                    "info": "Right T-junction with red stop lines to stop cars."
-                }
-            },
-            "red": 90,
-            "type": "block",
-            "length": 61,
-            "yellow": 15,
-            "icon": "img/tiles/3way_right.png",
-            "white": 81
         },
         "T-intersection": {
             "type": "sign",

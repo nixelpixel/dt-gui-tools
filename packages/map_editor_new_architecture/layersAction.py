@@ -3,13 +3,13 @@ from pathlib import Path
 from dt_maps import MapLayer
 from mapStorage import MapStorage
 from classes.basic.command import Command
-from layers import TileLayer, WatchtowersLayer
+from layers import TileLayerHandler, WatchtowersLayerHandler
 from classes.basic.chain import AbstractHandler
 from classes.MapDescription import MapDescription
 from classes.Commands.GetLayerСommand import GetLayerCommand
 
 LAYERS = [
-    WatchtowersLayer
+    WatchtowersLayerHandler
 ]
 
 
@@ -18,7 +18,7 @@ class LayersAction:
     _chain_map: AbstractHandler = None
 
     def __init__(self):
-        self._chain_map = TileLayer()
+        self._chain_map = TileLayerHandler()
         _ = self._chain_map
         for layer in LAYERS:
             _ = _.set_next(layer)

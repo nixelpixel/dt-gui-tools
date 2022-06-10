@@ -1,19 +1,28 @@
 # -*- coding: utf-8 -*-
-
+from enum import Enum
 from PyQt5 import QtWidgets, QtGui, QtCore
-from classes.objects import DraggableImage
+
+from classes.objects import DraggableImage, ImageObject
 from typing import Dict
-from layers import TileLayer, WatchtowersLayer
+from layers import TileLayerHandler, WatchtowersLayerHandler, FramesLayerHandler
 from mapStorage import MapStorage
 from coordinatesTransformer import CoordinatesTransformer
 from painter import Painter
-from utils.window import get_list_dir_with_path, get_canonical_sign_name
 
 TILES_DIR_PATH = './img/tiles'
 OBJECT_DIR_PATHS = ['./img/signs',
                     './img/apriltags',
                     './img/objects']
-
+class TileType(Enum):
+    STRAIGHT = "straight"
+    CURVE_LEFT = "curve_left"
+    CURVE_RIGHT = "curve_right"
+    ASPHALT = "asphalt"
+    FLOOR = "floor"
+    GRASS = "grass"
+    THREE_WAY_LEFT = "3way_left"
+    THREE_WAY_RIGHT = "3way_right"
+    FOUR_WAY = "4way"
 
 class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     map = None
@@ -21,6 +30,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     tiles = None
     watchtowers = None
     size_map = 7
+    tile_size = 0.585
     objects = []
     #citizens = None
     #traffic_signs = None
@@ -49,94 +59,44 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
 
         self.coordinates_transformer = CoordinatesTransformer()
         self.map = MapStorage()
-        self.tiles = TileLayer()
-        #self.watchtowers = WatchtowersLayer()
+        self.tiles = TileLayerHandler()
+        self.watchtowers = WatchtowersLayerHandler()
+        self.frames = FramesLayerHandler()
         #self.citizens = CitizensHandler()
         #self.traffic_signs = TrafficSignsHandler()
         #self.ground_tags = GroundTagsHandler()
         #self.vehicles = VehiclesHandler()
         #self.decorations = DecorationsHandler()
 
+        self.handlers_list = [self.watchtowers, self.frames]
         self.handlers = self.tiles
-        #self.handlers_list = [self.tiles]
-        #for i in range(len(self.handlers_list) - 1):
-        #    self.handlers_list.set_next(self.handlers_list[i+1])
+        for i in range(len(self.handlers_list) - 1):
+            self.handlers.set_next(self.handlers_list[i+1])
 
-        # load tiles
-        for filename, file_path in get_list_dir_with_path(TILES_DIR_PATH):
-            tile_name = filename.split('.')[0]
-            self.tile_sprites[tile_name] = QtGui.QImage()
-            self.tile_sprites[tile_name].load(file_path)
-
-        # load objects
-        #TODO added factory, commands
-        
-        for dir_path in OBJECT_DIR_PATHS:
-            for filename, file_path in get_list_dir_with_path(dir_path):
-                #object_name = filename.split('.')[0]
-                draggableImage = DraggableImage(file_path, self)
-                self.objects.append(draggableImage)
-
+        self.init_objects()
 
 
     def drawBackground(self, painter: QtGui.QPainter, rect: QtCore.QRectF):
-        self.painter.draw_background(self, painter, handlers=self.handlers)
+        #self.painter.draw_background(self, painter, handlers=self.handlers)
+        pass
 
-    '''    
-
-    def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
-        x, y = event.x(), event.y()
-        x_map = self.get_x_from_view(x)
-        y_map = self.get_y_from_view(y)
-        if self.drag_mode:
-            self.drag_obj.pose.x = x_map
-            self.drag_obj.pose.y = y_map
-            self.scene().update()
-        elif self.rmbPressed:
-            self.offsetX += event.x() - self.rmbPrevPos[0]
-            self.offsetY += event.y() - self.rmbPrevPos[1]
-            self.rmbPrevPos = [event.x(), event.y()]
-            self.scene().update()
-        elif self.lmbPressed:
-            self.mouseCurX = event.x()
-            self.mouseCurY = event.y()
-            self.scene().update()
-    def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
-        self.drag_mode = False
-        self.drag_obj = None
-        if event.button() == QtCore.Qt.LeftButton:
-            self.lmbPressed = False
-            if int((self.mouseStartX - self.offsetX) / self.sc * self.map.gridSize) == int(
-                    (self.mouseCurX - self.offsetX) / self.sc * self.map.gridSize) and int(
-                (self.mouseStartY - self.offsetY) / self.sc * self.map.gridSize) == int(
-                (self.mouseCurY - self.offsetY) / self.sc * self.map.gridSize):
-                self.lmbClicked.emit(int((self.mouseStartX - self.offsetX) / self.sc * self.map.gridSize),
-                                     int((self.mouseStartY - self.offsetY) / self.sc * self.map.gridSize))
-
-            self.raw_selection = [
-                ((min(self.mouseStartX, self.mouseCurX) - self.offsetX) / self.sc
-                 ) / self.map.gridSize,
-                self.get_y_from_view(min(self.mouseStartY, self.mouseCurY)) / self.tile_size,
-                ((max(self.mouseStartX, self.mouseCurX) - self.offsetX) / self.sc) / self.map.gridSize,
-                self.get_y_from_view(max(self.mouseStartY, self.mouseCurY)) / self.tile_size
-            ]
-
-            if self.map.get_tile_layer().visible:
-                self.tileSelection = [
-                    int(v)  # + (1 if i > 1 else 0)
-                    for i, v in enumerate(self.raw_selection)
-                ]
-            self.selectionChanged.emit()
-        else:
-            self.rmbPressed = False
-        self.scene().update()
-        
-    def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
-        x, y = event.x(), event.y()
-        x_map = self.get_x_from_view(x)
-        y_map = self.get_y_from_view(y)
-        if event.buttons() == QtCore.Qt.LeftButton:
-            self.lmbPressed = True
-            self.mouseCurX = self.mouseStartX = x
-            self.mouseCurY = self.mouseStartY = y
-    '''
+    def init_objects(self):
+        # TODO move objects moving to painter class or on move command
+        for layer_name in self.map.map.layers:
+            layer = self.map.map.layers[layer_name]
+            for object_name in layer:
+                layer_object = layer[object_name]
+                # TODO refactor on more layers
+                # TODO rotate tiles
+                # TODO use tile_size
+                new_obj = None
+                if layer_name == "tiles":
+                    new_obj = ImageObject(
+                        f"./img/tiles/{layer_object.type.value}.png", self,
+                        object_name, (self.map.gridSize, self.map.gridSize))
+                    new_coordinates = (CoordinatesTransformer.get_x_to_view(layer_object.i, self.scale, self.map.gridSize),
+                                       CoordinatesTransformer.get_y_to_view(layer_object.j, self.scale, self.map.gridSize, self.size_map))
+                    new_obj.move_object(new_coordinates)
+                elif layer_name != "frames":
+                    new_obj = DraggableImage(f"./img/objects/{layer_name}.png", self,
+                                             object_name)
