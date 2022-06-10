@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from PyQt5 import QtWidgets, QtGui, QtCore
+from classes.objects import DraggableImage
 from typing import Dict
 from layers import TileLayer, WatchtowersLayer
 from mapStorage import MapStorage
 from coordinatesTransformer import CoordinatesTransformer
 from painter import Painter
-from utils.window import get_list_dir_with_path
+from utils.window import get_list_dir_with_path, get_canonical_sign_name
 
 TILES_DIR_PATH = './img/tiles'
 OBJECT_DIR_PATHS = ['./img/signs',
@@ -20,6 +21,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     tiles = None
     watchtowers = None
     size_map = 7
+    objects = []
     #citizens = None
     #traffic_signs = None
     #ground_tags = None
@@ -65,6 +67,17 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             tile_name = filename.split('.')[0]
             self.tile_sprites[tile_name] = QtGui.QImage()
             self.tile_sprites[tile_name].load(file_path)
+
+        # load objects
+        #TODO added factory, commands
+        
+        for dir_path in OBJECT_DIR_PATHS:
+            for filename, file_path in get_list_dir_with_path(dir_path):
+                #object_name = filename.split('.')[0]
+                draggableImage = DraggableImage(file_path, self)
+                self.objects.append(draggableImage)
+
+
 
     def drawBackground(self, painter: QtGui.QPainter, rect: QtCore.QRectF):
         self.painter.draw_background(self, painter, handlers=self.handlers)
