@@ -8,14 +8,23 @@ class ImageObject(QtWidgets.QLabel):
         self.setParent(parent)
         self.name = object_name
         self.scaled_size = scale
-        pixel_map = QtGui.QPixmap(img_path)
+        pixmap = QtGui.QPixmap(img_path)
         resize = QtCore.QSize(self.scaled_size[0], self.scaled_size[1])
-        pixel_map = pixel_map.scaled(resize, aspectRatioMode=QtCore.Qt.KeepAspectRatio,
+        pixmap = pixmap.scaled(resize, aspectRatioMode=QtCore.Qt.KeepAspectRatio,
                                      transformMode=QtCore.Qt.SmoothTransformation)
-        self.setFixedSize(pixel_map.width(), pixel_map.height())
-        self.setPixmap(pixel_map)
+        self.pixmap = pixmap
+        self.setFixedSize(pixmap.width(), pixmap.height())
+        self.setPixmap(self.pixmap)
 
-
+    def rotate_object(self, angle_clockwise: int):
+        angle_clockwise = 360 - angle_clockwise
+        if not angle_clockwise % 180 == 0:
+            self.setFixedSize(self.pixmap.height(), self.pixmap.width())
+        new_transform = QtGui.QTransform()
+        new_transform.rotate(angle_clockwise)
+        self.pixmap = self.pixmap.transformed(new_transform, QtCore.Qt.SmoothTransformation)
+        self.setPixmap(self.pixmap)
+        
     def move_object(self, new_position: tuple):
         self.move(QtCore.QPoint(new_position[0], new_position[1]))
 
@@ -39,8 +48,8 @@ class DraggableImage(ImageObject):
             self.setCursor(QtCore.Qt.ClosedHandCursor)
             self.drag_start_pos = event.pos()
             self.raise_()
-        #elif event.button() == QtCore.Qt.RightButton:
-        #    self.clear()
+        elif event.button() == QtCore.Qt.RightButton:
+            self.rotate_object(90)
         super(DraggableImage, self).mousePressEvent(event)
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent):

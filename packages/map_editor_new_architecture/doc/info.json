@@ -12,8 +12,8 @@
             "id": "road",
             "elements": [
                 "straight",
-                "curve_right",
-                "3way_left",
+                "curve",
+                "3way",
                 "4way"
             ]
         },
@@ -215,6 +215,24 @@
             },
             "icon": "img/signs/stop.png"
         },
+        "curve": {
+            "lang": {
+                "ru": {
+                    "name": "Поворот",
+                    "info": "Поворот с двумя полосами движения. Ограничен сплошной белой разметкой. Полосы разграничены прерывистой жёлтой линией."
+                },
+                "en": {
+                    "name": "Turn",
+                    "info": "Turn with two lanes. Limited to solid white markings. The stripes are delimited by a dashed yellow line."
+                }
+            },
+            "red": 0,
+            "type": "block",
+            "length": 86,
+            "yellow": 45,
+            "icon": "img/tiles/curve.png",
+            "white": 110
+        },
         "duckiebot": {
             "type": "object",
             "lang": {
@@ -228,24 +246,6 @@
                 }
             },
             "icon": "img/objects/duckiebot.png"
-        },
-        "curve_right": {
-            "lang": {
-                "ru": {
-                    "name": "Правый поворот",
-                    "info": "Поворот направо с двумя полосами движения. Ограничен сплошной белой разметкой. Полосы разграничены прерывистой жёлтой линией."
-                },
-                "en": {
-                    "name": "Right turn",
-                    "info": "Right turn with two lanes. Limited to solid white markings. The stripes are delimited by a dashed yellow line."
-                }
-            },
-            "red": 0,
-            "type": "block",
-            "length": 86,
-            "yellow": 45,
-            "icon": "img/tiles/curve_right.png",
-            "white": 110
         },
         "floor": {
             "lang": {
@@ -311,22 +311,22 @@
             "icon": "img/tiles/grass.png",
             "white": 0
         },
-        "3way_left": {
+        "3way": {
             "lang": {
                 "ru": {
-                    "name": "Т-образный левый перекрёсток",
-                    "info": "Левый Т-образный перекрёсток с красными стоп линиями для остановки машин."
+                    "name": "Т-образный перекрёсток",
+                    "info": "Т-образный перекрёсток с красными стоп линиями для остановки машин."
                 },
                 "en": {
-                    "name": "T-shaped left crossroads",
-                    "info": "Left T-junction with red stop lines to stop cars."
+                    "name": "T-shaped crossroads",
+                    "info": "T-junction with red stop lines to stop cars."
                 }
             },
             "red": 90,
             "type": "block",
             "length": 61,
             "yellow": 15,
-            "icon": "img/tiles/3way_left.png",
+            "icon": "img/tiles/3way.png",
             "white": 81
         },
         "right-T-intersect": {

@@ -15,13 +15,11 @@ OBJECT_DIR_PATHS = ['./img/signs',
                     './img/objects']
 class TileType(Enum):
     STRAIGHT = "straight"
-    CURVE_LEFT = "curve_left"
-    CURVE_RIGHT = "curve_right"
+    CURVE = "curve"
     ASPHALT = "asphalt"
     FLOOR = "floor"
     GRASS = "grass"
-    THREE_WAY_LEFT = "3way_left"
-    THREE_WAY_RIGHT = "3way_right"
+    THREE_WAY = "3way"
     FOUR_WAY = "4way"
 
 class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
@@ -96,6 +94,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                         object_name, (self.map.gridSize, self.map.gridSize))
                     new_coordinates = (CoordinatesTransformer.get_x_to_view(layer_object.i, self.scale, self.map.gridSize),
                                        CoordinatesTransformer.get_y_to_view(layer_object.j, self.scale, self.map.gridSize, self.size_map))
+                    new_obj.rotate_object(90)
                     new_obj.move_object(new_coordinates)
                 elif layer_name != "frames":
                     new_obj = DraggableImage(f"./img/objects/{layer_name}.png", self,
