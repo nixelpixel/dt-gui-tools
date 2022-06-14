@@ -3,300 +3,304 @@ frames:
     pose:
       x: 0.0
       y: 0.0
+      yaw: 0
     relative_to: null
   map_1/duckie1:
     pose:
       x: 1
       y: 1
+      yaw: 0
     relative_to: null
   map_1/watchtower1:
     pose:
       x: 1.6
       y: 1.6
+      yaw: 0
     relative_to: map_1
   map_1/watchtower1/watchtower2:
     pose:
       x: 0.0
       y: 0.9
+      yaw: 0
     relative_to: map_1/watchtower1
   map_1/tile_0_0:
     pose:
       x: 0
       y: 0
-    yaw: 0
+      yaw: 0
   map_1/tile_0_1:
     pose:
       x: 0
       y: 1
-    yaw: 0
+      yaw: 0
   map_1/tile_0_2:
     pose:
       x: 0
       y: 2
-    yaw: 0
+      yaw: 0
   map_1/tile_0_3:
     pose:
       x: 0
       y: 3
-    yaw: 0
+      yaw: 0
   map_1/tile_0_4:
     pose:
       x: 0
       y: 4
-    yaw: 0
+      yaw: 0
   map_1/tile_0_5:
     pose:
       x: 0
       y: 5
-    yaw: 0
+      yaw: 0
   map_1/tile_0_6:
     pose:
       x: 0
       y: 6
-    yaw: 0
+      yaw: 0
   map_1/tile_1_0:
     pose:
       x: 1
       y: 0
-    yaw: 0
+      yaw: 0
   map_1/tile_1_1:
     pose:
       x: 1
       y: 1
-    yaw: 90
+      yaw: 90
   map_1/tile_1_2:
     pose:
       x: 1
       y: 2
-    yaw: 270
+      yaw: 270
   map_1/tile_1_3:
     pose:
       x: 1
       y: 3
-    yaw: 0
+      yaw: 0
   map_1/tile_1_4:
     pose:
       x: 1
       y: 4
-    yaw: 270
+      yaw: 270
   map_1/tile_1_5:
     pose:
       x: 1
       y: 5
-    yaw: 180
+      yaw: 180
   map_1/tile_1_6:
     pose:
       x: 1
       y: 6
-    yaw: 0
+      yaw: 0
   map_1/tile_2_0:
     pose:
       x: 2
       y: 0
-    yaw: 0
+      yaw: 0
   map_1/tile_2_1:
     pose:
       x: 2
       y: 1
-    yaw: 0
+      yaw: 0
   map_1/tile_2_2:
     pose:
       x: 2
       y: 2
-    yaw: 0
+      yaw: 0
   map_1/tile_2_3:
     pose:
       x: 2
       y: 3
-    yaw: 0
+      yaw: 0
   map_1/tile_2_4:
     pose:
       x: 2
       y: 4
-    yaw: 0
+      yaw: 0
   map_1/tile_2_5:
     pose:
       x: 2
       y: 5
-    yaw: 0
+      yaw: 0
   map_1/tile_2_6:
     pose:
       x: 2
       y: 6
-    yaw: 0
+      yaw: 0
   map_1/tile_3_0:
     pose:
       x: 3
       y: 0
-    yaw: 0
+      yaw: 0
   map_1/tile_3_1:
     pose:
       x: 3
       y: 1
-    yaw: 0
+      yaw: 0
   map_1/tile_3_2:
     pose:
       x: 3
       y: 2
-    yaw: 270
+      yaw: 270
   map_1/tile_3_3:
     pose:
       x: 3
       y: 3
-    yaw: 270
+      yaw: 270
   map_1/tile_3_4:
     pose:
       x: 3
       y: 4
-    yaw: 270
+      yaw: 270
   map_1/tile_3_5:
     pose:
       x: 3
       y: 5
-    yaw: 270
+      yaw: 270
   map_1/tile_3_6:
     pose:
       x: 3
       y: 6
-    yaw: 0
+      yaw: 0
   map_1/tile_4_0:
     pose:
       x: 4
       y: 0
-    yaw: 0
+      yaw: 0
   map_1/tile_4_1:
     pose:
       x: 4
       y: 1
-    yaw: 0
+      yaw: 0
   map_1/tile_4_2:
     pose:
       x: 4
       y: 2
-    yaw: 0
+      yaw: 0
   map_1/tile_4_3:
     pose:
       x: 4
       y: 3
-    yaw: 0
+      yaw: 0
   map_1/tile_4_4:
     pose:
       x: 4
       y: 4
-    yaw: 0
+      yaw: 0
   map_1/tile_4_5:
     pose:
       x: 4
       y: 5
-    yaw: 0
+      yaw: 0
   map_1/tile_4_6:
     pose:
       x: 4
       y: 6
-    yaw: 0
+      yaw: 0
   map_1/tile_5_0:
     pose:
       x: 5
       y: 0
-    yaw: 0
+      yaw: 0
   map_1/tile_5_1:
     pose:
       x: 5
       y: 1
-    yaw: 0
+      yaw: 0
   map_1/tile_5_2:
     pose:
       x: 5
       y: 2
-    yaw: 0
+      yaw: 0
   map_1/tile_5_3:
     pose:
       x: 5
       y: 3
-    yaw: 0
+      yaw: 0
   map_1/tile_5_4:
     pose:
       x: 5
       y: 4
-    yaw: 90
+      yaw: 90
   map_1/tile_5_5:
     pose:
       x: 5
       y: 5
-    yaw: 270
+      yaw: 270
     type: curve
   map_1/tile_5_6:
     pose:
       x: 5
       y: 6
-    yaw: 0
+      yaw: 0
   map_1/tile_6_0:
     pose:
       x: 6
       y: 0
-    yaw: 0
+      yaw: 0
   map_1/tile_6_1:
     pose:
       x: 6
       y: 1
-    yaw: 0
+      yaw: 0
   map_1/tile_6_2:
     pose:
       x: 6
       y: 2
-    yaw: 270
+      yaw: 270
   map_1/tile_6_3:
     pose:
       x: 6
       y: 3
-    yaw: 270
+      yaw: 270
   map_1/tile_6_4:
     pose:
       x: 6
       y: 4
-    yaw: 270
+      yaw: 270
   map_1/tile_6_5:
     pose:
       x: 6
       y: 5
-    yaw: 0
+      yaw: 0
   map_1/tile_6_6:
     pose:
       x: 6
       y: 6
-    yaw: 0
+      yaw: 0
   map_1/tile_7_0:
     pose:
       x: 7
       y: 0
-    yaw: 0
+      yaw: 0
   map_1/tile_7_1:
     pose:
       x: 7
       y: 1
-    yaw: 0
+      yaw: 0
   map_1/tile_7_2:
     pose:
       x: 7
       y: 2
-    yaw: 0
+      yaw: 0
   map_1/tile_7_3:
     pose:
       x: 7
       y: 3
-    yaw: 0
+      yaw: 0
   map_1/tile_7_4:
     pose:
       x: 7
       y: 4
-    yaw: 0
+      yaw: 0
   map_1/tile_7_5:
     pose:
       x: 7
       y: 5
-    yaw: 0
+      yaw: 0
   map_1/tile_7_6:
     pose:
       x: 7
       y: 6
-    yaw: 0
+      yaw: 0

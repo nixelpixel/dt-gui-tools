@@ -79,23 +79,35 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         pass
 
     def init_objects(self):
-        # TODO move objects moving to painter class or on move command
+        # TODO move objects moving on move command
         for layer_name in self.map.map.layers:
             layer = self.map.map.layers[layer_name]
+            if not layer_name == "tiles" and not layer_name == "watchtowers":
+                continue
             for object_name in layer:
                 layer_object = layer[object_name]
                 # TODO refactor on more layers
-                # TODO rotate tiles
                 # TODO use tile_size
                 new_obj = None
+
                 if layer_name == "tiles":
                     new_obj = ImageObject(
                         f"./img/tiles/{layer_object.type.value}.png", self,
                         object_name, (self.map.gridSize, self.map.gridSize))
-                    new_coordinates = (CoordinatesTransformer.get_x_to_view(layer_object.i, self.scale, self.map.gridSize),
-                                       CoordinatesTransformer.get_y_to_view(layer_object.j, self.scale, self.map.gridSize, self.size_map))
-                    new_obj.rotate_object(90)
-                    new_obj.move_object(new_coordinates)
-                elif layer_name != "frames":
+                elif layer_name == "watchtowers":
                     new_obj = DraggableImage(f"./img/objects/{layer_name}.png", self,
                                              object_name)
+                if layer_name != "frames":
+                    self.objects.append(new_obj)
+
+        # set frames info into objects
+        for obj in self.objects:
+            frame_obj = self.map.map.layers.frames[obj.name]
+            new_coordinates = (
+            CoordinatesTransformer.get_x_to_view(frame_obj.pose.x, self.scale,
+                                                 self.map.gridSize),
+            CoordinatesTransformer.get_y_to_view(frame_obj.pose.y, self.scale,
+                                                 self.map.gridSize, self.size_map))
+            obj.rotate_object(frame_obj.pose.yaw)
+            obj.move_object(new_coordinates)
+

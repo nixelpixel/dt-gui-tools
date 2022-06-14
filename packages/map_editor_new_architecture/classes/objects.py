@@ -17,14 +17,13 @@ class ImageObject(QtWidgets.QLabel):
         self.setPixmap(self.pixmap)
 
     def rotate_object(self, angle_clockwise: int):
-        angle_clockwise = 360 - angle_clockwise
         if not angle_clockwise % 180 == 0:
             self.setFixedSize(self.pixmap.height(), self.pixmap.width())
         new_transform = QtGui.QTransform()
         new_transform.rotate(angle_clockwise)
         self.pixmap = self.pixmap.transformed(new_transform, QtCore.Qt.SmoothTransformation)
         self.setPixmap(self.pixmap)
-        
+
     def move_object(self, new_position: tuple):
         self.move(QtCore.QPoint(new_position[0], new_position[1]))
 
