@@ -235,6 +235,7 @@ class DuckWindow(QtWidgets.QMainWindow):
 
     #  Save map
     def save_map_triggered(self):
+        self.map_api.save_map_triggered()
         print('save_map_triggered')
 
     #  Save map as

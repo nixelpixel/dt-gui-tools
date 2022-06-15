@@ -60,7 +60,8 @@ class MapAPI:
 
     #  Save map
     def save_map_triggered(self):
-        pass
+        self._map_storage.map.to_disk()
+        print('save map')
 
     #  Save map as
     def save_map_as_triggered(self):

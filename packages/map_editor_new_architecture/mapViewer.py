@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from enum import Enum
 from PyQt5 import QtWidgets, QtGui, QtCore
 
 from classes.objects import DraggableImage, ImageObject
@@ -8,19 +7,13 @@ from layers import TileLayerHandler, WatchtowersLayerHandler, FramesLayerHandler
 from mapStorage import MapStorage
 from coordinatesTransformer import CoordinatesTransformer
 from painter import Painter
+from classes.Commands.MoveObjCommand import MoveCommand
+from classes.Commands.RotateObjCommand import RotateCommand
 
 TILES_DIR_PATH = './img/tiles'
 OBJECT_DIR_PATHS = ['./img/signs',
                     './img/apriltags',
                     './img/objects']
-class TileType(Enum):
-    STRAIGHT = "straight"
-    CURVE = "curve"
-    ASPHALT = "asphalt"
-    FLOOR = "floor"
-    GRASS = "grass"
-    THREE_WAY = "3way"
-    FOUR_WAY = "4way"
 
 class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     map = None
@@ -111,3 +104,10 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             obj.rotate_object(frame_obj.pose.yaw)
             obj.move_object(new_coordinates)
 
+    def move_obj(self, frame_name: str, new_pos: tuple, obj_height: float, obj_width: float):
+        map_x = CoordinatesTransformer.get_x_from_view(new_pos[0], self.scale, self.map.gridSize, obj_width)
+        map_y = CoordinatesTransformer.get_y_from_view(new_pos[1], self.scale, self.map.gridSize, self.size_map, obj_height)
+        self.handlers.handle(command=MoveCommand(frame_name, (map_x, map_y)))
+
+    def rotate_obj(self, frame_name: str, new_angle: float):
+        self.handlers.handle(command=RotateCommand(frame_name, new_angle))

@@ -150,8 +150,8 @@ tiles:
   map_1/tile_5_2:
     i: 5
     j: 2
-    type: asphalt
     orientation: N
+    type: asphalt
   map_1/tile_5_3:
     i: 5
     j: 3
