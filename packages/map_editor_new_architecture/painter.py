@@ -1,5 +1,5 @@
 from PyQt5 import QtGui, QtCore
-from classes.Commands.GetLayerСommand import GetLayerCommand
+from classes.Commands.GetLayerCommand import GetLayerCommand
 from utils.window import get_degree_for_orientation
 
 class Painter:

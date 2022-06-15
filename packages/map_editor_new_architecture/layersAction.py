@@ -6,7 +6,7 @@ from classes.basic.command import Command
 from layers import TileLayerHandler, WatchtowersLayerHandler
 from classes.basic.chain import AbstractHandler
 from classes.MapDescription import MapDescription
-from classes.Commands.GetLayerСommand import GetLayerCommand
+from classes.Commands.GetLayerCommand import GetLayerCommand
 
 LAYERS = [
     WatchtowersLayerHandler

@@ -1,5 +1,6 @@
 from dt_maps import Map, MapLayer
 from classes.basic.command import Command
+from utils.maps import add_new_obj
 
 
 class AddObjCommand(Command):
@@ -10,8 +11,6 @@ class AddObjCommand(Command):
         self._layer_name = layer_name
         self._object_name = object_name
 
-    def execute(self, dm: Map, layer: MapLayer, layer_name: str) -> None:
+    def execute(self, dm: Map, layer: MapLayer, layer_name: str, default_conf: dict) -> None:
         if layer_name == self._layer_name:
-            layer[self._object_name].pose.x = 0
-            layer[self._object_name].pose.y = 0
-            layer[self._object_name].pose.yaw = 0
+            add_new_obj(dm, layer, layer_name, self._object_name, default_conf)
