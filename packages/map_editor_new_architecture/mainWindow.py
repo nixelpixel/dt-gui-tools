@@ -39,7 +39,7 @@ class DuckWindow(QtWidgets.QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
-        self.map_api = MapAPI()
+        self.map_api = MapAPI(self.info_json)
         self.map_viewer = MapViewer()
 
         self.map_viewer.setMinimumSize(540, 540)
@@ -309,6 +309,10 @@ class DuckWindow(QtWidgets.QMainWindow):
 
     #  Double click initiates as single click action
     def item_list_double_clicked(self):
+        item_ui_list = self.ui.block_list
+        item_name = item_ui_list.currentItem().data(0x0100)
+        item_type = item_ui_list.currentItem().data(0x0101)
+        self.map_api.item_list_double_clicked(item_name, item_type, self.map_viewer)
         print('item_list_double_clicked')
 
     #  Reset to default values

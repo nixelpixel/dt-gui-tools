@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from PyQt5 import QtWidgets, QtGui, QtCore
 
+from classes.Commands.AddObjCommand import AddObjCommand
+from classes.Commands.GetLayerСommand import GetLayerCommand
 from classes.objects import DraggableImage, ImageObject
 from typing import Dict
 from layers import TileLayerHandler, WatchtowersLayerHandler, FramesLayerHandler
@@ -59,11 +61,10 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         #self.vehicles = VehiclesHandler()
         #self.decorations = DecorationsHandler()
 
-        self.handlers_list = [self.watchtowers, self.frames]
-        self.handlers = self.tiles
+        self.handlers_list = [self.tiles, self.watchtowers, self.frames]
         for i in range(len(self.handlers_list) - 1):
-            self.handlers.set_next(self.handlers_list[i+1])
-
+            self.handlers_list[i].set_next(self.handlers_list[i+1])
+        self.handlers = self.tiles
         self.init_objects()
 
 
@@ -81,33 +82,43 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                 layer_object = layer[object_name]
                 # TODO refactor on more layers
                 # TODO use tile_size
-                new_obj = None
+                self.add_obj_image(layer_name, object_name, layer_object)
 
-                if layer_name == "tiles":
-                    new_obj = ImageObject(
-                        f"./img/tiles/{layer_object.type.value}.png", self,
-                        object_name, (self.map.gridSize, self.map.gridSize))
-                elif layer_name == "watchtowers":
-                    new_obj = DraggableImage(f"./img/objects/{layer_name}.png", self,
-                                             object_name)
-                if layer_name != "frames":
-                    self.objects.append(new_obj)
+    def add_obj(self, layer_name: str, item_type: str):
+        layer = self.handlers.handle(command=GetLayerCommand(layer_name))
+        object_name: str = f"map_1/{item_type}{len(layer) + 1}"
+        self.add_obj_on_map(layer_name, object_name)
 
-        # set frames info into objects
-        for obj in self.objects:
-            frame_obj = self.map.map.layers.frames[obj.name]
+    def add_obj_image(self, layer_name: str, object_name: str, layer_object):
+        new_obj = None
+        if layer_name == "tiles":
+            new_obj = ImageObject(
+                f"./img/tiles/{layer_object.type.value}.png", self,
+                object_name, (self.map.gridSize, self.map.gridSize))
+        elif layer_name == "watchtowers":
+            new_obj = DraggableImage(f"./img/objects/{layer_name}.png", self,
+                                     object_name)
+            print(new_obj)
+        if new_obj:
+            frame_obj = self.map.map.layers.frames[object_name]
             new_coordinates = (
-            CoordinatesTransformer.get_x_to_view(frame_obj.pose.x, self.scale,
-                                                 self.map.gridSize),
-            CoordinatesTransformer.get_y_to_view(frame_obj.pose.y, self.scale,
-                                                 self.map.gridSize, self.size_map))
-            obj.rotate_object(frame_obj.pose.yaw)
-            obj.move_object(new_coordinates)
+                CoordinatesTransformer.get_x_to_view(frame_obj.pose.x, self.scale,
+                                                     self.map.gridSize),
+                CoordinatesTransformer.get_y_to_view(frame_obj.pose.y, self.scale,
+                                                     self.map.gridSize,
+                                                     self.size_map))
+            new_obj.rotate_object(frame_obj.pose.yaw)
+            new_obj.move_object(new_coordinates)
+            self.objects.append(new_obj)
 
-    def move_obj(self, frame_name: str, new_pos: tuple, obj_height: float, obj_width: float):
+    def add_obj_on_map(self, layer_name: str, object_name: str):
+        # TODO add to layer_name and in frame
+        self.handlers.handle(command=AddObjCommand(layer_name, object_name))
+
+    def move_obj_on_map(self, frame_name: str, new_pos: tuple, obj_height: float, obj_width: float):
         map_x = CoordinatesTransformer.get_x_from_view(new_pos[0], self.scale, self.map.gridSize, obj_width)
         map_y = CoordinatesTransformer.get_y_from_view(new_pos[1], self.scale, self.map.gridSize, self.size_map, obj_height)
         self.handlers.handle(command=MoveCommand(frame_name, (map_x, map_y)))
 
-    def rotate_obj(self, frame_name: str, new_angle: float):
+    def rotate_obj_on_map(self, frame_name: str, new_angle: float):
         self.handlers.handle(command=RotateCommand(frame_name, new_angle))

@@ -5,6 +5,8 @@ from mapStorage import MapStorage
 from painter import Painter
 from utils.maps import default_map_storage
 
+TILE_TYPES = ('block', 'road')
+
 
 class MapAPI:
     """High level API. MapAPI ~ Backend"""
@@ -14,12 +16,13 @@ class MapAPI:
     _painter: Painter = None
     _layers_action: LayersAction = None
 
-    def __init__(self) -> None:
+    def __init__(self, info_json: dict) -> None:
         self._coordinate_transformer = CoordinatesTransformer()
         self._map_storage = default_map_storage()
         self._qt_api = QtWindowAPI()
         self._painter = Painter()
         self._layers_action = LayersAction()
+        self.info_json = info_json
 
     def load(self):
         """
@@ -133,8 +136,16 @@ class MapAPI:
         pass
 
     #  Double click initiates as single click action
-    def item_list_double_clicked(self):
-        pass
+    def item_list_double_clicked(self, item_name: str, item_type: str, map_viewer):
+        print(item_name, item_type)
+        if item_name == "separator":
+            pass
+        elif item_type in TILE_TYPES:
+            pass
+        else:
+            print(item_name, item_type)
+            type_of_element = self.info_json['info'][item_name]['type']
+            map_viewer.add_obj(item_name, type_of_element)
 
     #  Reset to default values
     def set_default_fill(self):

@@ -120,9 +120,9 @@
                     "name": "watchtowers"
                 }
             },
-            "id": "watchower",
+            "id": "watchtowers",
             "elements": [
-                "watchtower"
+                "watchtowers"
             ]
         },
         {
@@ -617,7 +617,7 @@
             },
             "icon": "img/signs/oneway-left.png"
         },
-        "watchtower": {
+        "watchtowers": {
             "type": "watchtower",
             "lang": {
                 "ru": {
@@ -629,7 +629,7 @@
                     "info": "test1 watchtower"
                 }
             },
-            "icon": "img/objects/watchtower.png"
+            "icon": "img/objects/watchtowers.png"
         },
         "apriltag": {
             "type": "apriltag",

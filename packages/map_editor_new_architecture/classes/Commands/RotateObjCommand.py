@@ -12,4 +12,4 @@ class RotateCommand(Command):
 
     def execute(self, dm: Map, layer: MapLayer, layer_name: str) -> None:
         if layer_name == "frames":
-            dm.layers[layer_name][self._frame_name].pose.yaw = self._new_angle
+            dm.layers[layer_name][self._frame_name].pose.yaw = float(self._new_angle)
