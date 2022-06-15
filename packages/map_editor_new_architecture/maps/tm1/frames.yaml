@@ -294,13 +294,13 @@ frames:
       yaw: 0
   map_1/watchtower1:
     pose:
-      x: 1.9914529914529915
-      y: 4.504273504273504
+      x: 2.213675213675214
+      y: 4.538461538461538
       yaw: 0
     relative_to: map_1
   map_1/watchtower1/watchtower2:
     pose:
-      x: 6.384615384615385
-      y: 2.7777777777777777
-      yaw: 180.0
+      x: 5.35042735042735
+      y: 3.4615384615384617
+      yaw: 90.0
     relative_to: map_1/watchtower1

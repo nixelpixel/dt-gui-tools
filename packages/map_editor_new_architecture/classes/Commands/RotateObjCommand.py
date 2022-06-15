@@ -11,6 +11,5 @@ class RotateCommand(Command):
         self._new_angle = new_angle
 
     def execute(self, dm: Map, layer: MapLayer, layer_name: str) -> None:
-        print("new rotate", self._new_angle)
         if layer_name == "frames":
             dm.layers[layer_name][self._frame_name].pose.yaw = self._new_angle

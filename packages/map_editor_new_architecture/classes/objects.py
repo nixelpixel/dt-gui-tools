@@ -18,12 +18,12 @@ class ImageObject(QtWidgets.QLabel):
         self.setPixmap(self.pixmap)
 
     def rotate_object(self, angle_clockwise: float):
-        print("self.rot, angle clockwise", self.yaw, angle_clockwise)
-        self.yaw = angle_clockwise % 360.0
-        if not self.yaw % 180 == 0:
+        rotate_angle = (angle_clockwise - self.yaw) % 360.0
+        self.yaw = angle_clockwise % 360
+        if not rotate_angle // 90 % 2 == 0:
             self.setFixedSize(self.pixmap.height(), self.pixmap.width())
         new_transform = QtGui.QTransform()
-        new_transform.rotate(self.yaw)
+        new_transform.rotate(rotate_angle)
         self.pixmap = self.pixmap.transformed(new_transform, QtCore.Qt.SmoothTransformation)
         self.setPixmap(self.pixmap)
 
@@ -41,9 +41,7 @@ class ImageObject(QtWidgets.QLabel):
                                      self.pixmap.width() / 2.0)
 
     def rotate_in_map(self, angle_clockwise: float):
-        #new_angle = self.r
-        if angle_clockwise % 360:
-            self.parentWidget().rotate_obj(self.name, angle_clockwise)
+        self.parentWidget().rotate_obj(self.name, angle_clockwise % 360)
 
 class DraggableImage(ImageObject):
     """Objects draggable class
