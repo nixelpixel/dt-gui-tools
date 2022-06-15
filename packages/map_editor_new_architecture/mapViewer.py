@@ -73,7 +73,6 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         pass
 
     def init_objects(self):
-        # TODO move objects moving on move command
         for layer_name in self.map.map.layers:
             layer = self.map.map.layers[layer_name]
             if not layer_name == "tiles" and not layer_name == "watchtowers":
@@ -86,13 +85,11 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
 
     def add_obj(self, layer_name: str, item_type: str):
         layer = self.handlers.handle(command=GetLayerCommand(layer_name))
+        # TODO map_1
         object_name: str = f"map_1/{item_type}{len(layer) + 1}"
-        self.map.map.layers.frames[object_name] = {}
-        #self.add_obj_image(layer_name, object_name)
-        #self.add_obj_image("fra")
         self.add_obj_on_map(layer_name, object_name)
 
-    def add_obj_image(self, layer_name: str, object_name: str, layer_object = None):
+    def add_obj_image(self, layer_name: str, object_name: str, layer_object= None):
         new_obj = None
         if layer_name == "tiles":
             new_obj = ImageObject(
@@ -102,7 +99,6 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             new_obj = DraggableImage(f"./img/objects/{layer_name}.png", self,
                                      object_name)
         if new_obj:
-            print(object_name)
             frame_obj = self.map.map.layers.frames[object_name]
             new_coordinates = (
                 CoordinatesTransformer.get_x_to_view(frame_obj.pose.x, self.scale,
@@ -115,11 +111,8 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             self.objects.append(new_obj)
 
     def add_obj_on_map(self, layer_name: str, object_name: str):
-
         self.handlers.handle(command=AddObjCommand("frames", object_name))
         self.handlers.handle(command=AddObjCommand(layer_name, object_name))
-        print(self.handlers.handle(command=GetLayerCommand("watchtowers")))
-        print(self.handlers.handle(command=GetLayerCommand("frames")))
         self.add_obj_image(layer_name, object_name)
 
     def move_obj_on_map(self, frame_name: str, new_pos: tuple, obj_height: float, obj_width: float):
