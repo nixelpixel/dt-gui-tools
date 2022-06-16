@@ -4,7 +4,7 @@ from dt_maps.types.tiles import Tile
 from classes.Commands.AddObjCommand import AddObjCommand
 from classes.Commands.GetLayerCommand import GetLayerCommand
 from classes.objects import DraggableImage, ImageObject
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from layers import TileLayerHandler, WatchtowersLayerHandler, FramesLayerHandler
 from coordinatesTransformer import CoordinatesTransformer
 from painter import Painter
@@ -67,8 +67,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.handlers = self.tiles
         self.init_objects()
 
-
-    def init_objects(self):
+    def init_objects(self) -> None:
         for layer_name in self.map.map.layers:
             layer = self.map.map.layers[layer_name]
             if not layer_name == "tiles" and not layer_name == "watchtowers":
@@ -78,13 +77,13 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                 # TODO refactor on more layers
                 self.add_obj_image(layer_name, object_name, layer_object)
 
-    def add_obj(self, layer_name: str, item_type: str):
+    def add_obj(self, layer_name: str, item_type: str) -> None:
         layer = self.handlers.handle(command=GetLayerCommand(layer_name))
         # TODO map_1
         object_name: str = f"map_1/{item_type}{len(layer) + 1}"
         self.add_obj_on_map(layer_name, object_name)
 
-    def add_obj_image(self, layer_name: str, object_name: str, layer_object= None):
+    def add_obj_image(self, layer_name: str, object_name: str, layer_object=None) -> None:
         new_obj = None
         if layer_name == "tiles":
             new_obj = ImageObject(
@@ -102,26 +101,26 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             self.move_obj(new_obj, new_coordinates)
             self.objects.append(new_obj)
 
-    def add_obj_on_map(self, layer_name: str, object_name: str):
+    def add_obj_on_map(self, layer_name: str, object_name: str) -> None:
         self.handlers.handle(command=AddObjCommand("frames", object_name))
         self.handlers.handle(command=AddObjCommand(layer_name, object_name))
         self.add_obj_image(layer_name, object_name)
 
-    def move_obj(self, obj, new_coordinates: tuple):
+    def move_obj(self, obj, new_coordinates: tuple) -> None:
         obj.move_object(new_coordinates)
 
-    def move_obj_on_map(self, frame_name: str, new_pos: tuple, obj_height: float, obj_width: float):
+    def move_obj_on_map(self, frame_name: str, new_pos: tuple, obj_height: float, obj_width: float) -> None:
         map_x = self.coordinates_transformer.get_x_from_view(new_pos[0], obj_width=obj_width)
         map_y = self.coordinates_transformer.get_y_from_view(new_pos[1], obj_height=obj_height)
         self.handlers.handle(command=MoveCommand(frame_name, (map_x, map_y)))
 
-    def rotate_obj(self, obj, new_angle: float):
+    def rotate_obj(self, obj, new_angle: float) -> None:
         obj.rotate_object(new_angle)
 
-    def rotate_obj_on_map(self, frame_name: str, new_angle: float):
+    def rotate_obj_on_map(self, frame_name: str, new_angle: float) -> None:
         self.handlers.handle(command=RotateCommand(frame_name, new_angle))
 
-    def rotate_with_button(self, args: Dict[str, Any]):
+    def rotate_with_button(self, args: Dict[str, Any]) -> None:
         tile_name = args["tile_name"]
         obj = self.get_object(tile_name)
         self.rotate_obj(obj, obj.yaw + 90)
@@ -131,15 +130,15 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         return self.tile_selection[0] <= tile.i <= self.tile_selection[2] and self.tile_selection[3] <= tile.j <= \
                self.tile_selection[1]
 
-    def get_tiles(self):
+    def get_tiles(self) -> Dict[str, Any]:
         return self.handlers.handle(command=GetLayerCommand("tiles"))
 
-    def get_object(self, obj_name: str):
+    def get_object(self, obj_name: str) -> Optional[ImageObject]:
         for obj in self.objects:
             if obj_name == obj.name:
                 return obj
 
-    def change_tiles_handler(self, handler_func, args: Dict[str, Any]):
+    def change_tiles_handler(self, handler_func, args: Dict[str, Any]) -> None:
         tiles = self.get_tiles()
         for tile_name in tiles:
             tile = tiles[tile_name]
@@ -147,14 +146,14 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                 args["tile_name"] = tile_name
                 handler_func(args)
 
-    def painting_tiles(self, default_fill: str):
+    def painting_tiles(self, default_fill: str) -> None:
         self.change_tiles_handler(self.change_tile_type,
                                   {"default_fill": default_fill})
 
-    def rotate_tiles(self):
+    def rotate_tiles(self) -> None:
         self.change_tiles_handler(self.rotate_with_button, {})
 
-    def change_tile_type(self, args: Dict[str, Any]):
+    def change_tile_type(self, args: Dict[str, Any]) -> None:
         new_tile_type = args["default_fill"]
         tile_name = args["tile_name"]
         img_path = f"./img/tiles/{new_tile_type}.png"
@@ -188,7 +187,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         else:
             self.rmbPressed = False
 
-    def select_tiles(self):
+    def select_tiles(self) -> None:
         raw_selection = [
             self.coordinates_transformer.get_x_from_view(
                 min(self.mouse_start_x, self.mouse_cur_x), self.offset_x),

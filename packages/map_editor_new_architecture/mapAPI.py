@@ -118,7 +118,7 @@ class MapAPI:
         pass
 
     #  Double click initiates as single click action
-    def item_list_double_clicked(self, item_name: str, item_type: str):
+    def item_list_double_clicked(self, item_name: str, item_type: str) -> None:
         print(item_name, item_type)
         if item_name == "separator":
             pass
@@ -163,12 +163,12 @@ class MapAPI:
     def trimClicked(self):
         pass
 
-    def selection_update(self, default_fill: str):
+    def selection_update(self, default_fill: str) -> None:
         if self._editor_state.drawState == 'brush':
             self._map_viewer.painting_tiles(default_fill)
 
     def key_press_event(self, e):
         self._qt_api.key_press_event(e)
 
-    def rotate_selected_tiles(self):
+    def rotate_selected_tiles(self) -> None:
         self._map_viewer.rotate_tiles()

@@ -307,7 +307,7 @@ class DuckWindow(QtWidgets.QMainWindow):
         print('item_list_clicked')
 
     #  Double click initiates as single click action
-    def item_list_double_clicked(self):
+    def item_list_double_clicked(self) -> None:
         item_ui_list = self.ui.block_list
         item_name = item_ui_list.currentItem().data(0x0100)
         item_type = item_ui_list.currentItem().data(0x0101)
@@ -338,10 +338,10 @@ class DuckWindow(QtWidgets.QMainWindow):
         print('undo_button_clicked')
 
     #  Brush mode
-    def brush_mode(self):
+    def brush_mode(self) -> None:
         self.map_api.brush_mode(self.brush_button.isChecked())
 
-    def selectionUpdate(self):
+    def selectionUpdate(self) -> None:
         self.map_api.selection_update(self.ui.default_fill.currentData())
 
     def trimClicked(self):

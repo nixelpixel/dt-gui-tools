@@ -18,11 +18,11 @@ class CoordinatesTransformer:
     def get_y_to_view(self, y_real: float) -> float:
         return (self.size_map - y_real - 1) * self.scale * (self.grid_size + 1)
 
-    def set_scale(self, new_scale: float):
+    def set_scale(self, new_scale: float) -> None:
         self.scale = new_scale
 
-    def set_size_map(self, new_size_map: int):
+    def set_size_map(self, new_size_map: int) -> None:
         self.size_map = new_size_map
 
-    def set_grid_size(self, new_grid_size: float):
+    def set_grid_size(self, new_grid_size: float) -> None:
         self.grid_size = new_grid_size

@@ -1,6 +1,6 @@
 from __future__ import annotations
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict
 
 from mapStorage import MapStorage
 from classes.layers import AbstractLayer
@@ -40,7 +40,7 @@ class WatchtowersLayerHandler(AbstractHandler, AbstractLayer):
     def layer_name(self) -> str:
         return "watchtowers"
 
-    def default_conf(self):
+    def default_conf(self) -> Dict[str, str]:
         return {'configuration': 'WT18'}
 
 
@@ -57,7 +57,7 @@ class FramesLayerHandler(AbstractHandler, AbstractLayer):
     def layer_name(self) -> str:
         return "frames"
 
-    def default_conf(self):
+    def default_conf(self) -> Dict[str, Any]:
         return {'pose': {'x': 1, 'y': 1, 'yaw': 0}}
 
 
