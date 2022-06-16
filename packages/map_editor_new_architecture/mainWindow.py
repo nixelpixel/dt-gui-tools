@@ -43,7 +43,6 @@ class DuckWindow(QtWidgets.QMainWindow):
 
         self.map_viewer.setMinimumSize(540, 540)
         self.ui.horizontalLayout.addWidget(self.map_viewer)
-        #self.ui.horizontalLayout.addWidget(self.map_viewer)
         self.map_viewer.repaint()
         self.initUi()
         self.update_layer_tree()

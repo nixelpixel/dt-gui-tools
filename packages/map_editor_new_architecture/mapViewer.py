@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from PyQt5 import QtWidgets, QtGui, QtCore
 from dt_maps.types.tiles import Tile
-
 from classes.Commands.AddObjCommand import AddObjCommand
 from classes.Commands.GetLayerCommand import GetLayerCommand
 from classes.objects import DraggableImage, ImageObject
@@ -18,6 +17,7 @@ TILES_DIR_PATH = './img/tiles'
 OBJECT_DIR_PATHS = ['./img/signs',
                     './img/apriltags',
                     './img/objects']
+
 
 class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     map = None
@@ -38,10 +38,10 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     rmbPressed = False
     lmbPressed = False
     rmbPrevPos = [0, 0]
-    mouseStartX, mouseStartY = 0, 0
-    mouseCurX, mouseCurY = 0, 0
-    offsetX = 0
-    offsetY = 0
+    mouse_start_x, mouse_start_y = 0, 0
+    mouse_cur_x, mouse_cur_y = 0, 0
+    offset_x = 0
+    offset_y = 0
     lmbClicked = QtCore.pyqtSignal(int, int)  # click coordinates as an index of the clicked tile
 
     def __init__(self):
@@ -50,9 +50,8 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.setScene(QtWidgets.QGraphicsScene())
 
         self.painter = Painter()
-
-        self.coordinates_transformer = CoordinatesTransformer()
         self.map = default_map_storage()
+        self.coordinates_transformer = CoordinatesTransformer(self.scale, self.size_map, self.map.gridSize)
         self.tiles = TileLayerHandler()
         self.watchtowers = WatchtowersLayerHandler()
         self.frames = FramesLayerHandler()
@@ -97,12 +96,8 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         if new_obj:
             frame_obj = self.map.map.layers.frames[object_name]
             new_coordinates = (
-                CoordinatesTransformer.get_x_to_view(frame_obj.pose.x, self.scale,
-                                                     self.map.gridSize),
-                CoordinatesTransformer.get_y_to_view(frame_obj.pose.y, self.scale,
-                                                     self.map.gridSize,
-                                                     self.size_map))
-            # FIXME rotate object functions duplicate?
+                self.coordinates_transformer.get_x_to_view(frame_obj.pose.x) + 1,
+                self.coordinates_transformer.get_y_to_view(frame_obj.pose.y) + 1)
             new_obj.rotate_object(frame_obj.pose.yaw)
             new_obj.move_object(new_coordinates)
             self.objects.append(new_obj)
@@ -113,8 +108,8 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.add_obj_image(layer_name, object_name)
 
     def move_obj_on_map(self, frame_name: str, new_pos: tuple, obj_height: float, obj_width: float):
-        map_x = CoordinatesTransformer.get_x_from_view(new_pos[0], self.scale, self.map.gridSize, obj_width)
-        map_y = CoordinatesTransformer.get_y_from_view(new_pos[1], self.scale, self.map.gridSize, self.size_map, obj_height)
+        map_x = self.coordinates_transformer.get_x_from_view(new_pos[0], obj_width=obj_width)
+        map_y = self.coordinates_transformer.get_y_from_view(new_pos[1], obj_height=obj_height)
         self.handlers.handle(command=MoveCommand(frame_name, (map_x, map_y)))
 
     def rotate_obj_on_map(self, frame_name: str, new_angle: float):
@@ -153,37 +148,28 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         x, y = event.x(), event.y()
         if event.buttons() == QtCore.Qt.LeftButton:
             self.lmbPressed = True
-            self.mouseCurX = self.mouseStartX = x
-            self.mouseCurY = self.mouseStartY = y
-            print("offset", start_pos)
-            self.offsetX = start_pos[0]
-            self.offsetY = start_pos[1]
+            self.mouse_cur_x = self.mouse_start_x = x
+            self.mouse_cur_y = self.mouse_start_y = y
+            self.offset_x = start_pos[0]
+            self.offset_y = start_pos[1]
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
         if self.lmbPressed:
-            self.mouseCurX = event.x()
-            self.mouseCurY = event.y()
-            print('coords', self.mouseCurX, self.mouseCurY)
+            self.mouse_cur_x = event.x()
+            self.mouse_cur_y = event.y()
 
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
         if event.button() == QtCore.Qt.LeftButton:
             self.lmbPressed = False
-            # TODO is coordinates transformer functions?
-
-            if int((self.mouseStartX + self.offsetX) / self.scale / self.map.gridSize) == int(
-                    (self.mouseCurX + self.offsetX) / self.scale / self.map.gridSize) and int(
-                (self.mouseStartY - self.offsetY) / self.scale / self.map.gridSize) == int(
-                (self.mouseCurY - self.offsetY) / self.scale / self.map.gridSize):
-                self.lmbClicked.emit(int((self.mouseStartX + self.offsetX) / self.scale / self.map.gridSize),
-                                     int((self.mouseStartY + self.offsetY) / self.scale / self.map.gridSize))
-
             raw_selection = [
-                (min(self.mouseStartX, self.mouseCurX) + self.offsetX) / self.scale / self.map.gridSize,
-                CoordinatesTransformer.get_y_from_view(min(self.mouseStartY, self.mouseCurY), self.scale, self.map.gridSize, self.size_map),
-                (max(self.mouseStartX, self.mouseCurX) + self.offsetX) / self.scale / self.map.gridSize,
-                CoordinatesTransformer.get_y_from_view(
-                    max(self.mouseStartY, self.mouseCurY), self.scale,
-                    self.map.gridSize, self.size_map)
+                self.coordinates_transformer.get_x_from_view(
+                    min(self.mouse_start_x, self.mouse_cur_x), self.offset_x),
+                self.coordinates_transformer.get_y_from_view(
+                    min(self.mouse_start_y, self.mouse_cur_y), self.offset_y),
+                self.coordinates_transformer.get_x_from_view(
+                    max(self.mouse_start_x, self.mouse_cur_x), self.offset_x),
+                self.coordinates_transformer.get_y_from_view(
+                    max(self.mouse_start_y, self.mouse_cur_y), self.offset_y),
             ]
 
             if self.get_tiles():

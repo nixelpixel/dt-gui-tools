@@ -11,7 +11,6 @@ TILE_TYPES = ('block', 'road')
 
 class MapAPI:
     """High level API. MapAPI ~ Backend"""
-    _coordinate_transformer: CoordinatesTransformer = None
     _qt_api: QtWindowAPI = None
     _map_storage: MapStorage = None
     _painter: Painter = None
@@ -20,7 +19,6 @@ class MapAPI:
     _editor_state: EditorState = None
 
     def __init__(self, info_json: dict, map_viewer: MapViewer) -> None:
-        self._coordinate_transformer = CoordinatesTransformer()
         self._map_storage = MapStorage()
         self._qt_api = QtWindowAPI()
         self._painter = Painter()
