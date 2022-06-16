@@ -1,9 +1,10 @@
 from coordinatesTransformer import CoordinatesTransformer
+from editorState import EditorState
 from layersAction import LayersAction
 from qtWindowAPI import QtWindowAPI
 from mapStorage import MapStorage
 from painter import Painter
-from utils.maps import default_map_storage
+from mapViewer import MapViewer
 
 TILE_TYPES = ('block', 'road')
 
@@ -15,35 +16,18 @@ class MapAPI:
     _map_storage: MapStorage = None
     _painter: Painter = None
     _layers_action: LayersAction = None
+    _map_viewer: MapViewer = None
+    _editor_state: EditorState = None
 
-    def __init__(self, info_json: dict) -> None:
+    def __init__(self, info_json: dict, map_viewer: MapViewer) -> None:
         self._coordinate_transformer = CoordinatesTransformer()
-        self._map_storage = default_map_storage()
+        self._map_storage = MapStorage()
         self._qt_api = QtWindowAPI()
         self._painter = Painter()
         self._layers_action = LayersAction()
         self.info_json = info_json
-
-    def load(self):
-        """
-        pseudocode
-        map_path = QT.GET_PATH
-        MapStorage.change map
-        :return:
-        """
-        pass
-
-    def save(self):
-        """save map"""
-        pass
-
-    def render(self):
-        """render map"""
-
-    def move(self):
-        pass
-
-# ------------------------------
+        self._map_viewer = map_viewer
+        self._editor_state = EditorState()
 
     def open_map_triggered(self):
         print('open map')
@@ -136,7 +120,7 @@ class MapAPI:
         pass
 
     #  Double click initiates as single click action
-    def item_list_double_clicked(self, item_name: str, item_type: str, map_viewer):
+    def item_list_double_clicked(self, item_name: str, item_type: str):
         print(item_name, item_type)
         if item_name == "separator":
             pass
@@ -145,7 +129,7 @@ class MapAPI:
         else:
             print(item_name, item_type)
             type_of_element = self.info_json['info'][item_name]['type']
-            map_viewer.add_obj(item_name, type_of_element)
+            self._map_viewer.add_obj(item_name, type_of_element)
 
     #  Reset to default values
     def set_default_fill(self):
@@ -172,14 +156,19 @@ class MapAPI:
         pass
 
     #  Brush mode
-    def brush_mode(self):
-        pass
+    def brush_mode(self, brush_button_is_checked: bool):
+        if brush_button_is_checked:
+            self._editor_state.drawState = 'brush'
+        else:
+            self._editor_state.drawState = ''
 
     def trimClicked(self):
         pass
 
-    def selectionUpdate(self):
-        pass
+    def selection_update(self, default_fill: str):
+        if self._editor_state.drawState == 'brush':
+            print('MAP API change tiles!')
+            self._map_viewer.painting_tiles(default_fill)
 
     def key_press_event(self, e):
         self._qt_api.key_press_event(e)

@@ -4,8 +4,7 @@ from os import path
 import functools
 import json
 import codecs
-from PyQt5.QtWidgets import QVBoxLayout, QLineEdit, QGroupBox, \
-    QLabel, QComboBox, QFrame, QGridLayout, QPushButton, QHBoxLayout
+from PyQt5.QtWidgets import QFrame
 
 from mapAPI import MapAPI
 from mapViewer import MapViewer
@@ -39,11 +38,12 @@ class DuckWindow(QtWidgets.QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
-        self.map_api = MapAPI(self.info_json)
         self.map_viewer = MapViewer()
+        self.map_api = MapAPI(self.info_json, self.map_viewer)
 
         self.map_viewer.setMinimumSize(540, 540)
         self.ui.horizontalLayout.addWidget(self.map_viewer)
+        #self.ui.horizontalLayout.addWidget(self.map_viewer)
         self.map_viewer.repaint()
         self.initUi()
         self.update_layer_tree()
@@ -312,8 +312,7 @@ class DuckWindow(QtWidgets.QMainWindow):
         item_ui_list = self.ui.block_list
         item_name = item_ui_list.currentItem().data(0x0100)
         item_type = item_ui_list.currentItem().data(0x0101)
-        self.map_api.item_list_double_clicked(item_name, item_type, self.map_viewer)
-        print('item_list_double_clicked')
+        self.map_api.item_list_double_clicked(item_name, item_type)
 
     #  Reset to default values
     def set_default_fill(self):
@@ -341,13 +340,13 @@ class DuckWindow(QtWidgets.QMainWindow):
 
     #  Brush mode
     def brush_mode(self):
-        print('brush_mode')
+        self.map_api.brush_mode(self.brush_button.isChecked())
+
+    def selectionUpdate(self):
+        self.map_api.selection_update(self.ui.default_fill.currentData())
 
     def trimClicked(self):
         print('trimClicked')
-
-    def selectionUpdate(self):
-        print('selectionUpdate')
 
     def keyPressEvent(self, e):
         print('keyPressEvent')
