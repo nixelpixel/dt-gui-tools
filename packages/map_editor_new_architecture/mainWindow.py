@@ -153,7 +153,7 @@ class DuckWindow(QtWidgets.QMainWindow):
         b4.triggered.connect(self.delete_button_clicked)
         b5.triggered.connect(self.undo_button_clicked)
 
-        c1.triggered.connect(self.rotateSelectedTiles)
+        c1.triggered.connect(self.rotate_selected_tiles)
         c2.triggered.connect(self.trimClicked)
 
         self.brush_button.clicked.connect(self.brush_mode)
@@ -350,5 +350,5 @@ class DuckWindow(QtWidgets.QMainWindow):
     def keyPressEvent(self, e):
         print('keyPressEvent')
 
-    def rotateSelectedTiles(self):
-        print('rotateSelectedTiles')
+    def rotate_selected_tiles(self):
+        self.map_api.rotate_selected_tiles()

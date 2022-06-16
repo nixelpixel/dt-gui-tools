@@ -26,7 +26,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     watchtowers = None
     size_map = 7
     tile_size = 0.585
-    objects = []
+    objects = [] # TODO replace to dict
     #citizens = None
     #traffic_signs = None
     #ground_tags = None
@@ -34,7 +34,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     #decorations = None
 
     scale = 1
-    tileSelection = [0] * 4
+    tile_selection = [0] * 4
     rmbPressed = False
     lmbPressed = False
     rmbPrevPos = [0, 0]
@@ -98,8 +98,8 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             new_coordinates = (
                 self.coordinates_transformer.get_x_to_view(frame_obj.pose.x) + 1,
                 self.coordinates_transformer.get_y_to_view(frame_obj.pose.y) + 1)
-            new_obj.rotate_object(frame_obj.pose.yaw)
-            new_obj.move_object(new_coordinates)
+            self.rotate_obj(new_obj, frame_obj.pose.yaw)
+            self.move_obj(new_obj, new_coordinates)
             self.objects.append(new_obj)
 
     def add_obj_on_map(self, layer_name: str, object_name: str):
@@ -107,17 +107,23 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.handlers.handle(command=AddObjCommand(layer_name, object_name))
         self.add_obj_image(layer_name, object_name)
 
+    def move_obj(self, obj, new_coordinates: tuple):
+        obj.move_object(new_coordinates)
+
     def move_obj_on_map(self, frame_name: str, new_pos: tuple, obj_height: float, obj_width: float):
         map_x = self.coordinates_transformer.get_x_from_view(new_pos[0], obj_width=obj_width)
         map_y = self.coordinates_transformer.get_y_from_view(new_pos[1], obj_height=obj_height)
         self.handlers.handle(command=MoveCommand(frame_name, (map_x, map_y)))
 
+    def rotate_obj(self, obj, new_angle: float):
+        obj.rotate_object(new_angle)
+
     def rotate_obj_on_map(self, frame_name: str, new_angle: float):
         self.handlers.handle(command=RotateCommand(frame_name, new_angle))
 
     def is_selected_tile(self, tile: Tile) -> bool:
-        return self.tileSelection[0] <= tile.i <= self.tileSelection[2] and self.tileSelection[3] <= tile.j <= \
-               self.tileSelection[1]
+        return self.tile_selection[0] <= tile.i <= self.tile_selection[2] and self.tile_selection[3] <= tile.j <= \
+               self.tile_selection[1]
 
     def get_tiles(self):
         return self.handlers.handle(command=GetLayerCommand("tiles"))
@@ -132,15 +138,25 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         for tile_name in tiles:
             tile = tiles[tile_name]
             if self.is_selected_tile(tile):
-                self.change_tile(tile, default_fill)
+                self.change_tile_type(tile, default_fill)
 
-    def change_tile(self, tile: Tile, new_tile_type: str):
+    def rotate_tiles(self):
+        tiles = self.get_tiles()
+        for tile_name in tiles:
+            tile = tiles[tile_name]
+            if self.is_selected_tile(tile):
+                obj = self.get_object(tile_name)
+                self.rotate_obj(obj, obj.yaw + 90)
+                self.rotate_obj_on_map(tile_name, obj.yaw + 90)
+
+    def change_tile_type(self, tile: Tile, new_tile_type: str):
         img_path = f"./img/tiles/{new_tile_type}.png"
         mutable_obj = self.get_object(tile.key)
         mutable_obj.change_image(img_path)
-        self.handlers.handle(command=ChangeTileTypeCommand(tile.key, new_tile_type))
+        self.handlers.handle(command=ChangeTileTypeCommand(tile.key,
+                                                           new_tile_type))
         self.rotate_obj_on_map(tile.key, 0)
-            
+
     def mousePressEvent(self, event: tuple) -> None:
         start_pos = event[1]
         event = event[0]
@@ -160,23 +176,25 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
         if event.button() == QtCore.Qt.LeftButton:
             self.lmbPressed = False
-            raw_selection = [
-                self.coordinates_transformer.get_x_from_view(
-                    min(self.mouse_start_x, self.mouse_cur_x), self.offset_x),
-                self.coordinates_transformer.get_y_from_view(
-                    min(self.mouse_start_y, self.mouse_cur_y), self.offset_y),
-                self.coordinates_transformer.get_x_from_view(
-                    max(self.mouse_start_x, self.mouse_cur_x), self.offset_x),
-                self.coordinates_transformer.get_y_from_view(
-                    max(self.mouse_start_y, self.mouse_cur_y), self.offset_y),
-            ]
-
-            if self.get_tiles():
-                self.tileSelection = [
-                    int(v)  # + (1 if i > 1 else 0)
-                    for i, v in enumerate(raw_selection)
-                ]
-            print(self.tileSelection)
+            self.select_tiles()
             self.parentWidget().parent().selectionUpdate()
         else:
             self.rmbPressed = False
+
+    def select_tiles(self):
+        raw_selection = [
+            self.coordinates_transformer.get_x_from_view(
+                min(self.mouse_start_x, self.mouse_cur_x), self.offset_x),
+            self.coordinates_transformer.get_y_from_view(
+                min(self.mouse_start_y, self.mouse_cur_y), self.offset_y),
+            self.coordinates_transformer.get_x_from_view(
+                max(self.mouse_start_x, self.mouse_cur_x), self.offset_x),
+            self.coordinates_transformer.get_y_from_view(
+                max(self.mouse_start_y, self.mouse_cur_y), self.offset_y),
+        ]
+
+        if self.get_tiles():
+            self.tile_selection = [
+                int(v)  # + (1 if i > 1 else 0)
+                for i, v in enumerate(raw_selection)
+            ]

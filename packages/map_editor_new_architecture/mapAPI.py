@@ -165,11 +165,10 @@ class MapAPI:
 
     def selection_update(self, default_fill: str):
         if self._editor_state.drawState == 'brush':
-            print('MAP API change tiles!')
             self._map_viewer.painting_tiles(default_fill)
 
     def key_press_event(self, e):
         self._qt_api.key_press_event(e)
 
-    def rotateSelectedTiles(self):
-        pass
+    def rotate_selected_tiles(self):
+        self._map_viewer.rotate_tiles()
