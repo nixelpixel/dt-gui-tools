@@ -4,7 +4,7 @@ class CoordinatesTransformer:
     # TODO set values on init
 
     @staticmethod
-    def get_x_from_view(x_view: float, scale: float, grid_size: float, obj_width: float) -> float:
+    def get_x_from_view(x_view: float, scale: float, grid_size: float, obj_width: float = 0.0) -> float:
         return (x_view - obj_width) / scale / grid_size
 
     @staticmethod

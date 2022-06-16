@@ -145,15 +145,19 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         mutable_obj = self.get_object(tile.key)
         mutable_obj.change_image(img_path)
         self.handlers.handle(command=ChangeTileTypeCommand(tile.key, new_tile_type))
-        mutable_obj.rotate_object(0)
         self.rotate_obj_on_map(tile.key, 0)
             
-    def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
+    def mousePressEvent(self, event: tuple) -> None:
+        start_pos = event[1]
+        event = event[0]
         x, y = event.x(), event.y()
         if event.buttons() == QtCore.Qt.LeftButton:
             self.lmbPressed = True
             self.mouseCurX = self.mouseStartX = x
             self.mouseCurY = self.mouseStartY = y
+            print("offset", start_pos)
+            self.offsetX = start_pos[0]
+            self.offsetY = start_pos[1]
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
         if self.lmbPressed:
@@ -166,22 +170,20 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             self.lmbPressed = False
             # TODO is coordinates transformer functions?
 
-            if int((self.mouseStartX - self.offsetX) / self.scale * self.map.gridSize) == int(
-                    (self.mouseCurX - self.offsetX) / self.scale * self.map.gridSize) and int(
-                (self.mouseStartY - self.offsetY) / self.scale * self.map.gridSize) == int(
-                (self.mouseCurY - self.offsetY) / self.scale * self.map.gridSize):
-                self.lmbClicked.emit(int((self.mouseStartX - self.offsetX) / self.scale * self.map.gridSize),
-                                     int((self.mouseStartY - self.offsetY) / self.scale * self.map.gridSize))
+            if int((self.mouseStartX + self.offsetX) / self.scale / self.map.gridSize) == int(
+                    (self.mouseCurX + self.offsetX) / self.scale / self.map.gridSize) and int(
+                (self.mouseStartY - self.offsetY) / self.scale / self.map.gridSize) == int(
+                (self.mouseCurY - self.offsetY) / self.scale / self.map.gridSize):
+                self.lmbClicked.emit(int((self.mouseStartX + self.offsetX) / self.scale / self.map.gridSize),
+                                     int((self.mouseStartY + self.offsetY) / self.scale / self.map.gridSize))
 
             raw_selection = [
-                ((min(self.mouseStartX, self.mouseCurX) - self.offsetX) / self.scale
-                 ) / self.map.gridSize,
-                CoordinatesTransformer.get_y_from_view(min(self.mouseStartY, self.mouseCurY), self.scale, self.map.gridSize, self.size_map)
-                 / self.tile_size,
-                ((max(self.mouseStartX, self.mouseCurX) - self.offsetX) / self.scale) / self.map.gridSize,
+                (min(self.mouseStartX, self.mouseCurX) + self.offsetX) / self.scale / self.map.gridSize,
+                CoordinatesTransformer.get_y_from_view(min(self.mouseStartY, self.mouseCurY), self.scale, self.map.gridSize, self.size_map),
+                (max(self.mouseStartX, self.mouseCurX) + self.offsetX) / self.scale / self.map.gridSize,
                 CoordinatesTransformer.get_y_from_view(
                     max(self.mouseStartY, self.mouseCurY), self.scale,
-                    self.map.gridSize, self.size_map) / self.tile_size
+                    self.map.gridSize, self.size_map)
             ]
 
             if self.get_tiles():
@@ -189,6 +191,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                     int(v)  # + (1 if i > 1 else 0)
                     for i, v in enumerate(raw_selection)
                 ]
+            print(self.tileSelection)
             self.parentWidget().parent().selectionUpdate()
         else:
             self.rmbPressed = False

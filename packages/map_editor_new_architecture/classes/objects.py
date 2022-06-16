@@ -14,6 +14,7 @@ class ImageObject(QtWidgets.QLabel):
 
     def rotate_object(self, angle_clockwise: float) -> None:
         rotate_angle = (angle_clockwise - self.yaw) % 360.0
+        print(rotate_angle)
         self.yaw = angle_clockwise % 360
         if not rotate_angle // 90 % 2 == 0:
             self.setFixedSize(self.pixmap.height(), self.pixmap.width())
@@ -23,6 +24,7 @@ class ImageObject(QtWidgets.QLabel):
         self.setPixmap(self.pixmap)
 
     def change_image(self, img_path: str) -> None:
+        self.yaw = 0
         pixmap = QtGui.QPixmap(img_path)
         resize = QtCore.QSize(self.scaled_size[0], self.scaled_size[1])
         pixmap = pixmap.scaled(resize,
@@ -50,7 +52,7 @@ class ImageObject(QtWidgets.QLabel):
         self.parentWidget().rotate_obj_on_map(self.name, angle_clockwise % 360)
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
-        self.parentWidget().mousePressEvent(event)
+        self.parentWidget().mousePressEvent((event, (self.pos().x(), self.pos().y())))
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
         self.parentWidget().mouseMoveEvent(event)

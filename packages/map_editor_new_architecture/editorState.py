@@ -1,5 +1,3 @@
-from threading import Lock
-
 from utils.singletonMeta import SingletonMeta
 
 DEFAULT_TILE_SIZE = 0.585
