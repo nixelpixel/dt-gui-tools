@@ -4,7 +4,7 @@ from dt_maps.types.tiles import Tile
 from classes.Commands.AddObjCommand import AddObjCommand
 from classes.Commands.GetLayerCommand import GetLayerCommand
 from classes.objects import DraggableImage, ImageObject
-from typing import Dict
+from typing import Dict, Any
 from layers import TileLayerHandler, WatchtowersLayerHandler, FramesLayerHandler
 from coordinatesTransformer import CoordinatesTransformer
 from painter import Painter
@@ -121,6 +121,12 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     def rotate_obj_on_map(self, frame_name: str, new_angle: float):
         self.handlers.handle(command=RotateCommand(frame_name, new_angle))
 
+    def rotate_with_button(self, args: Dict[str, Any]):
+        tile_name = args["tile_name"]
+        obj = self.get_object(tile_name)
+        self.rotate_obj(obj, obj.yaw + 90)
+        self.rotate_obj_on_map(tile_name, obj.yaw)
+
     def is_selected_tile(self, tile: Tile) -> bool:
         return self.tile_selection[0] <= tile.i <= self.tile_selection[2] and self.tile_selection[3] <= tile.j <= \
                self.tile_selection[1]
@@ -133,29 +139,30 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             if obj_name == obj.name:
                 return obj
 
-    def painting_tiles(self, default_fill: str):
+    def change_tiles_handler(self, handler_func, args: Dict[str, Any]):
         tiles = self.get_tiles()
         for tile_name in tiles:
             tile = tiles[tile_name]
             if self.is_selected_tile(tile):
-                self.change_tile_type(tile, default_fill)
+                args["tile_name"] = tile_name
+                handler_func(args)
+
+    def painting_tiles(self, default_fill: str):
+        self.change_tiles_handler(self.change_tile_type,
+                                  {"default_fill": default_fill})
 
     def rotate_tiles(self):
-        tiles = self.get_tiles()
-        for tile_name in tiles:
-            tile = tiles[tile_name]
-            if self.is_selected_tile(tile):
-                obj = self.get_object(tile_name)
-                self.rotate_obj(obj, obj.yaw + 90)
-                self.rotate_obj_on_map(tile_name, obj.yaw + 90)
+        self.change_tiles_handler(self.rotate_with_button, {})
 
-    def change_tile_type(self, tile: Tile, new_tile_type: str):
+    def change_tile_type(self, args: Dict[str, Any]):
+        new_tile_type = args["default_fill"]
+        tile_name = args["tile_name"]
         img_path = f"./img/tiles/{new_tile_type}.png"
-        mutable_obj = self.get_object(tile.key)
+        mutable_obj = self.get_object(tile_name)
         mutable_obj.change_image(img_path)
-        self.handlers.handle(command=ChangeTileTypeCommand(tile.key,
+        self.handlers.handle(command=ChangeTileTypeCommand(tile_name,
                                                            new_tile_type))
-        self.rotate_obj_on_map(tile.key, 0)
+        self.rotate_obj_on_map(tile_name, 0)
 
     def mousePressEvent(self, event: tuple) -> None:
         start_pos = event[1]
