@@ -135,7 +135,6 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                 self.change_tile(tile, default_fill)
 
     def change_tile(self, tile: Tile, new_tile_type: str):
-        print('paint')
         img_path = f"./img/tiles/{new_tile_type}.png"
         mutable_obj = self.get_object(tile.key)
         mutable_obj.change_image(img_path)

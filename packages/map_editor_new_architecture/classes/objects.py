@@ -14,7 +14,6 @@ class ImageObject(QtWidgets.QLabel):
 
     def rotate_object(self, angle_clockwise: float) -> None:
         rotate_angle = (angle_clockwise - self.yaw) % 360.0
-        print(rotate_angle)
         self.yaw = angle_clockwise % 360
         if not rotate_angle // 90 % 2 == 0:
             self.setFixedSize(self.pixmap.height(), self.pixmap.width())
