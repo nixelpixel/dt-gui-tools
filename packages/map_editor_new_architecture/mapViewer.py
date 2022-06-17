@@ -49,9 +49,9 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
 
         self.setScene(QtWidgets.QGraphicsScene())
 
-        self.painter = Painter()
         self.map = default_map_storage()
         self.coordinates_transformer = CoordinatesTransformer(self.scale, self.size_map, self.map.gridSize)
+        self.painter = Painter()
         self.tiles = TileLayerHandler()
         self.watchtowers = WatchtowersLayerHandler()
         self.frames = FramesLayerHandler()
@@ -123,8 +123,8 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     def scaled_obj(self, obj: ImageObject, args: Dict[str, Any]):
         scale = args["scale"]
         obj.scale_object(scale)
-        new_coordinates = (obj.pos().x() * self.scale,
-                           obj.pos().y() * self.scale)
+        new_coordinates = (obj.pos().x() * scale,
+                           obj.pos().y() * scale)
         self.move_obj(obj, new_coordinates)
 
     def rotate_with_button(self, args: Dict[str, Any]) -> None:
@@ -151,6 +151,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             tile = tiles[tile_name]
             if self.is_selected_tile(tile):
                 args["tile_name"] = tile_name
+                args["tile"] = tile
                 handler_func(args)
 
     def change_object_handler(self, handler_func, args: Dict[str, Any]) -> None:
@@ -163,6 +164,11 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
 
     def rotate_tiles(self) -> None:
         self.change_tiles_handler(self.rotate_with_button, {})
+
+    def highlight_select_tile(self, args: Dict[str, Any]):
+        tile = self.get_object(args["tile_name"])
+        self.painter.draw_rect((tile.pos().x() - 1, tile.pos().y() - 1),
+                               args["painter"])
 
     def change_tile_type(self, args: Dict[str, Any]) -> None:
         new_tile_type = args["default_fill"]
@@ -208,9 +214,14 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         if event.button() == QtCore.Qt.LeftButton:
             self.lmbPressed = False
             self.select_tiles()
+            self.scene().update()
             self.parentWidget().parent().selectionUpdate()
         else:
             self.rmbPressed = False
+
+    def drawBackground(self, painter: QtGui.QPainter, rect: QtCore.QRectF):
+        self.change_tiles_handler(self.highlight_select_tile,
+                                  {"painter": painter})
 
     def select_tiles(self) -> None:
         raw_selection = [

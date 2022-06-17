@@ -42,7 +42,7 @@ tiles:
   map_1/tile_1_3:
     i: 1
     j: 3
-    type: 4way
+    type: 3way
   map_1/tile_1_4:
     i: 1
     j: 4
@@ -106,7 +106,7 @@ tiles:
   map_1/tile_3_5:
     i: 3
     j: 5
-    type: 4way
+    type: 3way
   map_1/tile_3_6:
     i: 3
     j: 6
@@ -199,7 +199,7 @@ tiles:
   map_1/tile_7_0:
     i: 7
     j: 0
-    type: grass
+    type: floor
   map_1/tile_7_1:
     i: 7
     j: 1

@@ -13,7 +13,6 @@ class MapAPI:
     """High level API. MapAPI ~ Backend"""
     _qt_api: QtWindowAPI = None
     _map_storage: MapStorage = None
-    _painter: Painter = None
     _layers_action: LayersAction = None
     _map_viewer: MapViewer = None
     _editor_state: EditorState = None
@@ -21,7 +20,6 @@ class MapAPI:
     def __init__(self, info_json: dict, map_viewer: MapViewer) -> None:
         self._map_storage = MapStorage()
         self._qt_api = QtWindowAPI()
-        self._painter = Painter()
         self._layers_action = LayersAction()
         self.info_json = info_json
         self._map_viewer = map_viewer
