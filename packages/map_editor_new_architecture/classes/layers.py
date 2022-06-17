@@ -9,7 +9,10 @@ class AbstractLayer(ABC):
 
     def __init__(self) -> None:
         self.dm = MapStorage().map
-        self.data = self.dm.layers[self.layer_name()]
+        try:
+            self.data = self.dm.layers[self.layer_name()]
+        except KeyError:
+            self.data = {}
 
     @abstractmethod
     def layer_name(self) -> str:

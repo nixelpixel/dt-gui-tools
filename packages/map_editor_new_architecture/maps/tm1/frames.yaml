@@ -5,11 +5,6 @@ frames:
       y: 0.0
       yaw: 0
     relative_to: null
-  map_1/watchtower1:
-    pose:
-      x: 0
-      y: 0
-      yaw: 0.0
   map_1/tile_0_0:
     pose:
       x: 0
@@ -510,4 +505,13 @@ frames:
       x: 9
       y: 9
       yaw: 0.0
-
+  map_1/watchtower1:
+    pose:
+      x: 1
+      y: 1
+      yaw: 0
+  map_1/watchtower2:
+    pose:
+      x: 5.127118644067797
+      y: 2.016949152542373
+      yaw: 0

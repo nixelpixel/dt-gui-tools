@@ -2,6 +2,7 @@
 from PyQt5 import QtWidgets, QtGui, QtCore
 from dt_maps.types.tiles import Tile
 from classes.Commands.AddObjCommand import AddObjCommand
+from classes.Commands.DeleteObjCommand import DeleteObjCommand
 from classes.Commands.GetLayerCommand import GetLayerCommand
 from classes.objects import DraggableImage, ImageObject
 from typing import Dict, Any, Optional
@@ -80,7 +81,10 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     def add_obj(self, layer_name: str, item_type: str) -> None:
         layer = self.handlers.handle(command=GetLayerCommand(layer_name))
         # TODO map_1
-        object_name: str = f"map_1/{item_type}{len(layer) + 1}"
+        try:
+            object_name: str = f"map_1/{item_type}{len(layer) + 1}"
+        except TypeError:
+            object_name: str = f"map_1/{item_type}1"
         self.add_obj_on_map(layer_name, object_name)
 
     def add_obj_image(self, layer_name: str, object_name: str, layer_object=None) -> None:
@@ -105,6 +109,11 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.handlers.handle(command=AddObjCommand("frames", object_name))
         self.handlers.handle(command=AddObjCommand(layer_name, object_name))
         self.add_obj_image(layer_name, object_name)
+
+    def delete_obj_on_map(self, layer_name: str, object_name: str) -> None:
+        self.handlers.handle(command=DeleteObjCommand("frames", object_name))
+        self.handlers.handle(command=DeleteObjCommand(layer_name, object_name))
+        #self.add_obj_image(layer_name, object_name)
 
     def move_obj(self, obj: ImageObject, new_coordinates: tuple) -> None:
         obj.move_object(new_coordinates)

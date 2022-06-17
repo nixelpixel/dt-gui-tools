@@ -21,6 +21,18 @@ def add_new_obj(dm: Map, layer: MapLayer, layer_name: str, obj_name: str, defaul
     elif layer_name == "watchtowers":
         register("watchtowers", Watchtower)
 
+
+def delete_obj(dm: Map, layer: MapLayer, layer_name: str, obj_name: str) -> None:
+    layer.__delitem__(obj_name)
+    layer = MapLayer(dm, layer_name, layer)
+    dm._layers.__dict__[layer_name] = layer
+    register = lambda l, t: dm.layers.get(l).register_entity_helper(
+        t) if dm.layers.has(l) else 0
+    if layer_name == "frames":
+        register("frames", Frame)
+    elif layer_name == "watchtowers":
+        register("watchtowers", Watchtower)
+
 if __name__ == '__main__':
     m = default_map_storage()
     print(m.map.name)
