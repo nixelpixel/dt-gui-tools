@@ -6,6 +6,7 @@ class ImageObject(QtWidgets.QLabel):
     def __init__(self, img_path: str, parent: QtWidgets.QWidget, object_name: str = "", scale: tuple = (30, 60)):
         super(ImageObject, self).__init__()
         self.setParent(parent)
+        self.img_path = img_path
         self.name = object_name
         self.scaled_size = scale
         self.pixmap = None
@@ -24,15 +25,27 @@ class ImageObject(QtWidgets.QLabel):
 
     def change_image(self, img_path: str) -> None:
         self.yaw = 0
-        pixmap = QtGui.QPixmap(img_path)
+        self.img_path = img_path
+        self.pixmap = QtGui.QPixmap(img_path)
+        self.set_size_object(self.scaled_size)
+
+    def set_size_object(self, new_size: tuple):
+        self.scaled_size = new_size
         resize = QtCore.QSize(self.scaled_size[0], self.scaled_size[1])
-        pixmap = pixmap.scaled(resize,
+        self.pixmap = self.pixmap.scaled(resize,
                                aspectRatioMode=QtCore.Qt.KeepAspectRatio,
                                transformMode=QtCore.Qt.SmoothTransformation)
-        self.pixmap = pixmap
-        self.setFixedSize(pixmap.width(), pixmap.height())
+        self.setFixedSize(self.pixmap.width(), self.pixmap.height())
         self.setPixmap(self.pixmap)
         self.show()
+
+    def scale_object(self, scale: float):
+        yaw = self.yaw
+        self.change_image(self.img_path)
+        self.rotate_object(yaw)
+        self.set_size_object((self.scaled_size[0] * scale,
+                              self.scaled_size[1]
+                              * scale))
 
     def move_object(self, new_position: tuple) -> None:
         self.move(QtCore.QPoint(new_position[0], new_position[1]))
@@ -58,6 +71,9 @@ class ImageObject(QtWidgets.QLabel):
 
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
         self.parentWidget().mouseReleaseEvent(event)
+
+    def wheelEvent(self, event: QtGui.QWheelEvent) -> None:
+        self.parentWidget().wheelEvent(event)
 
 
 class DraggableImage(ImageObject):
