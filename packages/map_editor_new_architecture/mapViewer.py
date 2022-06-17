@@ -24,7 +24,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     tile_sprites: Dict[str, QtGui.QImage] = {'empty': QtGui.QImage()}
     tiles = None
     watchtowers = None
-    size_map = 7
+    size_map = 10
     tile_size = 0.585
     objects = [] # TODO replace to dict
     #citizens = None
@@ -195,15 +195,16 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.change_object_handler(self.scaled_obj, {"scale": self.scale})
 
     def mousePressEvent(self, event: tuple) -> None:
-        start_pos = event[1]
-        event = event[0]
-        x, y = event.x(), event.y()
-        if event.buttons() == QtCore.Qt.LeftButton:
-            self.lmbPressed = True
-            self.mouse_cur_x = self.mouse_start_x = x
-            self.mouse_cur_y = self.mouse_start_y = y
-            self.offset_x = start_pos[0]
-            self.offset_y = start_pos[1]
+        if isinstance(event, tuple):
+            start_pos = event[1]
+            event = event[0]
+            x, y = event.x(), event.y()
+            if event.buttons() == QtCore.Qt.LeftButton:
+                self.lmbPressed = True
+                self.mouse_cur_x = self.mouse_start_x = x
+                self.mouse_cur_y = self.mouse_start_y = y
+                self.offset_x = start_pos[0]
+                self.offset_y = start_pos[1]
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
         if self.lmbPressed:
