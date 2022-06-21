@@ -1,23 +1,12 @@
-from os import path
-# -*- coding: utf-8 -*-
-
 import functools
 import json
 import codecs
-from PyQt5.QtWidgets import QFrame
-
 from mapAPI import MapAPI
 from mapViewer import MapViewer
 from windowDesign import *
 
 
 _translate = QtCore.QCoreApplication.translate
-
-class QHLine(QFrame):
-    def __init__(self):
-        super(QHLine, self).__init__()
-        self.setFrameShape(QFrame.HLine)
-        self.setFrameShadow(QFrame.Sunken)
 
 
 class DuckWindow(QtWidgets.QMainWindow):

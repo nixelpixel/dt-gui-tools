@@ -1,6 +1,5 @@
 class CoordinatesTransformer:
     """coordinate of mouse, pressevent, moveevent, offset,"""
-    # TODO set values on init
     def __init__(self, scale: float, size_map: int, grid_size: float):
         self.scale = scale
         self.size_map = size_map

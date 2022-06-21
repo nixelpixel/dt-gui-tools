@@ -1,9 +1,6 @@
-from coordinatesTransformer import CoordinatesTransformer
 from editorState import EditorState
-from layersAction import LayersAction
 from qtWindowAPI import QtWindowAPI
 from mapStorage import MapStorage
-from painter import Painter
 from mapViewer import MapViewer
 
 TILE_TYPES = ('block', 'road')
@@ -13,14 +10,12 @@ class MapAPI:
     """High level API. MapAPI ~ Backend"""
     _qt_api: QtWindowAPI = None
     _map_storage: MapStorage = None
-    _layers_action: LayersAction = None
     _map_viewer: MapViewer = None
     _editor_state: EditorState = None
 
     def __init__(self, info_json: dict, map_viewer: MapViewer) -> None:
         self._map_storage = MapStorage()
         self._qt_api = QtWindowAPI()
-        self._layers_action = LayersAction()
         self.info_json = info_json
         self._map_viewer = map_viewer
         self._editor_state = EditorState()

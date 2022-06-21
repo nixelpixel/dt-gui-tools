@@ -6,14 +6,17 @@ class ImageObject(QtWidgets.QLabel):
     def __init__(self, img_path: str, parent: QtWidgets.QWidget, object_name: str = "", size: tuple = (30, 60)):
         super(ImageObject, self).__init__()
         self.init_size = size
-        self.setParent(parent)
-        self.img_path = img_path
-        self.name = object_name
         self.scale = 1
-        self.pixmap = None
-        self.change_image(img_path)
         self.yaw = 0
         self.obj_map_pos = (0, 0)
+        self.img_path = img_path
+        self.name = object_name
+        self.setParent(parent)
+        self.pixmap = None
+        self.change_image(img_path)
+
+    def is_draggable(self) -> bool:
+        return False
 
     def rotate_object(self, angle_clockwise: float) -> None:
         rotate_angle = (angle_clockwise - self.yaw) % 360.0
@@ -31,7 +34,7 @@ class ImageObject(QtWidgets.QLabel):
         self.pixmap = QtGui.QPixmap(img_path)
         self.set_size_object((self.init_size[0] * self.scale, self.init_size[1] * self.scale))
 
-    def set_size_object(self, new_size: tuple):
+    def set_size_object(self, new_size: tuple) -> None:
         resize = QtCore.QSize(new_size[0], new_size[1])
         self.pixmap = self.pixmap.scaled(resize,
                                aspectRatioMode=QtCore.Qt.KeepAspectRatio,
@@ -40,7 +43,7 @@ class ImageObject(QtWidgets.QLabel):
         self.setPixmap(self.pixmap)
         self.show()
 
-    def scale_object(self, scale: float):
+    def scale_object(self, scale: float) -> None:
         yaw = self.yaw
         self.scale = scale
         self.change_image(self.img_path)
@@ -76,11 +79,8 @@ class ImageObject(QtWidgets.QLabel):
     def wheelEvent(self, event: QtGui.QWheelEvent) -> None:
         self.parentWidget().wheelEvent(event)
 
-    def set_obj_map_pos(self, pos: tuple):
+    def set_obj_map_pos(self, pos: tuple) -> None:
         self.obj_map_pos = (pos[0], pos[1])
-
-    def is_draggable(self):
-        return False
 
 
 class DraggableImage(ImageObject):
