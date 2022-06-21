@@ -3,15 +3,17 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 
 class ImageObject(QtWidgets.QLabel):
     """Base object class"""
-    def __init__(self, img_path: str, parent: QtWidgets.QWidget, object_name: str = "", scale: tuple = (30, 60)):
+    def __init__(self, img_path: str, parent: QtWidgets.QWidget, object_name: str = "", size: tuple = (30, 60)):
         super(ImageObject, self).__init__()
+        self.init_size = size
         self.setParent(parent)
         self.img_path = img_path
         self.name = object_name
-        self.scaled_size = scale
+        self.scale = 1
         self.pixmap = None
         self.change_image(img_path)
         self.yaw = 0
+        self.obj_map_pos = (0, 0)
 
     def rotate_object(self, angle_clockwise: float) -> None:
         rotate_angle = (angle_clockwise - self.yaw) % 360.0
@@ -27,11 +29,10 @@ class ImageObject(QtWidgets.QLabel):
         self.yaw = 0
         self.img_path = img_path
         self.pixmap = QtGui.QPixmap(img_path)
-        self.set_size_object(self.scaled_size)
+        self.set_size_object((self.init_size[0] * self.scale, self.init_size[1] * self.scale))
 
     def set_size_object(self, new_size: tuple):
-        self.scaled_size = new_size
-        resize = QtCore.QSize(self.scaled_size[0], self.scaled_size[1])
+        resize = QtCore.QSize(new_size[0], new_size[1])
         self.pixmap = self.pixmap.scaled(resize,
                                aspectRatioMode=QtCore.Qt.KeepAspectRatio,
                                transformMode=QtCore.Qt.SmoothTransformation)
@@ -41,11 +42,11 @@ class ImageObject(QtWidgets.QLabel):
 
     def scale_object(self, scale: float):
         yaw = self.yaw
+        self.scale = scale
         self.change_image(self.img_path)
         self.rotate_object(yaw)
-        self.set_size_object((self.scaled_size[0] * scale,
-                              self.scaled_size[1]
-                              * scale))
+        self.set_size_object((self.init_size[0] * scale,
+                              self.init_size[1] * scale))
 
     def move_object(self, new_position: tuple) -> None:
         self.move(QtCore.QPoint(new_position[0], new_position[1]))
@@ -75,15 +76,24 @@ class ImageObject(QtWidgets.QLabel):
     def wheelEvent(self, event: QtGui.QWheelEvent) -> None:
         self.parentWidget().wheelEvent(event)
 
+    def set_obj_map_pos(self, pos: tuple):
+        self.obj_map_pos = (pos[0], pos[1])
+
+    def is_draggable(self):
+        return False
+
 
 class DraggableImage(ImageObject):
     """Objects draggable class
         working with Qt coordinates
     """
 
-    def __init__(self, img_path: str, parent: QtWidgets.QWidget, object_name: str = "", scale: tuple = (30, 60)):
-        super(DraggableImage, self).__init__(img_path, parent, object_name, scale)
+    def __init__(self, img_path: str, parent: QtWidgets.QWidget, object_name: str = "", size: tuple = (30, 60)):
+        super(DraggableImage, self).__init__(img_path, parent, object_name, size)
         self.drag_start_pos = None
+
+    def is_draggable(self):
+        return True
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
         if event.button() == QtCore.Qt.LeftButton:

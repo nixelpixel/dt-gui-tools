@@ -101,6 +101,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             new_coordinates = (
                 self.coordinates_transformer.get_x_to_view(frame_obj.pose.x),
                 self.coordinates_transformer.get_y_to_view(frame_obj.pose.y))
+            new_obj.set_obj_map_pos((frame_obj.pose.x, frame_obj.pose.y))
             self.rotate_obj(new_obj, frame_obj.pose.yaw)
             self.move_obj(new_obj, new_coordinates)
             self.objects.append(new_obj)
@@ -113,7 +114,6 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     def delete_obj_on_map(self, layer_name: str, object_name: str) -> None:
         self.handlers.handle(command=DeleteObjCommand("frames", object_name))
         self.handlers.handle(command=DeleteObjCommand(layer_name, object_name))
-        #self.add_obj_image(layer_name, object_name)
 
     def move_obj(self, obj: ImageObject, new_coordinates: tuple) -> None:
         obj.move_object(new_coordinates)
@@ -121,6 +121,8 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     def move_obj_on_map(self, frame_name: str, new_pos: tuple, obj_height: float, obj_width: float) -> None:
         map_x = self.coordinates_transformer.get_x_from_view(new_pos[0], obj_width=obj_width)
         map_y = self.coordinates_transformer.get_y_from_view(new_pos[1], obj_height=obj_height)
+        obj = self.get_object(frame_name)
+        obj.set_obj_map_pos((map_x, map_y))
         self.handlers.handle(command=MoveCommand(frame_name, (map_x, map_y)))
 
     def rotate_obj(self, obj: ImageObject, new_angle: float) -> None:
@@ -132,8 +134,9 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     def scaled_obj(self, obj: ImageObject, args: Dict[str, Any]):
         scale = args["scale"]
         obj.scale_object(scale)
-        new_coordinates = (obj.pos().x() * scale,
-                           obj.pos().y() * scale)
+        new_coordinates = (
+            self.coordinates_transformer.get_x_to_view(obj.obj_map_pos[0]),
+            self.coordinates_transformer.get_y_to_view(obj.obj_map_pos[1]))
         self.move_obj(obj, new_coordinates)
 
     def rotate_with_button(self, args: Dict[str, Any]) -> None:
@@ -176,7 +179,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
 
     def highlight_select_tile(self, args: Dict[str, Any]):
         tile = self.get_object(args["tile_name"])
-        self.painter.draw_rect((tile.pos().x() - 1, tile.pos().y() - 1),
+        self.painter.draw_rect((tile.pos().x() - 1, tile.pos().y() - 1), self.scale,
                                args["painter"])
 
     def change_tile_type(self, args: Dict[str, Any]) -> None:
@@ -190,17 +193,14 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.rotate_obj_on_map(tile_name, 0)
 
     def wheelEvent(self, event: QtGui.QWheelEvent) -> None:
-        print( 2 ** (event.angleDelta().y() / 360))
-        sf = 2 ** (event.angleDelta().y() / 240)
-        self.scale *= sf
-        if self.map.gridSize < 10 and sf < 1:
+        sf = 1.5 ** (event.angleDelta().y() / 240)
+        if self.scale * sf < 0.5:
             return
-        if self.map.gridSize > 1000 and sf > 1:
+        elif self.scale * sf > 5:
             return
-
-        self.map.gridSize *= self.scale
+        else:
+            self.scale *= sf
         self.coordinates_transformer.set_scale(self.scale)
-        self.coordinates_transformer.set_grid_size(self.map.gridSize)
         self.change_object_handler(self.scaled_obj, {"scale": self.scale})
 
     def mousePressEvent(self, event: tuple) -> None:
