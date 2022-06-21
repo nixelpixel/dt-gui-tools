@@ -10,6 +10,7 @@ class Painter(QtWidgets.QGraphicsView):
         super(Painter, self).__init__()
 
     def draw_rect(self, start_pos: tuple,
+                  scale: float,
                   painter: QtGui.QPainter,
                   color: str = "green"):
         painter.resetTransform()
@@ -17,6 +18,6 @@ class Painter(QtWidgets.QGraphicsView):
         painter.drawRect(
             QtCore.QRectF(start_pos[0] - 1,
                           start_pos[1] - 1,
-                          self.map.gridSize + 1,
-                          self.map.gridSize + 1
+                          self.map.gridSize * scale + 1,
+                          self.map.gridSize * scale + 1
                           ))

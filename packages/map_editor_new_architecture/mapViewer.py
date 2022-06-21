@@ -232,6 +232,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     def drawBackground(self, painter: QtGui.QPainter, rect: QtCore.QRectF):
         self.change_tiles_handler(self.highlight_select_tile,
                                   {"painter": painter})
+        self.scene().update()
 
     def select_tiles(self) -> None:
         raw_selection = [
