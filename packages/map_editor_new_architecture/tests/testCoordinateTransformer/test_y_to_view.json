@@ -1,0 +1,30 @@
+{
+    "test_y_to_1": {
+        "y": 0,
+        "ret": 0,
+        "scale": 1.0,
+        "size_map": 7,
+        "grid_size": 59.0
+    },
+    "test_y_to_2": {
+        "y": 1,
+        "ret": 60,
+        "scale": 1.0,
+        "size_map": 7,
+        "grid_size": 59.0
+    },
+    "test_y_to_3": {
+        "y": 10,
+        "ret": 300,
+        "scale": 0.5,
+        "size_map": 6,
+        "grid_size": 59.0
+    },
+    "test_y_to_4": {
+        "y": 1,
+        "ret": 120,
+        "scale": 2.0,
+        "size_map": 7,
+        "grid_size": 59.0
+    }
+}
