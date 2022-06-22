@@ -3,7 +3,7 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 
 class ImageObject(QtWidgets.QLabel):
     """Base object class"""
-    def __init__(self, img_path: str, parent: QtWidgets.QWidget, object_name: str = "", size: tuple = (30, 60)):
+    def __init__(self, img_path: str, parent: QtWidgets.QWidget, object_name: str, layer_name: str, size: tuple = (30, 60)):
         super(ImageObject, self).__init__()
         self.init_size = size
         self.scale = 1
@@ -11,9 +11,10 @@ class ImageObject(QtWidgets.QLabel):
         self.obj_map_pos = (0, 0)
         self.img_path = img_path
         self.name = object_name
+        self.layer_name = layer_name
         self.setParent(parent)
         self.pixmap = None
-        self.change_image(img_path)
+        self.change_image(img_path, layer_name)
 
     def is_draggable(self) -> bool:
         return False
@@ -28,9 +29,10 @@ class ImageObject(QtWidgets.QLabel):
         self.pixmap = self.pixmap.transformed(new_transform, QtCore.Qt.SmoothTransformation)
         self.setPixmap(self.pixmap)
 
-    def change_image(self, img_path: str) -> None:
+    def change_image(self, img_path: str, layer_name: str) -> None:
         self.yaw = 0
         self.img_path = img_path
+        self.layer_name = layer_name
         self.pixmap = QtGui.QPixmap(img_path)
         self.set_size_object((self.init_size[0] * self.scale, self.init_size[1] * self.scale))
 
@@ -46,7 +48,7 @@ class ImageObject(QtWidgets.QLabel):
     def scale_object(self, scale: float) -> None:
         yaw = self.yaw
         self.scale = scale
-        self.change_image(self.img_path)
+        self.change_image(self.img_path, self.layer_name)
         self.rotate_object(yaw)
         self.set_size_object((self.init_size[0] * scale,
                               self.init_size[1] * scale))
@@ -88,12 +90,16 @@ class DraggableImage(ImageObject):
         working with Qt coordinates
     """
 
-    def __init__(self, img_path: str, parent: QtWidgets.QWidget, object_name: str = "", size: tuple = (30, 60)):
-        super(DraggableImage, self).__init__(img_path, parent, object_name, size)
+    def __init__(self, img_path: str, parent: QtWidgets.QWidget, object_name: str, layer_name: str, size: tuple = (30, 60)):
+        super(DraggableImage, self).__init__(img_path, parent, object_name, layer_name, size)
         self.drag_start_pos = None
 
-    def is_draggable(self):
+    def is_draggable(self) -> bool:
         return True
+
+    def delete_object(self) -> None:
+        self.parentWidget().delete_obj_on_map(self)
+        self.clear()
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
         if event.button() == QtCore.Qt.LeftButton:
@@ -102,8 +108,9 @@ class DraggableImage(ImageObject):
             self.raise_()
         elif event.button() == QtCore.Qt.RightButton:
             # TODO just for test
-            self.rotate_object(self.yaw + 90)
-            self.rotate_in_map(self.yaw)
+            #self.rotate_object(self.yaw + 90)
+            #self.rotate_in_map(self.yaw)
+            self.delete_object()
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
         if self.drag_start_pos is not None:
