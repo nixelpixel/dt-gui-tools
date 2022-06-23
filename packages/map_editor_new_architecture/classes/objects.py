@@ -98,8 +98,8 @@ class DraggableImage(ImageObject):
         return True
 
     def delete_object(self) -> None:
-        self.parentWidget().delete_obj_on_map(self)
-        self.clear()
+        self.parentWidget().delete_object(self)
+        self.deleteLater()
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
         if event.button() == QtCore.Qt.LeftButton:

@@ -79,13 +79,17 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                 self.add_obj_image(layer_name, object_name, layer_object)
 
     def add_obj(self, layer_name: str, item_type: str) -> None:
-        layer = self.handlers.handle(command=GetLayerCommand(layer_name))
         # TODO map_1
-        try:
-            object_name: str = f"map_1/{item_type}{len(layer) + 1}"
-        except TypeError:
-            object_name: str = f"map_1/{item_type}1"
-        self.add_obj_on_map(layer_name, object_name)
+        i = 1
+
+        while True:
+            object_name: str = f"map_1/{item_type}{i}"
+            try:
+                obj = self.get_object(object_name)
+            except KeyError:
+                self.add_obj_on_map(layer_name, object_name)
+                break
+            i += 1
 
     def add_obj_image(self, layer_name: str, object_name: str, layer_object=None) -> None:
         new_obj = None
@@ -163,8 +167,9 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     def get_object(self, obj_name: str) -> Optional[ImageObject]:
         return self.objects[obj_name]
 
-    def delete_object(self, object_name: str) -> None:
-        self.objects.__delattr__(object_name)
+    def delete_object(self, obj: ImageObject) -> None:
+        self.delete_obj_on_map(obj)
+        self.objects.__delitem__(obj.name)
 
     def change_tiles_handler(self, handler_func, args: Dict[str, Any]) -> None:
         tiles = self.get_tiles()
