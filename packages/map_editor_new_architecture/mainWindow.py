@@ -3,7 +3,9 @@ import json
 import codecs
 from mapAPI import MapAPI
 from mapViewer import MapViewer
+from utils.debug import DebugLine
 from windowDesign import *
+from PyQt5.QtCore import Qt
 
 
 _translate = QtCore.QCoreApplication.translate
@@ -29,12 +31,17 @@ class DuckWindow(QtWidgets.QMainWindow):
 
         self.map_viewer = MapViewer()
         self.map_api = MapAPI(self.info_json, self.map_viewer)
+        self.debug_line = DebugLine("Hello")
+        self.debug_line.setParent(self)
 
         self.map_viewer.setMinimumSize(540, 540)
         self.ui.horizontalLayout.addWidget(self.map_viewer)
-        self.map_viewer.repaint()
+
         self.initUi()
         self.update_layer_tree()
+
+        self.debug_line.setMaximumHeight(20)
+        self.ui.horizontalLayout.addWidget(self.debug_line, Qt.AlignBottom)
 
     def get_translation(self, elem):
         """Gets info about the element based on self.locale
