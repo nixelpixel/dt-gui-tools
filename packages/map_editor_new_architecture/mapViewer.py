@@ -67,6 +67,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             self.handlers_list[i].set_next(self.handlers_list[i+1])
         self.handlers = self.tiles
         self.init_objects()
+        self.setMouseTracking(True)
 
     def init_objects(self) -> None:
         for layer_name in self.map.map.layers:
@@ -229,10 +230,15 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                 self.offset_x = start_pos[0]
                 self.offset_y = start_pos[1]
 
-    def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
-        if self.lmbPressed:
-            self.mouse_cur_x = event.x()
-            self.mouse_cur_y = event.y()
+    def mouseMoveEvent(self, event: tuple) -> None:
+        if isinstance(event, tuple):
+            start_pos = event[1]
+            event = event[0]
+            if self.lmbPressed:
+                self.mouse_cur_x = event.x()
+                self.mouse_cur_y = event.y()
+            pos = (start_pos[0] + event.x(), start_pos[1] + event.y())
+            self.parentWidget().parent().update_debug_info({"mode": "set_cursor_pos", "pos" : pos})
 
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
         if event.button() == QtCore.Qt.LeftButton:
@@ -248,7 +254,6 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                                      self.size().height())
         self.change_tiles_handler(self.highlight_select_tile,
                                   {"painter": painter})
-
         self.scene().update()
 
     def select_tiles(self) -> None:

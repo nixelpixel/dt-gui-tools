@@ -1,7 +1,11 @@
+from PyQt5 import QtGui
+
 from editorState import EditorState
 from qtWindowAPI import QtWindowAPI
 from mapStorage import MapStorage
 from mapViewer import MapViewer
+from utils.debug import DebugLine
+from typing import Dict, Any
 
 TILE_TYPES = ('block', 'road')
 
@@ -12,6 +16,7 @@ class MapAPI:
     _map_storage: MapStorage = None
     _map_viewer: MapViewer = None
     _editor_state: EditorState = None
+    _debug_line: DebugLine = None
 
     def __init__(self, info_json: dict, map_viewer: MapViewer) -> None:
         self._map_storage = MapStorage()
@@ -147,7 +152,7 @@ class MapAPI:
         pass
 
     #  Brush mode
-    def brush_mode(self, brush_button_is_checked: bool):
+    def brush_mode(self, brush_button_is_checked: bool) -> None:
         if brush_button_is_checked:
             self._editor_state.drawState = 'brush'
         else:
@@ -160,8 +165,17 @@ class MapAPI:
         if self._editor_state.drawState == 'brush':
             self._map_viewer.painting_tiles(default_fill)
 
-    def key_press_event(self, e):
+    def key_press_event(self, e) -> None:
         self._qt_api.key_press_event(e)
 
     def rotate_selected_tiles(self) -> None:
         self._map_viewer.rotate_tiles()
+
+    def set_debug_mode(self, debug_line: DebugLine) -> None:
+        self._editor_state.debug_mode = True
+        self._debug_line = debug_line
+
+    def update_debug_info(self, event: Dict[str, Any]) -> None:
+        if self._editor_state.debug_mode:
+            if event["mode"] == "set_cursor_pos":
+                self._debug_line.set_mouse_pos(event)

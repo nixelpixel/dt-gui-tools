@@ -15,6 +15,7 @@ class ImageObject(QtWidgets.QLabel):
         self.setParent(parent)
         self.pixmap = None
         self.change_image(img_path, layer_name)
+        self.setMouseTracking(True)
 
     def is_draggable(self) -> bool:
         return False
@@ -73,7 +74,7 @@ class ImageObject(QtWidgets.QLabel):
         self.parentWidget().mousePressEvent((event, (self.pos().x(), self.pos().y())))
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
-        self.parentWidget().mouseMoveEvent(event)
+        self.parentWidget().mouseMoveEvent((event, (self.pos().x(), self.pos().y())))
 
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
         self.parentWidget().mouseReleaseEvent(event)

@@ -6,6 +6,7 @@ from mapViewer import MapViewer
 from utils.debug import DebugLine
 from windowDesign import *
 from PyQt5.QtCore import Qt
+from typing import Dict, Any
 
 
 _translate = QtCore.QCoreApplication.translate
@@ -31,17 +32,16 @@ class DuckWindow(QtWidgets.QMainWindow):
 
         self.map_viewer = MapViewer()
         self.map_api = MapAPI(self.info_json, self.map_viewer)
-        self.debug_line = DebugLine("Hello")
-        self.debug_line.setParent(self)
-
         self.map_viewer.setMinimumSize(540, 540)
         self.ui.horizontalLayout.addWidget(self.map_viewer)
-
         self.initUi()
-        self.update_layer_tree()
 
-        self.debug_line.setMaximumHeight(20)
-        self.ui.horizontalLayout.addWidget(self.debug_line, Qt.AlignBottom)
+        if args.debug:
+            self.debug_line = DebugLine()
+            self.debug_line.setParent(self)
+            self.debug_line.setMaximumHeight(20)
+            self.ui.horizontalLayout.addWidget(self.debug_line, Qt.AlignBottom)
+            self.map_api.set_debug_mode(self.debug_line)
 
     def get_translation(self, elem):
         """Gets info about the element based on self.locale
@@ -346,5 +346,8 @@ class DuckWindow(QtWidgets.QMainWindow):
     def keyPressEvent(self, e):
         print('keyPressEvent')
 
-    def rotate_selected_tiles(self):
+    def rotate_selected_tiles(self) -> None:
         self.map_api.rotate_selected_tiles()
+
+    def update_debug_info(self, event: Dict[str, Any]) -> None:
+        self.map_api.update_debug_info(event)
