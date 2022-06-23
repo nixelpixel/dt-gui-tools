@@ -244,8 +244,11 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             self.rmbPressed = False
 
     def drawBackground(self, painter: QtGui.QPainter, rect: QtCore.QRectF) -> None:
+        self.painter.fill_background(painter, 'lightGray', self.size().width(),
+                                     self.size().height())
         self.change_tiles_handler(self.highlight_select_tile,
                                   {"painter": painter})
+
         self.scene().update()
 
     def select_tiles(self) -> None:
