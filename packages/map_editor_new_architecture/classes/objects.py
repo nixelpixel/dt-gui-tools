@@ -85,6 +85,13 @@ class ImageObject(QtWidgets.QLabel):
     def set_obj_map_pos(self, pos: tuple) -> None:
         self.obj_map_pos = (pos[0], pos[1])
 
+    def delete_object(self) -> None:
+        self.deleteLater()
+
+    def delete_from_map(self):
+        self.parentWidget().delete_object(self)
+        self.delete_from_map()
+
 
 class DraggableImage(ImageObject):
     """Objects draggable class
@@ -98,10 +105,6 @@ class DraggableImage(ImageObject):
     def is_draggable(self) -> bool:
         return True
 
-    def delete_object(self) -> None:
-        self.parentWidget().delete_object(self)
-        self.deleteLater()
-
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
         if event.button() == QtCore.Qt.LeftButton:
             self.setCursor(QtCore.Qt.ClosedHandCursor)
@@ -111,7 +114,7 @@ class DraggableImage(ImageObject):
             # TODO just for test
             #self.rotate_object(self.yaw + 90)
             #self.rotate_in_map(self.yaw)
-            self.delete_object()
+            self.delete_from_map()
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
         if self.drag_start_pos is not None:

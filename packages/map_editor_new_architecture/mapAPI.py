@@ -1,11 +1,16 @@
-from PyQt5 import QtGui
+from pathlib import Path
 
+from PyQt5 import QtWidgets
+
+from classes.MapDescription import MapDescription
 from editorState import EditorState
-from qtWindowAPI import QtWindowAPI
+from utils.maps import change_map_directory
+from utils.qtWindowAPI import QtWindowAPI
 from mapStorage import MapStorage
 from mapViewer import MapViewer
 from utils.debug import DebugLine
 from typing import Dict, Any
+
 
 TILE_TYPES = ('block', 'road')
 
@@ -25,8 +30,14 @@ class MapAPI:
         self._map_viewer = map_viewer
         self._editor_state = EditorState()
 
-    def open_map_triggered(self):
-        print('open map')
+    def open_map_triggered(self, parent: QtWidgets.QWidget):
+        path = self._qt_api.get_dir(parent, "open")
+        if path:
+            self._map_viewer.delete_objects()
+            self._map_storage.load_map(MapDescription(path,
+                                                      self._map_storage.map.name))
+            self._map_viewer.init_handlers()
+            self._map_viewer.init_objects()
 
     def import_old_format(self):
         print('import old format')
@@ -47,8 +58,11 @@ class MapAPI:
         print('save map')
 
     #  Save map as
-    def save_map_as_triggered(self):
-        print('save_map_as_triggered')
+    def save_map_as_triggered(self, parent: QtWidgets.QWidget):
+        path = self._qt_api.get_dir(parent, "save")
+        if path:
+            change_map_directory(self._map_storage.map, path)
+            self.save_map_triggered()
 
     #  Calculate map characteristics
     def calc_param_triggered(self):
@@ -166,7 +180,7 @@ class MapAPI:
             self._map_viewer.painting_tiles(default_fill)
 
     def key_press_event(self, e) -> None:
-        self._qt_api.key_press_event(e)
+        pass
 
     def rotate_selected_tiles(self) -> None:
         self._map_viewer.rotate_tiles()

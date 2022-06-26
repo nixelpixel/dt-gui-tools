@@ -25,9 +25,11 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     tile_sprites: Dict[str, QtGui.QImage] = {'empty': QtGui.QImage()}
     tiles = None
     watchtowers = None
+    frames = None
     size_map = 10
     tile_size = 0.585
     objects = {}
+    handlers = None
     #citizens = None
     #traffic_signs = None
     #ground_tags = None
@@ -49,23 +51,10 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         QtWidgets.QGraphicsView.__init__(self)
 
         self.setScene(QtWidgets.QGraphicsScene())
-
         self.map = default_map_storage()
         self.coordinates_transformer = CoordinatesTransformer(self.scale, self.size_map, self.map.gridSize)
         self.painter = Painter()
-        self.tiles = TileLayerHandler()
-        self.watchtowers = WatchtowersLayerHandler()
-        self.frames = FramesLayerHandler()
-        #self.citizens = CitizensHandler()
-        #self.traffic_signs = TrafficSignsHandler()
-        #self.ground_tags = GroundTagsHandler()
-        #self.vehicles = VehiclesHandler()
-        #self.decorations = DecorationsHandler()
-
-        self.handlers_list = [self.tiles, self.watchtowers, self.frames]
-        for i in range(len(self.handlers_list) - 1):
-            self.handlers_list[i].set_next(self.handlers_list[i+1])
-        self.handlers = self.tiles
+        self.init_handlers()
         self.init_objects()
         self.setMouseTracking(True)
 
@@ -79,15 +68,27 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                 # TODO refactor on more layers
                 self.add_obj_image(layer_name, object_name, layer_object)
 
+    def init_handlers(self):
+        self.tiles = TileLayerHandler()
+        self.watchtowers = WatchtowersLayerHandler()
+        self.frames = FramesLayerHandler()
+        # self.citizens = CitizensHandler()
+        # self.traffic_signs = TrafficSignsHandler()
+        # self.ground_tags = GroundTagsHandler()
+        # self.vehicles = VehiclesHandler()
+        # self.decorations = DecorationsHandler()
+
+        handlers_list = [self.tiles, self.watchtowers, self.frames]
+        for i in range(len(handlers_list) - 1):
+            handlers_list[i].set_next(handlers_list[i + 1])
+        self.handlers = self.tiles
+
     def add_obj(self, layer_name: str, item_type: str) -> None:
         # TODO map_1
         i = 1
-
         while True:
             object_name: str = f"map_1/{item_type}{i}"
-            try:
-                obj = self.get_object(object_name)
-            except KeyError:
+            if object_name not in self.objects:
                 self.add_obj_on_map(layer_name, object_name)
                 break
             i += 1
@@ -102,7 +103,8 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             new_obj = DraggableImage(f"./img/objects/{layer_name}.png", self,
                                      object_name, layer_name)
         if new_obj:
-            frame_obj = self.map.map.layers.frames[object_name]
+            frame_obj = self.handlers.handle(
+                command=GetLayerCommand("frames"))[object_name]
             new_coordinates = (
                 self.coordinates_transformer.get_x_to_view(frame_obj.pose.x),
                 self.coordinates_transformer.get_y_to_view(frame_obj.pose.y))
@@ -121,6 +123,12 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.handlers.handle(command=DeleteObjCommand("frames", obj.name))
         self.handlers.handle(command=DeleteObjCommand(obj.layer_name,
                                                       obj.name))
+
+    def delete_objects(self):
+        for obj_name in self.objects:
+            obj = self.get_object(obj_name)
+            obj.delete_object()
+        self.objects.clear()
 
     def move_obj(self, obj: ImageObject, new_coordinates: tuple) -> None:
         obj.move_object(new_coordinates)

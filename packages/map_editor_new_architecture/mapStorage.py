@@ -10,12 +10,14 @@ class MapStorage(metaclass=SingletonMeta):
     map: Map = None
     gridSize: float = 59.0
 
-    def __init__(self, map_description: Optional[MapDescription] = None) -> None:
+    def __init__(self,
+                 map_description: Optional[MapDescription] = None) -> None:
         if map_description:
-            self.change_map(map_description)
+            self.load_map(map_description)
 
-    def change_map(self, new_map_description: MapDescription) -> None:
-        self.map = Map.from_disk(new_map_description.map_name, str(new_map_description.folder))
+    def load_map(self, new_map_description: MapDescription) -> None:
+        self.map = Map.from_disk(new_map_description.map_name,
+                                 str(new_map_description.folder))
 
 
 if __name__ == '__main__':

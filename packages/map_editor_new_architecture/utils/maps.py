@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from classes.MapDescription import MapDescription
 from mapStorage import MapStorage
@@ -32,6 +33,11 @@ def delete_obj(dm: Map, layer: MapLayer, layer_name: str, obj_name: str) -> None
         register("frames", Frame)
     elif layer_name == "watchtowers":
         register("watchtowers", Watchtower)
+
+
+def change_map_directory(dm: Map, new_dir: str) -> None:
+    dm._path = new_dir
+    dm._assets_dir = os.path.join(dm._path, "assets")
 
 if __name__ == '__main__':
     m = default_map_storage()

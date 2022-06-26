@@ -43,6 +43,8 @@ class DuckWindow(QtWidgets.QMainWindow):
             self.ui.horizontalLayout.addWidget(self.debug_line, Qt.AlignBottom)
             self.map_api.set_debug_mode(self.debug_line)
 
+        self.update_layer_tree()
+
     def get_translation(self, elem):
         """Gets info about the element based on self.locale
         If local doesn't exist, return locale='en'
@@ -213,7 +215,7 @@ class DuckWindow(QtWidgets.QMainWindow):
 
     #  Create a new map
     def open_map_triggered(self):
-        self.map_api.open_map_triggered()
+        self.map_api.open_map_triggered(self)
 
     def import_old_format(self):
         self.map_api.import_old_format()
@@ -231,11 +233,10 @@ class DuckWindow(QtWidgets.QMainWindow):
     #  Save map
     def save_map_triggered(self):
         self.map_api.save_map_triggered()
-        print('save_map_triggered')
 
     #  Save map as
     def save_map_as_triggered(self):
-        print('')
+        self.map_api.save_map_as_triggered(self)
 
     #  Calculate map characteristics
     def calc_param_triggered(self):
