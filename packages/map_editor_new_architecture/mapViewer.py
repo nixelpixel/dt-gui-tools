@@ -225,6 +225,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             self.scale *= sf
         self.coordinates_transformer.set_scale(self.scale)
         self.change_object_handler(self.scaled_obj, {"scale": self.scale})
+        self.scene().update()
 
     def mousePressEvent(self, event: tuple) -> None:
         if isinstance(event, tuple):

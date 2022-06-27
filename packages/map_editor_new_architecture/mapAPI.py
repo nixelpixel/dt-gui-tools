@@ -38,6 +38,8 @@ class MapAPI:
                                                       self._map_storage.map.name))
             self._map_viewer.init_handlers()
             self._map_viewer.init_objects()
+            self._map_viewer.change_object_handler(self._map_viewer.scaled_obj,
+                                                   {"scale": self._map_viewer.scale})
 
     def import_old_format(self):
         print('import old format')

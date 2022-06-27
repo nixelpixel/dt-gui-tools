@@ -102,19 +102,19 @@ tiles:
   map_1/tile_2_5:
     i: 2
     j: 5
-    type: floor
+    type: grass
   map_1/tile_2_6:
     i: 2
     j: 6
-    type: floor
+    type: grass
   map_1/tile_2_7:
     i: 2
     j: 7
-    type: floor
+    type: grass
   map_1/tile_2_8:
     i: 2
     j: 8
-    type: floor
+    type: grass
   map_1/tile_2_9:
     i: 2
     j: 9
@@ -142,19 +142,19 @@ tiles:
   map_1/tile_3_5:
     i: 3
     j: 5
-    type: floor
+    type: grass
   map_1/tile_3_6:
     i: 3
     j: 6
-    type: floor
+    type: grass
   map_1/tile_3_7:
     i: 3
     j: 7
-    type: floor
+    type: grass
   map_1/tile_3_8:
     i: 3
     j: 8
-    type: floor
+    type: grass
   map_1/tile_3_9:
     i: 3
     j: 9
@@ -182,19 +182,19 @@ tiles:
   map_1/tile_4_5:
     i: 4
     j: 5
-    type: floor
+    type: grass
   map_1/tile_4_6:
     i: 4
     j: 6
-    type: floor
+    type: grass
   map_1/tile_4_7:
     i: 4
     j: 7
-    type: floor
+    type: grass
   map_1/tile_4_8:
     i: 4
     j: 8
-    type: floor
+    type: grass
   map_1/tile_4_9:
     i: 4
     j: 9
@@ -222,19 +222,19 @@ tiles:
   map_1/tile_5_5:
     i: 5
     j: 5
-    type: floor
+    type: grass
   map_1/tile_5_6:
     i: 5
     j: 6
-    type: floor
+    type: grass
   map_1/tile_5_7:
     i: 5
     j: 7
-    type: floor
+    type: grass
   map_1/tile_5_8:
     i: 5
     j: 8
-    type: floor
+    type: grass
   map_1/tile_5_9:
     i: 5
     j: 9
@@ -262,19 +262,19 @@ tiles:
   map_1/tile_6_5:
     i: 6
     j: 5
-    type: floor
+    type: grass
   map_1/tile_6_6:
     i: 6
     j: 6
-    type: floor
+    type: grass
   map_1/tile_6_7:
     i: 6
     j: 7
-    type: floor
+    type: grass
   map_1/tile_6_8:
     i: 6
     j: 8
-    type: floor
+    type: grass
   map_1/tile_6_9:
     i: 6
     j: 9

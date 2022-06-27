@@ -507,11 +507,6 @@ frames:
       yaw: 0.0
   map_1/watchtower1:
     pose:
-      x: 1
-      y: 1
-      yaw: 0
-  map_1/watchtower2:
-    pose:
-      x: 5.127118644067797
-      y: 2.016949152542373
+      x: 2.483050847457627
+      y: 2.9661016949152543
       yaw: 0
