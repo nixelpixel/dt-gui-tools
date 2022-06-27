@@ -90,7 +90,7 @@ class ImageObject(QtWidgets.QLabel):
 
     def delete_from_map(self):
         self.parentWidget().delete_object(self)
-        self.delete_from_map()
+        self.delete_object()
 
 
 class DraggableImage(ImageObject):
