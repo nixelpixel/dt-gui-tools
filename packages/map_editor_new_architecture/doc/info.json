@@ -28,7 +28,6 @@
             },
             "id": "block",
             "elements": [
-                "empty",
                 "asphalt",
                 "grass",
                 "floor"
@@ -644,24 +643,6 @@
                 }
             },
             "icon": "img/apriltags/apriltag.png"
-        },
-        "empty": {
-            "lang": {
-                "ru": {
-                    "name": "Пустой блок",
-                    "info": "Пустой блок для заполнения карты."
-                },
-                "en": {
-                    "name": "Empty block",
-                    "info": "An empty block to fill map."
-                }
-            },
-            "red": 0,
-            "type": "block",
-            "length": 0,
-            "yellow": 0,
-            "icon": "img/tiles/empty.png",
-            "white": 0
         }
     }
 }

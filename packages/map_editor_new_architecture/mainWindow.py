@@ -202,7 +202,7 @@ class DuckWindow(QtWidgets.QMainWindow):
                                         self.get_translation(information[elem_id])['name'], elem_id)
 
         default_fill.setCurrentText(self.get_translation(information["grass"])['name'])
-        delete_fill.setCurrentText(self.get_translation(information["empty"])['name'])
+        delete_fill.setCurrentText(self.get_translation(information["grass"])['name'])
 
         set_fill = self.ui.set_fill
         set_fill.clicked.connect(self.set_default_fill)
