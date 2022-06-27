@@ -195,3 +195,6 @@ class MapAPI:
         if self._editor_state.debug_mode:
             if event["mode"] == "set_cursor_pos":
                 self._debug_line.set_mouse_pos(event)
+
+    def scene_update(self):
+        self._map_viewer.scene_update()

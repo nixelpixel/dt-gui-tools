@@ -1,6 +1,9 @@
 import functools
 import json
 import codecs
+
+from PyQt5.QtGui import QResizeEvent
+
 from mapAPI import MapAPI
 from mapViewer import MapViewer
 from utils.debug import DebugLine
@@ -352,3 +355,6 @@ class DuckWindow(QtWidgets.QMainWindow):
 
     def update_debug_info(self, event: Dict[str, Any]) -> None:
         self.map_api.update_debug_info(event)
+
+    def resizeEvent(self, event: QResizeEvent):
+        self.map_api.scene_update()

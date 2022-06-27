@@ -225,6 +225,9 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             self.scale *= sf
         self.coordinates_transformer.set_scale(self.scale)
         self.change_object_handler(self.scaled_obj, {"scale": self.scale})
+        self.scene_update()
+
+    def scene_update(self):
         self.scene().update()
 
     def mousePressEvent(self, event: tuple) -> None:
@@ -253,7 +256,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         if event.button() == QtCore.Qt.LeftButton:
             self.lmbPressed = False
             self.select_tiles()
-            self.scene().update()
+            self.scene_update()
             self.parentWidget().parent().selectionUpdate()
         else:
             self.rmbPressed = False
@@ -263,7 +266,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                                      self.size().height())
         self.change_tiles_handler(self.highlight_select_tile,
                                   {"painter": painter})
-        self.scene().update()
+        self.scene_update()
 
     def select_tiles(self) -> None:
         raw_selection = [
