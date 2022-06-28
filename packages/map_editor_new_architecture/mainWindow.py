@@ -71,56 +71,65 @@ class DuckWindow(QtWidgets.QMainWindow):
         open_map = self.ui.open_map
         save_map = self.ui.save_map
         save_map_as = self.ui.save_map_as
-        calc_param = self.ui.calc_param
-        about_author = self.ui.about_author
+        # TODO
+        #calc_param = self.ui.calc_param
+        #about_author = self.ui.about_author
         exit = self.ui.exit
         change_blocks = self.ui.change_blocks
-        change_info = self.ui.change_info
+        #change_info = self.ui.change_info TODO
         change_map = self.ui.change_map
-        change_layer = self.ui.change_layer
-        distortion_view = self.ui.distortion_view
-        create_region = self.ui.region_create
-        import_old_format = self.ui.import_old_format
-        environment = self.ui.env
+        #change_layer = self.ui.change_layer TODO
+        #distortion_view = self.ui.distortion_view
+        #create_region = self.ui.region_create
+        #import_old_format = self.ui.import_old_format
+        #environment = self.ui.env
 
         #  Initialize floating blocks
         block_widget = self.ui.block_widget
-        info_widget = self.ui.info_widget
+        # TODO
+        #info_widget = self.ui.info_widget
         map_info_widget = self.ui.map_info_widget
-        layer_info_widget = self.ui.layer_info_widget
+        #layer_info_widget = self.ui.layer_info_widget
 
         #  Assign actions to buttons
         create_map.triggered.connect(self.create_map_triggered)
         open_map.triggered.connect(self.open_map_triggered)
         save_map.triggered.connect(self.save_map_triggered)
         save_map_as.triggered.connect(self.save_map_as_triggered)
+        '''
         calc_param.triggered.connect(self.calc_param_triggered)
         about_author.triggered.connect(self.about_author_triggered)
         distortion_view.triggered.connect(self.change_distortion_view_triggered)
         create_region.triggered.connect(self.create_region)
         import_old_format.triggered.connect(self.import_old_format)
         environment.triggered.connect(self.change_env)
+        '''
         exit.triggered.connect(self.exit_triggered)
 
+        # TODO
+        '''
         change_blocks.toggled.connect(self.change_blocks_toggled)
         change_info.toggled.connect(self.change_info_toggled)
         change_map.toggled.connect(self.change_map_toggled)
         change_layer.toggled.connect(self.toggle_layer_window)
+        '''
 
         block_widget.closeEvent = functools.partial(self.blocks_event)
-        info_widget.closeEvent = functools.partial(self.info_event)
+        #info_widget.closeEvent = functools.partial(self.info_event)
         map_info_widget.closeEvent = functools.partial(self.map_event)
-        layer_info_widget.closeEvent = functools.partial(self.close_layer_window_event)
+        #layer_info_widget.closeEvent = functools.partial(self.close_layer_window_event)
 
         #  QToolBar setting
         tool_bar = self.ui.tool_bar
 
-        a1 = QtWidgets.QAction(QtGui.QIcon("img/icons/new.png"), _translate("MainWindow", "New map"), self)
-        a2 = QtWidgets.QAction(QtGui.QIcon("img/icons/open.png"), _translate("MainWindow", "Open map"), self)
-        a3 = QtWidgets.QAction(QtGui.QIcon("img/icons/save.png"), _translate("MainWindow", "Save map"), self)
-        a4 = QtWidgets.QAction(QtGui.QIcon("img/icons/save_as.png"), _translate("MainWindow", "Save map as"), self)
-        a5 = QtWidgets.QAction(QtGui.QIcon("img/icons/png.png"), _translate("MainWindow", "Export to PNG"), self)
+        a1 = QtWidgets.QAction(QtGui.QIcon("img/icons/new.png"), _translate("MainWindow", "New map (Ctrl+N)"), self)
+        a2 = QtWidgets.QAction(QtGui.QIcon("img/icons/open.png"), _translate("MainWindow", "Open map (Ctrl+O)"), self)
+        a3 = QtWidgets.QAction(QtGui.QIcon("img/icons/save.png"), _translate("MainWindow", "Save map (Ctrl+S)"), self)
+        a4 = QtWidgets.QAction(QtGui.QIcon("img/icons/save_as.png"), _translate("MainWindow", "Save map as (Ctrl+Alt+S)"), self)
+        a5 = QtWidgets.QAction(QtGui.QIcon("img/icons/png.png"), _translate("MainWindow", "Export to PNG (Ctrl+P)"), self)
 
+        # TODO
+        '''
         b1 = QtWidgets.QAction(QtGui.QIcon("img/icons/copy.png"), _translate("MainWindow", "Copy"), self)
         b2 = QtWidgets.QAction(QtGui.QIcon("img/icons/cut.png"), _translate("MainWindow", "Cut"), self)
         b3 = QtWidgets.QAction(QtGui.QIcon("img/icons/insert.png"), _translate("MainWindow", "Paste"), self)
@@ -131,16 +140,19 @@ class DuckWindow(QtWidgets.QMainWindow):
         b3.setShortcut("Ctrl+V")
         b4.setShortcut("Delete")
         b5.setShortcut("Ctrl+Z")
+        '''
 
-        c1 = QtWidgets.QAction(QtGui.QIcon("img/icons/rotate.png"), _translate("MainWindow", "Rotate"), self)
-        c2 = QtWidgets.QAction(QtGui.QIcon("img/icons/trim.png"),
-                               _translate("MainWindow", "Delete extreme empty blocks"), self)
+        c1 = QtWidgets.QAction(QtGui.QIcon("img/icons/rotate.png"), _translate("MainWindow", "Rotate (Ctrl+R)"), self)
+
+        # TODO
+        #c2 = QtWidgets.QAction(QtGui.QIcon("img/icons/trim.png"),
+        #                       _translate("MainWindow", "Delete extreme empty blocks"), self)
         c1.setShortcut("Ctrl+R")
-        c2.setShortcut("Ctrl+F")
+        #c2.setShortcut("Ctrl+F")
 
         self.brush_button.setIcon(QtGui.QIcon("img/icons/brush.png"))
         self.brush_button.setCheckable(True)
-        self.brush_button.setToolTip("Brush tool")
+        self.brush_button.setToolTip("Brush tool (Ctrl+B)")
         self.brush_button.setShortcut("Ctrl+B")
 
         a1.triggered.connect(self.create_map_triggered)
@@ -148,27 +160,35 @@ class DuckWindow(QtWidgets.QMainWindow):
         a3.triggered.connect(self.save_map_triggered)
         a4.triggered.connect(self.save_map_as_triggered)
 
+        # TODO
+        '''
         b1.triggered.connect(self.copy_button_clicked)
         b2.triggered.connect(self.cut_button_clicked)
         b3.triggered.connect(self.insert_button_clicked)
         b4.triggered.connect(self.delete_button_clicked)
         b5.triggered.connect(self.undo_button_clicked)
+        '''
 
         c1.triggered.connect(self.rotate_selected_tiles)
-        c2.triggered.connect(self.trimClicked)
+        # TODO
+        #c2.triggered.connect(self.trimClicked)
 
         self.brush_button.clicked.connect(self.brush_mode)
 
-        for elem in [[a1, a2, a3, a4, a5], [b1, b2, b3, b4, b5]]:
+        # TODO
+        #for elem in [[a1, a2, a3, a4, a5], [b1, b2, b3, b4, b5]]:
+        for elem in [[a1, a2, a3, a4, a5]]:
             for act in elem:
                 tool_bar.addAction(act)
             tool_bar.addSeparator()
         tool_bar.addWidget(self.brush_button)
         tool_bar.addAction(c1)
-        tool_bar.addAction(c2)
+        # TODO
+        #tool_bar.addAction(c2)
 
+        # TODO
         # Setup Layer Tree menu
-        self.ui.layer_tree.setModel(QtGui.QStandardItemModel())  # set item model for tree
+        #self.ui.layer_tree.setModel(QtGui.QStandardItemModel())  # set item model for tree
 
         #  Customize the Blocks menu
         block_list_widget = self.ui.block_list
