@@ -57,6 +57,9 @@ class MapAPI:
     def change_distortion_view_triggered(self):
         pass
 
+    def save_map_as_png(self):
+        self._map_viewer.save_to_png()
+
     #  Save map
     def save_map_triggered(self) -> None:
         self._map_storage.map.to_disk()

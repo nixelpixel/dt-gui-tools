@@ -44,12 +44,20 @@ def change_map_directory(dm: Map, new_dir: str) -> None:
     dm._assets_dir = os.path.join(dm._path, "assets")
 
 
-def get_map_size(tiles: Dict[str, Any]) -> int:
-    j_array = []
+def get_map_height(tiles: Dict[str, Any]):
+    return get_map_size(tiles, "j")
+    
+
+def get_map_width(tiles: Dict[str, Any]):
+    return get_map_size(tiles, "i")
+
+
+def get_map_size(tiles: Dict[str, Any], side: str) -> int:
+    elems = []
     for tile_name in tiles:
-        j_array.append(tiles[tile_name].j)
-    if len(j_array) > 0:
-        return max(j_array) + 1
+        elems.append(tiles[tile_name][side])
+    if len(elems) > 0:
+        return max(elems) + 1
     else:
         return 0
 

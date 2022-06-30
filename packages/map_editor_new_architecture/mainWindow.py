@@ -159,6 +159,7 @@ class DuckWindow(QtWidgets.QMainWindow):
         a2.triggered.connect(self.open_map_triggered)
         a3.triggered.connect(self.save_map_triggered)
         a4.triggered.connect(self.save_map_as_triggered)
+        a5.triggered.connect(self.save_map_as_png)
 
         # TODO
         '''
@@ -268,6 +269,9 @@ class DuckWindow(QtWidgets.QMainWindow):
     #  Help: About
     def about_author_triggered(self):
         print('about_author_triggered')
+
+    def save_map_as_png(self):
+        self.map_api.save_map_as_png()
 
     #  Exit
     def exit_triggered(self) -> None:

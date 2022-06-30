@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from PyQt5 import QtWidgets, QtGui, QtCore
+from PyQt5.QtCore import QRect, QSize, QPoint
 from dt_maps.types.tiles import Tile
 from classes.Commands.AddObjCommand import AddObjCommand
 from classes.Commands.DeleteObjCommand import DeleteObjCommand
@@ -12,7 +13,7 @@ from painter import Painter
 from classes.Commands.MoveObjCommand import MoveCommand
 from classes.Commands.RotateObjCommand import RotateCommand
 from classes.Commands.ChangeTileTypeCommand import ChangeTileTypeCommand
-from utils.maps import default_map_storage, get_map_size
+from utils.maps import default_map_storage, get_map_height, get_map_width
 
 TILES_DIR_PATH = './img/tiles'
 OBJECT_DIR_PATHS = ['./img/signs',
@@ -60,6 +61,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.init_objects()
         self.set_map_size()
         self.setMouseTracking(True)
+        self.save_to_png()
 
     def init_objects(self) -> None:
         for layer_name in self.map.map.layers:
@@ -165,7 +167,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.move_obj(obj, new_coordinates)
 
     def set_map_size(self) -> None:
-        self.size_map = get_map_size(self.get_tiles())
+        self.size_map = get_map_height(self.get_tiles())
         self.coordinates_transformer.set_size_map(self.size_map)
 
     def rotate_with_button(self, args: Dict[str, Any]) -> None:
@@ -294,3 +296,14 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                 int(v)  # + (1 if i > 1 else 0)
                 for i, v in enumerate(raw_selection)
             ]
+
+    def save_to_png(self):
+        self.coordinates_transformer.set_scale(1)
+        self.change_object_handler(self.scaled_obj, {"scale": 1})
+        pixmap = self.grab(QRect(QPoint(0, 0),
+                                 QPoint((self.map.gridSize + 1) * get_map_height(self.get_tiles()),
+                                        (self.map.gridSize + 1) * get_map_width(self.get_tiles()))))
+        pixmap.save("file.png")
+        self.coordinates_transformer.set_scale(self.scale)
+        self.change_object_handler(self.scaled_obj, {"scale": self.scale})
+        self.scene_update()
