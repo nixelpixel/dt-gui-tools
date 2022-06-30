@@ -5,13 +5,16 @@ from mapStorage import MapStorage
 from dt_maps import Map, MapLayer
 from dt_maps.types.frames import Frame
 from dt_maps.types.watchtowers import Watchtower
+from typing import Dict, Any
 
 
 def default_map_storage() -> MapStorage:
     return MapStorage(MapDescription(Path("./maps/tm1"), "test"))  # TODO: need to open empty map
 
 
-def add_new_obj(dm: Map, layer: MapLayer, layer_name: str, obj_name: str, default_conf: dict) -> None:
+def add_new_obj(dm: Map,
+                layer: MapLayer,
+                layer_name: str, obj_name: str, default_conf: dict) -> None:
     layer[obj_name] = default_conf
     layer = MapLayer(dm, layer_name, layer)
     dm._layers.__dict__[layer_name] = layer
@@ -23,7 +26,8 @@ def add_new_obj(dm: Map, layer: MapLayer, layer_name: str, obj_name: str, defaul
         register("watchtowers", Watchtower)
 
 
-def delete_obj(dm: Map, layer: MapLayer, layer_name: str, obj_name: str) -> None:
+def delete_obj(dm: Map, layer: MapLayer,
+               layer_name: str, obj_name: str) -> None:
     layer.__delitem__(obj_name)
     layer = MapLayer(dm, layer_name, layer)
     dm._layers.__dict__[layer_name] = layer
@@ -38,6 +42,17 @@ def delete_obj(dm: Map, layer: MapLayer, layer_name: str, obj_name: str) -> None
 def change_map_directory(dm: Map, new_dir: str) -> None:
     dm._path = new_dir
     dm._assets_dir = os.path.join(dm._path, "assets")
+
+
+def get_map_size(tiles: Dict[str, Any]) -> int:
+    j_array = []
+    for tile_name in tiles:
+        j_array.append(tiles[tile_name].j)
+    if len(j_array) > 0:
+        return max(j_array) + 1
+    else:
+        return 0
+
 
 if __name__ == '__main__':
     m = default_map_storage()

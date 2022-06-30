@@ -42,6 +42,7 @@ class MapAPI:
             self._map_viewer.init_objects()
             self._map_viewer.change_object_handler(self._map_viewer.scaled_obj,
                                                    {"scale": self._map_viewer.scale})
+            self._map_viewer.set_map_size()
 
     def import_old_format(self):
         print('import old format')
@@ -80,7 +81,6 @@ class MapAPI:
     #  Exit
     def exit_triggered(self, _translate, window: QtWidgets.QMainWindow) -> None:
         if self.save_before_exit(_translate, window):
-            print('exit_triggered')
             QtCore.QCoreApplication.instance().quit()
 
     # Save map before exit

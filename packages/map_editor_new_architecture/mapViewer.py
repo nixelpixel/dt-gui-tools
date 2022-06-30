@@ -12,7 +12,7 @@ from painter import Painter
 from classes.Commands.MoveObjCommand import MoveCommand
 from classes.Commands.RotateObjCommand import RotateCommand
 from classes.Commands.ChangeTileTypeCommand import ChangeTileTypeCommand
-from utils.maps import default_map_storage
+from utils.maps import default_map_storage, get_map_size
 
 TILES_DIR_PATH = './img/tiles'
 OBJECT_DIR_PATHS = ['./img/signs',
@@ -52,10 +52,13 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
 
         self.setScene(QtWidgets.QGraphicsScene())
         self.map = default_map_storage()
-        self.coordinates_transformer = CoordinatesTransformer(self.scale, self.size_map, self.map.gridSize)
+        self.coordinates_transformer = CoordinatesTransformer(self.scale,
+                                                              self.size_map,
+                                                              self.map.gridSize)
         self.painter = Painter()
         self.init_handlers()
         self.init_objects()
+        self.set_map_size()
         self.setMouseTracking(True)
 
     def init_objects(self) -> None:
@@ -161,6 +164,10 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             self.coordinates_transformer.get_y_to_view(obj.obj_map_pos[1]))
         self.move_obj(obj, new_coordinates)
 
+    def set_map_size(self) -> None:
+        self.size_map = get_map_size(self.get_tiles())
+        self.coordinates_transformer.set_size_map(self.size_map)
+
     def rotate_with_button(self, args: Dict[str, Any]) -> None:
         tile_name = args["tile_name"]
         obj = self.get_object(tile_name)
@@ -203,7 +210,8 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
 
     def highlight_select_tile(self, args: Dict[str, Any]):
         tile = self.get_object(args["tile_name"])
-        self.painter.draw_rect((tile.pos().x() - 1, tile.pos().y() - 1), self.scale,
+        self.painter.draw_rect((tile.pos().x() - 1, tile.pos().y() - 1),
+                               self.scale,
                                args["painter"])
 
     def change_tile_type(self, args: Dict[str, Any]) -> None:
@@ -228,7 +236,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.change_object_handler(self.scaled_obj, {"scale": self.scale})
         self.scene_update()
 
-    def scene_update(self):
+    def scene_update(self) -> None:
         self.scene().update()
 
     def mousePressEvent(self, event: tuple) -> None:
