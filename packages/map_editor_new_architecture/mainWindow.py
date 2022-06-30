@@ -1,9 +1,7 @@
 import functools
 import json
 import codecs
-
 from PyQt5.QtGui import QResizeEvent
-
 from mapAPI import MapAPI
 from mapViewer import MapViewer
 from utils.debug import DebugLine
@@ -71,6 +69,7 @@ class DuckWindow(QtWidgets.QMainWindow):
         open_map = self.ui.open_map
         save_map = self.ui.save_map
         save_map_as = self.ui.save_map_as
+        export_png = self.ui.export_png
         # TODO
         #calc_param = self.ui.calc_param
         #about_author = self.ui.about_author
@@ -96,6 +95,7 @@ class DuckWindow(QtWidgets.QMainWindow):
         open_map.triggered.connect(self.open_map_triggered)
         save_map.triggered.connect(self.save_map_triggered)
         save_map_as.triggered.connect(self.save_map_as_triggered)
+        export_png.triggered.connect(self.save_map_as_png)
         '''
         calc_param.triggered.connect(self.calc_param_triggered)
         about_author.triggered.connect(self.about_author_triggered)
