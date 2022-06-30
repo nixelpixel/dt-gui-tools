@@ -148,6 +148,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
 
     def rotate_obj(self, obj: ImageObject, new_angle: float) -> None:
         obj.rotate_object(new_angle)
+        self.scene_update()
 
     def rotate_obj_on_map(self, frame_name: str, new_angle: float) -> None:
         self.handlers.handle(command=RotateCommand(frame_name, new_angle))

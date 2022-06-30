@@ -270,12 +270,8 @@ class DuckWindow(QtWidgets.QMainWindow):
         print('about_author_triggered')
 
     #  Exit
-    def exit_triggered(self):
-        print('exit_triggered')
-
-    # Save map before exit
-    def save_before_exit(self):
-        print('save_before_exit')
+    def exit_triggered(self) -> None:
+        self.map_api.exit_triggered(_translate, self)
 
     #  Hide Block menu
     def change_blocks_toggled(self):
@@ -319,8 +315,8 @@ class DuckWindow(QtWidgets.QMainWindow):
         print('update_layer_tree')
 
     #  Program exit event
-    def quit_program_event(self, event):
-        print('quit_program_event')
+    def quit_program_event(self, event) -> None:
+        self.exit_triggered()
 
     #  Handle a click on an item from a list to a list
     def item_list_clicked(self):
@@ -332,10 +328,6 @@ class DuckWindow(QtWidgets.QMainWindow):
         item_name = item_ui_list.currentItem().data(0x0100)
         item_type = item_ui_list.currentItem().data(0x0101)
         self.map_api.item_list_double_clicked(self, item_name, item_type)
-
-    #  Reset to default values
-    def set_default_fill(self):
-        print('set_default_fill')
 
     #  Copy
     def copy_button_clicked(self):
@@ -376,9 +368,9 @@ class DuckWindow(QtWidgets.QMainWindow):
     def update_debug_info(self, event: Dict[str, Any]) -> None:
         self.map_api.update_debug_info(event)
 
-    def resizeEvent(self, event: QResizeEvent):
+    def resizeEvent(self, event: QResizeEvent) -> None:
         self.map_api.scene_update()
 
-    def set_default_fill(self, item_name: str):
+    def set_default_fill(self, item_name: str) -> None:
         self.ui.default_fill.setCurrentText(
             self.get_translation(self.info_json['info'][item_name])['name'])

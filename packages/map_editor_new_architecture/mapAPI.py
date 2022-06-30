@@ -1,9 +1,11 @@
 from pathlib import Path
 
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtCore
+from PyQt5.QtWidgets import QMessageBox
 
 from classes.MapDescription import MapDescription
 from editorState import EditorState
+from forms.quit import quit_message_box
 from utils.maps import change_map_directory
 from utils.qtWindowAPI import QtWindowAPI
 from mapStorage import MapStorage
@@ -30,7 +32,7 @@ class MapAPI:
         self._map_viewer = map_viewer
         self._editor_state = EditorState()
 
-    def open_map_triggered(self, parent: QtWidgets.QWidget):
+    def open_map_triggered(self, parent: QtWidgets.QWidget) -> None:
         path = self._qt_api.get_dir(parent, "open")
         if path:
             self._map_viewer.delete_objects()
@@ -55,16 +57,17 @@ class MapAPI:
         pass
 
     #  Save map
-    def save_map_triggered(self):
+    def save_map_triggered(self) -> None:
         self._map_storage.map.to_disk()
-        print('save map')
 
     #  Save map as
-    def save_map_as_triggered(self, parent: QtWidgets.QWidget):
+    def save_map_as_triggered(self, parent: QtWidgets.QWidget) -> bool:
         path = self._qt_api.get_dir(parent, "save")
         if path:
             change_map_directory(self._map_storage.map, path)
             self.save_map_triggered()
+            return True
+        return False
 
     #  Calculate map characteristics
     def calc_param_triggered(self):
@@ -75,12 +78,23 @@ class MapAPI:
         print('about_author_triggered')
 
     #  Exit
-    def exit_triggered(self):
-        print('exit_triggered')
+    def exit_triggered(self, _translate, window: QtWidgets.QMainWindow) -> None:
+        if self.save_before_exit(_translate, window):
+            print('exit_triggered')
+            QtCore.QCoreApplication.instance().quit()
 
     # Save map before exit
-    def save_before_exit(self):
-        pass
+    def save_before_exit(self, _translate,
+                         window: QtWidgets.QMainWindow) -> bool:
+        if not self._editor_state.debug_mode:
+            ret = quit_message_box(_translate, window)
+            if ret == QMessageBox.Cancel:
+                return False
+            if ret == QMessageBox.Discard:
+                return True
+            if ret == QMessageBox.Save:
+                return self.save_map_as_triggered(window)
+        return True
 
     #  Hide Block menu
     def change_blocks_toggled(self):
