@@ -271,7 +271,7 @@ class DuckWindow(QtWidgets.QMainWindow):
         print('about_author_triggered')
 
     def save_map_as_png(self):
-        self.map_api.save_map_as_png()
+        self.map_api.save_map_as_png(self)
 
     #  Exit
     def exit_triggered(self) -> None:

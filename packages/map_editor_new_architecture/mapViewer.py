@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from PyQt5 import QtWidgets, QtGui, QtCore
-from PyQt5.QtCore import QRect, QSize, QPoint
+from PyQt5.QtCore import QRect, QPoint
 from dt_maps.types.tiles import Tile
 from classes.Commands.AddObjCommand import AddObjCommand
 from classes.Commands.DeleteObjCommand import DeleteObjCommand
@@ -47,6 +47,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     offset_x = 0
     offset_y = 0
     lmbClicked = QtCore.pyqtSignal(int, int)  # click coordinates as an index of the clicked tile
+    is_to_png = False
 
     def __init__(self):
         QtWidgets.QGraphicsView.__init__(self)
@@ -61,7 +62,6 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.init_objects()
         self.set_map_size()
         self.setMouseTracking(True)
-        self.save_to_png()
 
     def init_objects(self) -> None:
         for layer_name in self.map.map.layers:
@@ -273,10 +273,12 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             self.rmbPressed = False
 
     def drawBackground(self, painter: QtGui.QPainter, rect: QtCore.QRectF) -> None:
+
         self.painter.fill_background(painter, 'lightGray', self.size().width(),
                                      self.size().height())
-        self.change_tiles_handler(self.highlight_select_tile,
-                                  {"painter": painter})
+        if not self.is_to_png:
+            self.change_tiles_handler(self.highlight_select_tile,
+                                      {"painter": painter})
         self.scene_update()
 
     def select_tiles(self) -> None:
@@ -297,13 +299,16 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                 for i, v in enumerate(raw_selection)
             ]
 
-    def save_to_png(self):
+    def save_to_png(self, file_name: str):
         self.coordinates_transformer.set_scale(1)
         self.change_object_handler(self.scaled_obj, {"scale": 1})
+        self.is_to_png = True
+        self.scene_update()
         pixmap = self.grab(QRect(QPoint(0, 0),
-                                 QPoint((self.map.gridSize + 1) * get_map_height(self.get_tiles()),
-                                        (self.map.gridSize + 1) * get_map_width(self.get_tiles()))))
-        pixmap.save("file.png")
+                                 QPoint((self.map.gridSize + 1) * get_map_width(self.get_tiles()),
+                                        (self.map.gridSize + 1) * get_map_height(self.get_tiles()))))
+        pixmap.save(f"{file_name}.png")
+        self.is_to_png = False
         self.coordinates_transformer.set_scale(self.scale)
         self.change_object_handler(self.scaled_obj, {"scale": self.scale})
         self.scene_update()
