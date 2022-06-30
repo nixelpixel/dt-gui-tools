@@ -331,7 +331,7 @@ class DuckWindow(QtWidgets.QMainWindow):
         item_ui_list = self.ui.block_list
         item_name = item_ui_list.currentItem().data(0x0100)
         item_type = item_ui_list.currentItem().data(0x0101)
-        self.map_api.item_list_double_clicked(item_name, item_type)
+        self.map_api.item_list_double_clicked(self, item_name, item_type)
 
     #  Reset to default values
     def set_default_fill(self):
@@ -378,3 +378,7 @@ class DuckWindow(QtWidgets.QMainWindow):
 
     def resizeEvent(self, event: QResizeEvent):
         self.map_api.scene_update()
+
+    def set_default_fill(self, item_name: str):
+        self.ui.default_fill.setCurrentText(
+            self.get_translation(self.info_json['info'][item_name])['name'])

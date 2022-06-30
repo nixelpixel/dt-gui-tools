@@ -132,14 +132,13 @@ class MapAPI:
         pass
 
     #  Double click initiates as single click action
-    def item_list_double_clicked(self, item_name: str, item_type: str) -> None:
-        print(item_name, item_type)
+    def item_list_double_clicked(self, window: QtWidgets.QMainWindow, item_name: str, item_type: str) -> None:
+        #print(item_name, item_type)
         if item_name == "separator":
             pass
         elif item_type in TILE_TYPES:
-            pass
+            window.set_default_fill(item_name)
         else:
-            print(item_name, item_type)
             type_of_element = self.info_json['info'][item_name]['type']
             self._map_viewer.add_obj(item_name, type_of_element)
 
