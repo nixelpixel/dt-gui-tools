@@ -2,6 +2,8 @@ import functools
 import json
 import codecs
 from PyQt5.QtGui import QResizeEvent
+
+from forms.start_info import NewMapInfoForm
 from mapAPI import MapAPI
 from mapViewer import MapViewer
 from utils.debug import DebugLine
@@ -24,6 +26,8 @@ class DuckWindow(QtWidgets.QMainWindow):
         #  The brush button / override the closeEvent
         self.brush_button = QtWidgets.QToolButton()
         self.closeEvent = functools.partial(self.quit_program_event)
+
+        self.init_info_form = NewMapInfoForm()
 
         # Load element's info
         self.info_json = json.load(codecs.open(elem_info, "r", "utf-8"))
@@ -245,8 +249,9 @@ class DuckWindow(QtWidgets.QMainWindow):
         self.map_api.import_old_format()
 
     #  Open map
-    def create_map_triggered(self):
-       print('create_map_triggered')
+    def create_map_triggered(self) -> None:
+        self.init_info_form.send_info.connect(self.map_api.create_map_triggered)
+        self.init_info_form.show()
 
     def create_region(self):
         print('create_region')

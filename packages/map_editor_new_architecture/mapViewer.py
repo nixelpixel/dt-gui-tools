@@ -14,6 +14,8 @@ from classes.Commands.MoveObjCommand import MoveCommand
 from classes.Commands.RotateObjCommand import RotateCommand
 from classes.Commands.ChangeTileTypeCommand import ChangeTileTypeCommand
 from utils.maps import default_map_storage, get_map_height, get_map_width
+from classes.MapDescription import MapDescription
+from pathlib import Path
 
 TILES_DIR_PATH = './img/tiles'
 OBJECT_DIR_PATHS = ['./img/signs',
@@ -312,3 +314,32 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.coordinates_transformer.set_scale(self.scale)
         self.change_object_handler(self.scaled_obj, {"scale": self.scale})
         self.scene_update()
+
+    def create_new_map(self, info: Dict[str, Any]):
+        width, height = int(info['x']), int(info['y'])
+        tile_size = float(info['tile_size'])
+        self.map.gridSize = tile_size * 100
+        #self.ch
+        for i in range(width):
+            for j in range(height):
+                #TODO map_1
+                tile = Tile()
+                tile = Tile(f"map_1/tile_{i}_{j}")
+                tile.x = i
+                tile.y = j
+                tile.frame.pose.x = int(i) * 0.585 + 0.585 / 2
+                tile.frame.pose.y = int(j) * 0.585 + 0.585 / 2
+                tile.obj.orientation = 'E'
+                tile.frame.dm = self.dm
+                self.dm.add(tile)
+
+
+        self.scene_update()
+        
+    def open_map(self, path: Path):
+        self.delete_objects()
+        self.map.load_map(MapDescription(path, self.map.map.name))
+        self.init_handlers()
+        self.init_objects()
+        self.change_object_handler(self.scaled_obj, {"scale": self.scale})
+        self.set_map_size()

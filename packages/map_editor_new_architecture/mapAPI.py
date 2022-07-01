@@ -1,7 +1,5 @@
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QMessageBox
-
-from classes.MapDescription import MapDescription
 from editorState import EditorState
 from forms.quit import quit_message_box
 from utils.maps import change_map_directory
@@ -33,21 +31,14 @@ class MapAPI:
     def open_map_triggered(self, parent: QtWidgets.QWidget) -> None:
         path = self._qt_api.get_dir(parent, "open")
         if path:
-            self._map_viewer.delete_objects()
-            self._map_storage.load_map(MapDescription(path,
-                                                      self._map_storage.map.name))
-            self._map_viewer.init_handlers()
-            self._map_viewer.init_objects()
-            self._map_viewer.change_object_handler(self._map_viewer.scaled_obj,
-                                                   {"scale": self._map_viewer.scale})
-            self._map_viewer.set_map_size()
+            self._map_viewer.open_map(path)
 
     def import_old_format(self):
         print('import old format')
 
     #  Open map
-    def create_map_triggered(self):
-       print('create_map_triggered')
+    def create_map_triggered(self, info: Dict[str, Any]) -> None:
+        self._map_viewer.create_new_map(info)
 
     def create_region(self):
         print('create_region')
@@ -55,10 +46,10 @@ class MapAPI:
     def change_distortion_view_triggered(self):
         pass
 
-    def save_map_as_png(self, parent: QtWidgets.QWidget):
-        path = self._qt_api.get_file_name(parent)
+    def save_map_as_png(self, parent: QtWidgets.QWidget) -> None:
+        path = self._qt_api.create_file_name(parent)
         if path:
-            self._map_viewer.save_to_png(path[0])
+            self._map_viewer.save_to_png(path)
 
     #  Save map
     def save_map_triggered(self) -> None:

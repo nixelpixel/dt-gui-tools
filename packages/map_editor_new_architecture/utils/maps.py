@@ -1,11 +1,20 @@
 import os
 from pathlib import Path
+
+from dt_maps.types.tiles import Tile
+
 from classes.MapDescription import MapDescription
 from mapStorage import MapStorage
 from dt_maps import Map, MapLayer
 from dt_maps.types.frames import Frame
 from dt_maps.types.watchtowers import Watchtower
 from typing import Dict, Any
+
+REGISTER = {
+    "frames": Frame,
+    "watchtowers": Watchtower,
+    "tiles": Tile,
+}
 
 
 def default_map_storage() -> MapStorage:
@@ -20,10 +29,7 @@ def add_new_obj(dm: Map,
     dm._layers.__dict__[layer_name] = layer
     register = lambda l, t: dm.layers.get(l).register_entity_helper(
         t) if dm.layers.has(l) else 0
-    if layer_name == "frames":
-        register("frames", Frame)
-    elif layer_name == "watchtowers":
-        register("watchtowers", Watchtower)
+    register(layer_name, REGISTER[layer_name])
 
 
 def delete_obj(dm: Map, layer: MapLayer,
@@ -33,10 +39,7 @@ def delete_obj(dm: Map, layer: MapLayer,
     dm._layers.__dict__[layer_name] = layer
     register = lambda l, t: dm.layers.get(l).register_entity_helper(
         t) if dm.layers.has(l) else 0
-    if layer_name == "frames":
-        register("frames", Frame)
-    elif layer_name == "watchtowers":
-        register("watchtowers", Watchtower)
+    register(layer_name, REGISTER[layer_name])
 
 
 def change_map_directory(dm: Map, new_dir: str) -> None:
