@@ -1,5 +1,5 @@
 from PyQt5 import QtCore
-from PyQt5.QtGui import QIntValidator
+from PyQt5.QtGui import QIntValidator, QDoubleValidator
 from PyQt5.QtWidgets import QDialog, QGroupBox, QDialogButtonBox, QFormLayout, QVBoxLayout, \
     QLineEdit, QLabel
 
@@ -19,6 +19,9 @@ class NewMapInfoForm(QDialog):
         self.nameYEdit.setValidator(QIntValidator())
         self.nameTileSizeEdit = QLineEdit(self)
         self.nameTileSizeEdit.setText("0.59")
+        self.nameTileSizeEdit.setValidator(QDoubleValidator())
+        self.nameDirEdit = QLineEdit(self)
+        self.nameDirEdit.setText("./maps/map1")
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         self.buttonBox.accepted.connect(self.get_info)
         self.buttonBox.rejected.connect(self.reject)
@@ -32,7 +35,8 @@ class NewMapInfoForm(QDialog):
         info = {
             'x': self.nameXEdit.text(),
             'y': self.nameYEdit.text(),
-            'tile_size': self.nameTileSizeEdit.text()
+            'tile_size': self.nameTileSizeEdit.text(),
+            'dir_name': self.nameDirEdit.text()
         }
         self.send_info.emit(info)
         self.close()
@@ -42,4 +46,5 @@ class NewMapInfoForm(QDialog):
         layout.addRow(QLabel("Width"), self.nameXEdit)
         layout.addRow(QLabel("Height"), self.nameYEdit)
         layout.addRow(QLabel("Tile size"), self.nameTileSizeEdit)
+        layout.addRow(QLabel("Folder"), self.nameDirEdit)
         self.formGroupBox.setLayout(layout)

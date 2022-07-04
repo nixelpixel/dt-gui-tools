@@ -18,28 +18,28 @@ REGISTER = {
 
 
 def default_map_storage() -> MapStorage:
-    return MapStorage(MapDescription(Path("./maps/tm1"), "test"))  # TODO: need to open empty map
+    return MapStorage(MapDescription(Path("./maps/tm1"), "test"))
+
+
+def create_layer(dm: Map, layer_name: str, layer: Dict[str, Any]):
+    layer = MapLayer(dm, layer_name, layer)
+    dm._layers.__dict__[layer_name] = layer
+    register = lambda l, t: dm.layers.get(l).register_entity_helper(
+        t) if dm.layers.has(l) else 0
+    register(layer_name, REGISTER[layer_name])
 
 
 def add_new_obj(dm: Map,
                 layer: MapLayer,
                 layer_name: str, obj_name: str, default_conf: dict) -> None:
     layer[obj_name] = default_conf
-    layer = MapLayer(dm, layer_name, layer)
-    dm._layers.__dict__[layer_name] = layer
-    register = lambda l, t: dm.layers.get(l).register_entity_helper(
-        t) if dm.layers.has(l) else 0
-    register(layer_name, REGISTER[layer_name])
+    create_layer(dm, layer_name, layer)
 
 
 def delete_obj(dm: Map, layer: MapLayer,
                layer_name: str, obj_name: str) -> None:
     layer.__delitem__(obj_name)
-    layer = MapLayer(dm, layer_name, layer)
-    dm._layers.__dict__[layer_name] = layer
-    register = lambda l, t: dm.layers.get(l).register_entity_helper(
-        t) if dm.layers.has(l) else 0
-    register(layer_name, REGISTER[layer_name])
+    create_layer(dm, layer_name, layer)
 
 
 def change_map_directory(dm: Map, new_dir: str) -> None:

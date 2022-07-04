@@ -1,3 +1,5 @@
+import logging
+
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QMessageBox
 from editorState import EditorState
@@ -8,6 +10,9 @@ from mapStorage import MapStorage
 from mapViewer import MapViewer
 from utils.debug import DebugLine
 from typing import Dict, Any
+from pathlib import Path
+import os
+import shutil
 
 
 TILE_TYPES = ('block', 'road')
@@ -31,14 +36,22 @@ class MapAPI:
     def open_map_triggered(self, parent: QtWidgets.QWidget) -> None:
         path = self._qt_api.get_dir(parent, "open")
         if path:
-            self._map_viewer.open_map(path)
+            self._map_viewer.open_map(Path(path), self._map_storage.map.name)
 
     def import_old_format(self):
         print('import old format')
 
     #  Open map
     def create_map_triggered(self, info: Dict[str, Any]) -> None:
-        self._map_viewer.create_new_map(info)
+        path = Path(info["dir_name"])
+        if path:
+            try:
+                if os.path.exists(path):
+                    shutil.rmtree(path)
+                os.makedirs(path)
+                self._map_viewer.create_new_map(info, path)
+            except OSError:
+                logging.error(f"Cannot create path {path} for new map")
 
     def create_region(self):
         print('create_region')

@@ -11,7 +11,6 @@ from classes.Commands.GetLayerCommand import GetLayerCommand
 
 
 class TileLayerHandler(AbstractHandler, AbstractLayer):
-
     def __init__(self, *kwargs) -> None:
         super(TileLayerHandler, self).__init__(*kwargs)
 
@@ -24,8 +23,9 @@ class TileLayerHandler(AbstractHandler, AbstractLayer):
     def layer_name(self) -> str:
         return "tiles"
 
-    def default_conf(self):
-        return {'i': 0, 'j': 0}
+    def default_conf(self) -> Dict[str, Any]:
+        return {'i': 0, 'j': 0, 'type': 'floor'}
+
 
 class WatchtowersLayerHandler(AbstractHandler, AbstractLayer):
     def __init__(self, *kwargs) -> None:

@@ -29,7 +29,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     tiles = None
     watchtowers = None
     frames = None
-    size_map = 10
+    map_height = 10
     tile_size = 0.585
     objects = {}
     handlers = None
@@ -57,7 +57,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.setScene(QtWidgets.QGraphicsScene())
         self.map = default_map_storage()
         self.coordinates_transformer = CoordinatesTransformer(self.scale,
-                                                              self.size_map,
+                                                              self.map_height,
                                                               self.map.gridSize)
         self.painter = Painter()
         self.init_handlers()
@@ -67,8 +67,9 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
 
     def init_objects(self) -> None:
         for layer_name in self.map.map.layers:
-            layer = self.map.map.layers[layer_name]
-            if not layer_name == "tiles" and not layer_name == "watchtowers":
+            layer = self.handlers.handle(GetLayerCommand(layer_name))
+            if not layer_name == "tiles" and not layer_name == "watchtowers" \
+                    or not layer:
                 continue
             for object_name in layer:
                 layer_object = layer[object_name]
@@ -97,12 +98,15 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             object_name: str = f"map_1/{item_type}{i}"
             if object_name not in self.objects:
                 self.add_obj_on_map(layer_name, object_name)
+                self.add_obj_image(layer_name, object_name)
+                self.scaled_obj(self.get_object(object_name),
+                                {'scale': self.scale})
                 break
             i += 1
 
     def add_obj_image(self, layer_name: str, object_name: str, layer_object=None) -> None:
         new_obj = None
-        if layer_name == "tiles":
+        if layer_name == "tiles" and layer_object:
             new_obj = ImageObject(
                 f"./img/tiles/{layer_object.type.value}.png", self,
                 object_name, layer_name, (self.map.gridSize, self.map.gridSize))
@@ -112,6 +116,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         if new_obj:
             frame_obj = self.handlers.handle(
                 command=GetLayerCommand("frames"))[object_name]
+
             new_coordinates = (
                 self.coordinates_transformer.get_x_to_view(frame_obj.pose.x),
                 self.coordinates_transformer.get_y_to_view(frame_obj.pose.y))
@@ -121,10 +126,11 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             self.objects[object_name] = new_obj
 
     def add_obj_on_map(self, layer_name: str, object_name: str) -> None:
-        self.handlers.handle(command=AddObjCommand("frames", object_name))
+        self.add_frame_on_map(object_name)
         self.handlers.handle(command=AddObjCommand(layer_name, object_name))
-        self.add_obj_image(layer_name, object_name)
-        self.scaled_obj(self.get_object(object_name), {'scale': self.scale})
+        
+    def add_frame_on_map(self, frame_name: str):
+        self.handlers.handle(command=AddObjCommand("frames", frame_name))
 
     def delete_obj_on_map(self, obj: ImageObject) -> None:
         self.handlers.handle(command=DeleteObjCommand("frames", obj.name))
@@ -168,9 +174,12 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             self.coordinates_transformer.get_y_to_view(obj.obj_map_pos[1]))
         self.move_obj(obj, new_coordinates)
 
-    def set_map_size(self) -> None:
-        self.size_map = get_map_height(self.get_tiles())
-        self.coordinates_transformer.set_size_map(self.size_map)
+    def set_map_size(self, height: int = 0) -> None:
+        if not height:
+            self.map_height = get_map_height(self.get_tiles())
+        else:
+            self.map_height = height
+        self.coordinates_transformer.set_size_map(self.map_height)
 
     def rotate_with_button(self, args: Dict[str, Any]) -> None:
         tile_name = args["tile_name"]
@@ -315,31 +324,37 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.change_object_handler(self.scaled_obj, {"scale": self.scale})
         self.scene_update()
 
-    def create_new_map(self, info: Dict[str, Any]):
+    def create_new_map(self, info: Dict[str, Any], path: Path):
         width, height = int(info['x']), int(info['y'])
         tile_size = float(info['tile_size'])
         self.map.gridSize = tile_size * 100
-        #self.ch
+        self.scale = 1
+        self.coordinates_transformer.set_scale(self.scale)
+        self.open_map(path, self.map.map.name, True, (width, height))
+
+    def create_default_map_content(self, size: tuple):
+        width, height = size
+        self.add_frame_on_map("map_1")
         for i in range(width):
             for j in range(height):
                 #TODO map_1
-                tile = Tile()
-                tile = Tile(f"map_1/tile_{i}_{j}")
-                tile.x = i
-                tile.y = j
-                tile.frame.pose.x = int(i) * 0.585 + 0.585 / 2
-                tile.frame.pose.y = int(j) * 0.585 + 0.585 / 2
-                tile.obj.orientation = 'E'
-                tile.frame.dm = self.dm
-                self.dm.add(tile)
+                new_tile_name = f"map_1/tile_{i}_{j}"
 
+                self.add_obj_on_map("tiles", new_tile_name)
+                self.handlers.handle(MoveCommand(new_tile_name, (i, j)))
+                #self.add_obj_image("tiles", new_tile_name)
 
-        self.scene_update()
         
-    def open_map(self, path: Path):
+    def open_map(self, path: Path, map_name: str, is_new_map: bool = False,
+                 size: tuple = (0, 0)):
         self.delete_objects()
-        self.map.load_map(MapDescription(path, self.map.map.name))
+        self.map.load_map(MapDescription(path, map_name))
         self.init_handlers()
+
+        if is_new_map:
+            self.create_default_map_content(size)
+
         self.init_objects()
         self.change_object_handler(self.scaled_obj, {"scale": self.scale})
         self.set_map_size()
+        self.scene_update()
