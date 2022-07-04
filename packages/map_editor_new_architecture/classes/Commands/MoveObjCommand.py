@@ -2,7 +2,7 @@ from dt_maps import Map, MapLayer
 from classes.basic.command import Command
 
 
-class MoveCommand(Command):
+class MoveObjCommand(Command):
     _new_position: tuple = (0, 0)
     _frame_name: str
 

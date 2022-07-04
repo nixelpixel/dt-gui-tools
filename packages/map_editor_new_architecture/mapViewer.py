@@ -10,9 +10,10 @@ from typing import Dict, Any, Optional
 from layers import TileLayerHandler, WatchtowersLayerHandler, FramesLayerHandler
 from coordinatesTransformer import CoordinatesTransformer
 from painter import Painter
-from classes.Commands.MoveObjCommand import MoveCommand
+from classes.Commands.MoveObjCommand import MoveObjCommand
 from classes.Commands.RotateObjCommand import RotateCommand
 from classes.Commands.ChangeTileTypeCommand import ChangeTileTypeCommand
+from classes.Commands.MoveTileCommand import MoveTileCommand
 from utils.maps import default_map_storage, get_map_height, get_map_width
 from classes.MapDescription import MapDescription
 from pathlib import Path
@@ -157,7 +158,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         map_y = self.coordinates_transformer.get_y_from_view(new_pos[1], obj_height=obj_height)
         obj = self.get_object(frame_name)
         self.set_obj_map_pos(obj, (map_x, map_y))
-        self.handlers.handle(command=MoveCommand(frame_name, (map_x, map_y)))
+        self.handlers.handle(command=MoveObjCommand(frame_name, (map_x, map_y)))
 
     def rotate_obj(self, obj: ImageObject, new_angle: float) -> None:
         obj.rotate_object(new_angle)
@@ -339,21 +340,17 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             for j in range(height):
                 #TODO map_1
                 new_tile_name = f"map_1/tile_{i}_{j}"
-
                 self.add_obj_on_map("tiles", new_tile_name)
-                self.handlers.handle(MoveCommand(new_tile_name, (i, j)))
-                #self.add_obj_image("tiles", new_tile_name)
-
+                self.handlers.handle(MoveObjCommand(new_tile_name, (float(i), float(j))))
+                self.handlers.handle(MoveTileCommand(new_tile_name, (i, j)))
         
     def open_map(self, path: Path, map_name: str, is_new_map: bool = False,
                  size: tuple = (0, 0)):
         self.delete_objects()
         self.map.load_map(MapDescription(path, map_name))
         self.init_handlers()
-
         if is_new_map:
             self.create_default_map_content(size)
-
         self.init_objects()
         self.change_object_handler(self.scaled_obj, {"scale": self.scale})
         self.set_map_size()
