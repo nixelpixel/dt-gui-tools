@@ -77,7 +77,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                 # TODO refactor on more layers
                 self.add_obj_image(layer_name, object_name, layer_object)
 
-    def init_handlers(self):
+    def init_handlers(self) -> None:
         self.tiles = TileLayerHandler()
         self.watchtowers = WatchtowersLayerHandler()
         self.frames = FramesLayerHandler()
@@ -273,7 +273,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                 self.mouse_cur_x = event.x()
                 self.mouse_cur_y = event.y()
             pos = (start_pos[0] + event.x(), start_pos[1] + event.y())
-            self.parentWidget().parent().update_debug_info({"mode": "set_cursor_pos", "pos" : pos})
+            self.update_debug_info(pos)
 
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
         if event.button() == QtCore.Qt.LeftButton:
@@ -284,7 +284,16 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         else:
             self.rmbPressed = False
 
-    def drawBackground(self, painter: QtGui.QPainter, rect: QtCore.QRectF) -> None:
+    def update_debug_info(self, pos: tuple):
+        map_pos = (
+            self.coordinates_transformer.get_x_from_view(pos[0]),
+            self.coordinates_transformer.get_y_from_view(pos[1])
+        )
+        self.parentWidget().parent().update_debug_info(
+            {"mode": "set_cursor_pos", "pos": pos, "map_pose": map_pos})
+
+    def drawBackground(self, painter: QtGui.QPainter,
+                       rect: QtCore.QRectF) -> None:
 
         self.painter.fill_background(painter, 'lightGray', self.size().width(),
                                      self.size().height())
@@ -311,7 +320,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                 for i, v in enumerate(raw_selection)
             ]
 
-    def save_to_png(self, file_name: str):
+    def save_to_png(self, file_name: str) -> None:
         self.coordinates_transformer.set_scale(1)
         self.change_object_handler(self.scaled_obj, {"scale": 1})
         self.is_to_png = True
@@ -325,7 +334,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.change_object_handler(self.scaled_obj, {"scale": self.scale})
         self.scene_update()
 
-    def create_new_map(self, info: Dict[str, Any], path: Path):
+    def create_new_map(self, info: Dict[str, Any], path: Path) -> None:
         width, height = int(info['x']), int(info['y'])
         tile_size = float(info['tile_size'])
         self.map.gridSize = tile_size * 100
@@ -333,7 +342,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.coordinates_transformer.set_scale(self.scale)
         self.open_map(path, self.map.map.name, True, (width, height))
 
-    def create_default_map_content(self, size: tuple):
+    def create_default_map_content(self, size: tuple) -> None:
         width, height = size
         self.add_frame_on_map("map_1")
         for i in range(width):
@@ -341,11 +350,12 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                 #TODO map_1
                 new_tile_name = f"map_1/tile_{i}_{j}"
                 self.add_obj_on_map("tiles", new_tile_name)
-                self.handlers.handle(MoveObjCommand(new_tile_name, (float(i), float(j))))
+                self.handlers.handle(MoveObjCommand(new_tile_name,
+                                                    (float(i), float(j))))
                 self.handlers.handle(MoveTileCommand(new_tile_name, (i, j)))
         
     def open_map(self, path: Path, map_name: str, is_new_map: bool = False,
-                 size: tuple = (0, 0)):
+                 size: tuple = (0, 0)) -> None:
         self.delete_objects()
         self.map.load_map(MapDescription(path, map_name))
         self.init_handlers()

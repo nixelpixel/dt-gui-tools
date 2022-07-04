@@ -21,7 +21,7 @@ def default_map_storage() -> MapStorage:
     return MapStorage(MapDescription(Path("./maps/tm1"), "test"))
 
 
-def create_layer(dm: Map, layer_name: str, layer: Dict[str, Any]):
+def create_layer(dm: Map, layer_name: str, layer: Dict[str, Any]) -> None:
     layer = MapLayer(dm, layer_name, layer)
     dm._layers.__dict__[layer_name] = layer
     register = lambda l, t: dm.layers.get(l).register_entity_helper(
@@ -47,11 +47,11 @@ def change_map_directory(dm: Map, new_dir: str) -> None:
     dm._assets_dir = os.path.join(dm._path, "assets")
 
 
-def get_map_height(tiles: Dict[str, Any]):
+def get_map_height(tiles: Dict[str, Any]) -> int:
     return get_map_size(tiles, "j")
     
 
-def get_map_width(tiles: Dict[str, Any]):
+def get_map_width(tiles: Dict[str, Any]) -> int:
     return get_map_size(tiles, "i")
 
 

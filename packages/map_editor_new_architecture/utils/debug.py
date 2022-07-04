@@ -1,6 +1,7 @@
-from PyQt5 import QtGui
 from PyQt5.QtWidgets import QLabel
 from typing import Dict, Any
+
+ACCURACY = 4
 
 
 class DebugLine(QLabel):
@@ -16,4 +17,7 @@ class DebugLine(QLabel):
         self.show()
 
     def set_mouse_pos(self, event: Dict[str, Any]) -> None:
-        self.setText(f"Cursor position: x={event['pos'][0]}, y={event['pos'][1]}")
+        self.setText(f"Cursor position: x={event['pos'][0]}, "
+                     f"y={event['pos'][1]}, "
+                     f"x'={event['map_pose'][0]:.{ACCURACY}f}, "
+                     f"y'={event['map_pose'][1]:.{ACCURACY}f}")
