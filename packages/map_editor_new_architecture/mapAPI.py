@@ -4,6 +4,7 @@ from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QMessageBox
 from editorState import EditorState
 from forms.quit import quit_message_box
+from forms.default_forms import form_yes
 from utils.maps import change_map_directory
 from utils.qtWindowAPI import QtWindowAPI
 from mapStorage import MapStorage
@@ -161,7 +162,10 @@ class MapAPI:
             window.set_default_fill(item_name)
         else:
             type_of_element = self.info_json['info'][item_name]['type']
-            self._map_viewer.add_obj(item_name, type_of_element)
+            try:
+                self._map_viewer.add_obj(item_name, type_of_element)
+            except KeyError:
+                form_yes(self._map_viewer, "Info", "Functional not implemented")
 
     #  Reset to default values
     def set_default_fill(self):
