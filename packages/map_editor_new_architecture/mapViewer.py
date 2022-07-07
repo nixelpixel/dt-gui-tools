@@ -299,6 +299,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             x, y = event.x(), event.y()
         if event.buttons() == QtCore.Qt.LeftButton:
             self.lmbPressed = True
+            self.set_offset()
             self.mouse_cur_x = self.mouse_start_x = x
             self.mouse_cur_y = self.mouse_start_y = y
 
@@ -317,18 +318,30 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                 print(1, delta_pos)
                 self.change_object_handler(self.move_obj,
                                            {"delta_coordinates": delta_pos})
+        self.set_offset()
         self.mouse_cur_x = x
         self.mouse_cur_y = y
         self.update_debug_info((self.mouse_cur_x, self.mouse_cur_y))
 
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
         if event.button() == QtCore.Qt.LeftButton:
+            #self.offset_x =
             self.lmbPressed = False
-            self.select_tiles()
+            self.set_offset()
+            if not self.is_move_mode():
+                self.select_tiles()
+            #self.offset_x = 0
+            #self.offset_y = 0
             self.scene_update()
             self.parentWidget().parent().selectionUpdate()
         else:
             self.rmbPressed = False
+
+    def set_offset(self) -> None:
+        # TODO map_1
+        left_upper_tile = self.get_object(f"map_1/tile_0_{self.map_height - 1}")
+        self.offset_x = left_upper_tile.pos().x()
+        self.offset_y = left_upper_tile.pos().y()
 
     def update_debug_info(self, pos: tuple) -> None:
         map_pos = (
@@ -351,13 +364,13 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     def select_tiles(self) -> None:
         raw_selection = [
             self.coordinates_transformer.get_x_from_view(
-                min(self.mouse_start_x, self.mouse_cur_x)),
+                min(self.mouse_start_x, self.mouse_cur_x), self.offset_x),
             self.coordinates_transformer.get_y_from_view(
-                min(self.mouse_start_y, self.mouse_cur_y)),
+                min(self.mouse_start_y, self.mouse_cur_y), self.offset_y),
             self.coordinates_transformer.get_x_from_view(
-                max(self.mouse_start_x, self.mouse_cur_x)),
+                max(self.mouse_start_x, self.mouse_cur_x), self.offset_x),
             self.coordinates_transformer.get_y_from_view(
-                max(self.mouse_start_y, self.mouse_cur_y)),
+                max(self.mouse_start_y, self.mouse_cur_y), self.offset_y),
         ]
 
         if self.get_tiles():

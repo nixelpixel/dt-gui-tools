@@ -8,12 +8,12 @@ class CoordinatesTransformer:
     def get_x_from_view(self, x_view: float,
                         offset_x: float = 0.0,
                         obj_width: float = 0.0) -> float:
-        return (x_view - obj_width + offset_x) / self.scale / self.grid_size
+        return (x_view - obj_width - offset_x) / self.scale / self.grid_size
 
     def get_y_from_view(self, y_view: float,
                         offset_y: float = 0.0,
                         obj_height: float = 0.0) -> float:
-        return self.size_map - (y_view + obj_height + offset_y) \
+        return self.size_map - (y_view + obj_height - offset_y) \
                / self.scale / self.grid_size
 
     def get_x_to_view(self, x_real: float) -> float:
