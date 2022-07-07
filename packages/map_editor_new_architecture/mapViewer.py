@@ -178,8 +178,8 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         scale = args["scale"]
         obj.scale_object(scale)
         new_coordinates = (
-            self.coordinates_transformer.get_x_to_view(obj.obj_map_pos[0]),
-            self.coordinates_transformer.get_y_to_view(obj.obj_map_pos[1]))
+            self.coordinates_transformer.get_x_to_view(obj.obj_map_pos[0]) + self.offset_x,
+            self.coordinates_transformer.get_y_to_view(obj.obj_map_pos[1]) + self.offset_y)
         self.move_obj(obj, {"new_coordinates": new_coordinates})
 
     def set_map_size(self, height: int = 0) -> None:
@@ -315,7 +315,6 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             if self.is_move_mode():
                 delta_pos = (x - self.mouse_cur_x,
                              y - self.mouse_cur_y)
-                print(1, delta_pos)
                 self.change_object_handler(self.move_obj,
                                            {"delta_coordinates": delta_pos})
         self.set_offset()
@@ -325,13 +324,10 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
 
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
         if event.button() == QtCore.Qt.LeftButton:
-            #self.offset_x =
             self.lmbPressed = False
             self.set_offset()
             if not self.is_move_mode():
                 self.select_tiles()
-            #self.offset_x = 0
-            #self.offset_y = 0
             self.scene_update()
             self.parentWidget().parent().selectionUpdate()
         else:
