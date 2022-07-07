@@ -269,18 +269,25 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     def is_move_mode(self) -> bool:
         return self.parentWidget().parent().is_move_mode()
 
-    def move_map(self) -> None:
-        print(1)
-        pass
+    def move_map(self, x: float, y: float) -> None:
+        delta_pos = (x - self.mouse_cur_x,
+                     y - self.mouse_cur_y)
+        self.change_object_handler(self.move_obj,
+                                   {"delta_coordinates": delta_pos})
 
-    def mousePressEvent(self, event: Any) -> None:
-        # cursor on object
+    def get_event_coordinates(self, event: Any) -> \
+            [float, float, QtGui.QMouseEvent]:
         if isinstance(event, tuple):
             start_pos = event[1]
             event = event[0]
             x, y = event.x() + start_pos[0], event.y() + start_pos[1]
         else:
             x, y = event.x(), event.y()
+        return x, y, event
+
+    def mousePressEvent(self, event: Any) -> None:
+        # cursor on object
+        x, y, event = self.get_event_coordinates(event)
         if event.buttons() == QtCore.Qt.LeftButton:
             self.lmbPressed = True
             self.set_offset()
@@ -289,18 +296,10 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
 
     def mouseMoveEvent(self, event: Any) -> None:
         # cursor on object
-        if isinstance(event, tuple):
-            start_pos = event[1]
-            event = event[0]
-            x, y = event.x() + start_pos[0], event.y() + start_pos[1]
-        else:
-            x, y = event.x(), event.y()
+        x, y, event = self.get_event_coordinates(event)
         if self.lmbPressed:
             if self.is_move_mode():
-                delta_pos = (x - self.mouse_cur_x,
-                             y - self.mouse_cur_y)
-                self.change_object_handler(self.move_obj,
-                                           {"delta_coordinates": delta_pos})
+                self.move_map(x, y)
         self.set_offset()
         self.mouse_cur_x = x
         self.mouse_cur_y = y
