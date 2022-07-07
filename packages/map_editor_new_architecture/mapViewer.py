@@ -161,8 +161,8 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                         new_pos: tuple,
                         obj_height: float,
                         obj_width: float) -> None:
-        map_x = self.coordinates_transformer.get_x_from_view(new_pos[0], obj_width=obj_width)
-        map_y = self.coordinates_transformer.get_y_from_view(new_pos[1], obj_height=obj_height)
+        map_x = self.coordinates_transformer.get_x_from_view(new_pos[0], obj_width=obj_width, offset_x=self.offset_x)
+        map_y = self.coordinates_transformer.get_y_from_view(new_pos[1], obj_height=obj_height, offset_y=self.offset_y)
         obj = self.get_object(frame_name)
         self.set_obj_map_pos(obj, (map_x, map_y))
         self.handlers.handle(command=MoveObjCommand(frame_name, (map_x, map_y)))
@@ -260,21 +260,6 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     def scene_update(self) -> None:
         self.scene().update()
 
-    '''
-    нажали кнопку(ctrl) где угодно (обработка main window)
-    запомнили состояние (map api -> map editor state)
-    
-    пошли в map viewer считать offset - он будет храниться глобально в этом классе
-    mouse press->move->release
-    не важно, куда тукнли, всё равно должны перетащить(только если не draggable объект)
-    как только подвинули, соответственно подвинули координаты в объектах(но не в карте)
-    объекты ничего не должны знать про offset, ровно как и данные карты
-    
-    
-    бага с выделением
-    бага с переносом объектов
-    '''
-
     def keyPressEvent(self, event: QKeyEvent) -> None:
         self.parentWidget().keyPressEvent(event)
 
@@ -289,7 +274,6 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         pass
 
     def mousePressEvent(self, event: Any) -> None:
-        # TODO refactoring
         # cursor on object
         if isinstance(event, tuple):
             start_pos = event[1]
@@ -380,9 +364,9 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.change_object_handler(self.scaled_obj, {"scale": 1})
         self.is_to_png = True
         self.scene_update()
-        pixmap = self.grab(QRect(QPoint(0, 0),
-                                 QPoint((self.map.gridSize + 1) * get_map_width(self.get_tiles()),
-                                        (self.map.gridSize + 1) * get_map_height(self.get_tiles()))))
+        pixmap = self.grab(QRect(QPoint(self.offset_x, self.offset_y),
+                                 QPoint((self.map.gridSize + 1) * get_map_width(self.get_tiles()) + self.offset_x,
+                                        (self.map.gridSize + 1) * get_map_height(self.get_tiles()) + self.offset_y)))
         pixmap.save(f"{file_name}.png")
         self.is_to_png = False
         self.coordinates_transformer.set_scale(self.scale)
