@@ -15,6 +15,10 @@ class EditorState(metaclass=SingletonMeta):
         self.active_group = None
         self.name_of_editable_obj = None
         self.tile_size = DEFAULT_TILE_SIZE
+        self.is_move = False
 
     def is_debug(self) -> bool:
         return self.debug_mode
+
+    def set_move(self, val: bool) -> None:
+        self.is_move = val

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtCore import QRect, QPoint
+from PyQt5.QtGui import QKeyEvent
 from dt_maps.types.tiles import Tile
 from classes.Commands.AddObjCommand import AddObjCommand
 from classes.Commands.DeleteObjCommand import DeleteObjCommand
@@ -123,7 +124,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                 self.coordinates_transformer.get_y_to_view(frame_obj.pose.y))
             self.set_obj_map_pos(new_obj, (frame_obj.pose.x, frame_obj.pose.y))
             self.rotate_obj(new_obj, frame_obj.pose.yaw)
-            self.move_obj(new_obj, new_coordinates)
+            self.move_obj(new_obj, {"new_coordinates": new_coordinates})
             self.objects[object_name] = new_obj
 
     def add_obj_on_map(self, layer_name: str, object_name: str) -> None:
@@ -144,8 +145,14 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             obj.delete_object()
         self.objects.clear()
 
-    def move_obj(self, obj: ImageObject, new_coordinates: tuple) -> None:
-        obj.move_object(new_coordinates)
+    def move_obj(self, obj: ImageObject, args: Dict[str, Any]) -> None:
+        if "new_coordinates" in args:
+            new_coordinates = args["new_coordinates"]
+            obj.move_object(new_coordinates)
+        elif "delta_coordinates" in args:
+            delta_coord = args["delta_coordinates"]
+            obj.move_object((obj.pos().x() + delta_coord[0],
+                             obj.pos().y() + delta_coord[1]))
 
     def set_obj_map_pos(self, obj: ImageObject, new_pos: tuple) -> None:
         obj.set_obj_map_pos(new_pos)
@@ -173,7 +180,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         new_coordinates = (
             self.coordinates_transformer.get_x_to_view(obj.obj_map_pos[0]),
             self.coordinates_transformer.get_y_to_view(obj.obj_map_pos[1]))
-        self.move_obj(obj, new_coordinates)
+        self.move_obj(obj, {"new_coordinates": new_coordinates})
 
     def set_map_size(self, height: int = 0) -> None:
         if not height:
@@ -253,27 +260,66 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     def scene_update(self) -> None:
         self.scene().update()
 
-    def mousePressEvent(self, event: tuple) -> None:
-        if isinstance(event, tuple):
-            start_pos = event[1]
-            event = event[0]
-            x, y = event.x(), event.y()
-            if event.buttons() == QtCore.Qt.LeftButton:
-                self.lmbPressed = True
-                self.mouse_cur_x = self.mouse_start_x = x
-                self.mouse_cur_y = self.mouse_start_y = y
-                self.offset_x = start_pos[0]
-                self.offset_y = start_pos[1]
+    '''
+    нажали кнопку(ctrl) где угодно (обработка main window)
+    запомнили состояние (map api -> map editor state)
+    
+    пошли в map viewer считать offset - он будет храниться глобально в этом классе
+    mouse press->move->release
+    не важно, куда тукнли, всё равно должны перетащить(только если не draggable объект)
+    как только подвинули, соответственно подвинули координаты в объектах(но не в карте)
+    объекты ничего не должны знать про offset, ровно как и данные карты
+    
+    
+    бага с выделением
+    бага с переносом объектов
+    '''
 
-    def mouseMoveEvent(self, event: tuple) -> None:
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        self.parentWidget().keyPressEvent(event)
+
+    def keyReleaseEvent(self, event: QKeyEvent) -> None:
+        self.parentWidget().keyReleaseEvent(event)
+
+    def is_move_mode(self) -> bool:
+        return self.parentWidget().parent().is_move_mode()
+
+    def move_map(self) -> None:
+        print(1)
+        pass
+
+    def mousePressEvent(self, event: Any) -> None:
+        # TODO refactoring
+        # cursor on object
         if isinstance(event, tuple):
             start_pos = event[1]
             event = event[0]
-            if self.lmbPressed:
-                self.mouse_cur_x = event.x()
-                self.mouse_cur_y = event.y()
-            pos = (start_pos[0] + event.x(), start_pos[1] + event.y())
-            self.update_debug_info(pos)
+            x, y = event.x() + start_pos[0], event.y() + start_pos[1]
+        else:
+            x, y = event.x(), event.y()
+        if event.buttons() == QtCore.Qt.LeftButton:
+            self.lmbPressed = True
+            self.mouse_cur_x = self.mouse_start_x = x
+            self.mouse_cur_y = self.mouse_start_y = y
+
+    def mouseMoveEvent(self, event: Any) -> None:
+        # cursor on object
+        if isinstance(event, tuple):
+            start_pos = event[1]
+            event = event[0]
+            x, y = event.x() + start_pos[0], event.y() + start_pos[1]
+        else:
+            x, y = event.x(), event.y()
+        if self.lmbPressed:
+            if self.is_move_mode():
+                delta_pos = (x - self.mouse_cur_x,
+                             y - self.mouse_cur_y)
+                print(1, delta_pos)
+                self.change_object_handler(self.move_obj,
+                                           {"delta_coordinates": delta_pos})
+        self.mouse_cur_x = x
+        self.mouse_cur_y = y
+        self.update_debug_info((self.mouse_cur_x, self.mouse_cur_y))
 
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
         if event.button() == QtCore.Qt.LeftButton:
@@ -284,7 +330,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         else:
             self.rmbPressed = False
 
-    def update_debug_info(self, pos: tuple):
+    def update_debug_info(self, pos: tuple) -> None:
         map_pos = (
             self.coordinates_transformer.get_x_from_view(pos[0]),
             self.coordinates_transformer.get_y_from_view(pos[1])
@@ -305,13 +351,13 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     def select_tiles(self) -> None:
         raw_selection = [
             self.coordinates_transformer.get_x_from_view(
-                min(self.mouse_start_x, self.mouse_cur_x), self.offset_x),
+                min(self.mouse_start_x, self.mouse_cur_x)),
             self.coordinates_transformer.get_y_from_view(
-                min(self.mouse_start_y, self.mouse_cur_y), self.offset_y),
+                min(self.mouse_start_y, self.mouse_cur_y)),
             self.coordinates_transformer.get_x_from_view(
-                max(self.mouse_start_x, self.mouse_cur_x), self.offset_x),
+                max(self.mouse_start_x, self.mouse_cur_x)),
             self.coordinates_transformer.get_y_from_view(
-                max(self.mouse_start_y, self.mouse_cur_y), self.offset_y),
+                max(self.mouse_start_y, self.mouse_cur_y)),
         ]
 
         if self.get_tiles():

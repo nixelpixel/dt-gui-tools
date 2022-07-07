@@ -1,7 +1,7 @@
 import functools
 import json
 import codecs
-from PyQt5.QtGui import QResizeEvent
+from PyQt5.QtGui import QResizeEvent, QKeyEvent
 
 from forms.start_info import NewMapInfoForm
 from mapAPI import MapAPI
@@ -368,8 +368,11 @@ class DuckWindow(QtWidgets.QMainWindow):
     def trimClicked(self):
         print('trimClicked')
 
-    def keyPressEvent(self, e):
-        print('keyPressEvent')
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        self.map_api.key_press_event(event)
+
+    def keyReleaseEvent(self, event: QKeyEvent) -> None:
+        self.map_api.key_release_event(event)
 
     def rotate_selected_tiles(self) -> None:
         self.map_api.rotate_selected_tiles()
@@ -383,3 +386,6 @@ class DuckWindow(QtWidgets.QMainWindow):
     def set_default_fill(self, item_name: str) -> None:
         self.ui.default_fill.setCurrentText(
             self.get_translation(self.info_json['info'][item_name])['name'])
+
+    def is_move_mode(self) -> bool:
+        return self.map_api.is_move_mode()

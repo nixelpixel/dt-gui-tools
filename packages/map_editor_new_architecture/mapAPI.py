@@ -1,6 +1,8 @@
 import logging
 
 from PyQt5 import QtWidgets, QtCore
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QKeyEvent
 from PyQt5.QtWidgets import QMessageBox
 from editorState import EditorState
 from forms.quit import quit_message_box
@@ -17,6 +19,7 @@ import shutil
 
 
 TILE_TYPES = ('block', 'road')
+CTRL = 16777249
 
 
 class MapAPI:
@@ -205,8 +208,13 @@ class MapAPI:
         if self._editor_state.drawState == 'brush':
             self._map_viewer.painting_tiles(default_fill)
 
-    def key_press_event(self, e) -> None:
-        pass
+    def key_press_event(self, event: QKeyEvent) -> None:
+        if event.key() == CTRL and not self._editor_state.is_move:
+            self._editor_state.set_move(True)
+
+    def key_release_event(self, event: QKeyEvent) -> None:
+        if event.key() == CTRL:
+            self._editor_state.set_move(False)
 
     def rotate_selected_tiles(self) -> None:
         self._map_viewer.rotate_tiles()
@@ -220,5 +228,8 @@ class MapAPI:
             if event["mode"] == "set_cursor_pos":
                 self._debug_line.set_mouse_pos(event)
 
-    def scene_update(self):
+    def scene_update(self) -> None:
         self._map_viewer.scene_update()
+
+    def is_move_mode(self) -> bool:
+        return self._editor_state.is_move
