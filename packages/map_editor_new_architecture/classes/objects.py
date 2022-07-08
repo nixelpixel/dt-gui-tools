@@ -21,6 +21,7 @@ class ImageObject(QtWidgets.QLabel):
         return False
 
     def rotate_object(self, angle_clockwise: float) -> None:
+        print("pixmap size", self.pixmap.height(), self.pixmap.width())
         rotate_angle = (angle_clockwise - self.yaw) % 360.0
         self.yaw = angle_clockwise % 360
         if not rotate_angle // 90 % 2 == 0:
@@ -40,7 +41,6 @@ class ImageObject(QtWidgets.QLabel):
     def set_size_object(self, new_size: tuple) -> None:
         resize = QtCore.QSize(new_size[0], new_size[1])
         self.pixmap = self.pixmap.scaled(resize,
-                               aspectRatioMode=QtCore.Qt.KeepAspectRatio,
                                transformMode=QtCore.Qt.SmoothTransformation)
         self.setFixedSize(self.pixmap.width(), self.pixmap.height())
         self.setPixmap(self.pixmap)

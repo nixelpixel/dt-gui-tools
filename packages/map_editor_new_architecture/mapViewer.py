@@ -32,7 +32,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     watchtowers = None
     frames = None
     map_height = 10
-    tile_size = 0.585
+    grid_scale = 100
     objects = {}
     handlers = None
     #citizens = None
@@ -52,6 +52,8 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     offset_y = 0
     lmbClicked = QtCore.pyqtSignal(int, int)  # click coordinates as an index of the clicked tile
     is_to_png = False
+    grid_width: float = 59.0
+    grid_height: float = 59.0
 
     def __init__(self):
         QtWidgets.QGraphicsView.__init__(self)
@@ -60,7 +62,8 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.map = default_map_storage()
         self.coordinates_transformer = CoordinatesTransformer(self.scale,
                                                               self.map_height,
-                                                              self.map.gridSize)
+                                                              self.grid_width,
+                                                              self.grid_height)
         self.painter = Painter()
         self.init_handlers()
         self.init_objects()
@@ -111,7 +114,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         if layer_name == "tiles" and layer_object:
             new_obj = ImageObject(
                 f"./img/tiles/{layer_object.type.value}.png", self,
-                object_name, layer_name, (self.map.gridSize, self.map.gridSize))
+                object_name, layer_name, (self.grid_width, self.grid_height))
         elif layer_name == "watchtowers":
             new_obj = DraggableImage(f"./img/objects/{layer_name}.png", self,
                                      object_name, layer_name)
@@ -232,8 +235,9 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     def highlight_select_tile(self, args: Dict[str, Any]):
         tile = self.get_object(args["tile_name"])
         self.painter.draw_rect((tile.pos().x() - 1, tile.pos().y() - 1),
-                               self.scale,
-                               args["painter"])
+                               self.scale, args["painter"],
+                               self.grid_width, self.grid_height,
+                               )
 
     def change_tile_type(self, args: Dict[str, Any]) -> None:
         new_tile_type = args["default_fill"]
@@ -367,8 +371,8 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.is_to_png = True
         self.scene_update()
         pixmap = self.grab(QRect(QPoint(self.offset_x, self.offset_y),
-                                 QPoint((self.map.gridSize + 1) * get_map_width(self.get_tiles()) + self.offset_x,
-                                        (self.map.gridSize + 1) * get_map_height(self.get_tiles()) + self.offset_y)))
+                                 QPoint((self.grid_width + 1) * get_map_width(self.get_tiles()) + self.offset_x,
+                                        (self.grid_height + 1) * get_map_height(self.get_tiles()) + self.offset_y)))
         pixmap.save(f"{file_name}.png")
         self.is_to_png = False
         self.coordinates_transformer.set_scale(self.scale)
@@ -377,10 +381,13 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
 
     def create_new_map(self, info: Dict[str, Any], path: Path) -> None:
         width, height = int(info['x']), int(info['y'])
-        tile_size = float(info['tile_size'])
-        self.map.gridSize = tile_size * 100
+        tile_width = float(info['tile_width'])
+        tile_height = float(info['tile_height'])
+        self.grid_width = tile_width * self.grid_scale
+        self.grid_height = tile_height * self.grid_scale
         self.scale = 1
         self.coordinates_transformer.set_scale(self.scale)
+        self.coordinates_transformer.set_grid_size((self.grid_width, self.grid_height))
         self.open_map(path, self.map.map.name, True, (width, height))
 
     def create_default_map_content(self, size: tuple) -> None:

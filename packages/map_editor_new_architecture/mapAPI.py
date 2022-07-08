@@ -101,6 +101,7 @@ class MapAPI:
                          window: QtWidgets.QMainWindow) -> bool:
         if not self._editor_state.debug_mode:
             ret = quit_message_box(_translate, window)
+            self.set_move_mode(False)
             if ret == QMessageBox.Cancel:
                 return False
             if ret == QMessageBox.Discard:

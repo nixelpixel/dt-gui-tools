@@ -17,8 +17,10 @@ class NewMapInfoForm(QDialog):
         self.nameYEdit = QLineEdit(self)
         self.nameYEdit.setText("5")
         self.nameYEdit.setValidator(QIntValidator())
-        self.nameTileSizeEdit = QLineEdit(self)
-        self.nameTileSizeEdit.setText("0.59")
+        self.nameTileSizeXEdit = QLineEdit(self)
+        self.nameTileSizeXEdit.setText("0.585")
+        self.nameTileSizeYEdit = QLineEdit(self)
+        self.nameTileSizeYEdit.setText("0.585")
         self.nameDirEdit = QLineEdit(self)
         self.nameDirEdit.setText("./maps/map1")
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
@@ -34,7 +36,8 @@ class NewMapInfoForm(QDialog):
         info = {
             'x': self.nameXEdit.text(),
             'y': self.nameYEdit.text(),
-            'tile_size': self.nameTileSizeEdit.text(),
+            'tile_width': self.nameTileSizeXEdit.text(),
+            'tile_height': self.nameTileSizeYEdit.text(),
             'dir_name': self.nameDirEdit.text()
         }
         self.send_info.emit(info)
@@ -44,6 +47,7 @@ class NewMapInfoForm(QDialog):
         layout = QFormLayout()
         layout.addRow(QLabel("Width"), self.nameXEdit)
         layout.addRow(QLabel("Height"), self.nameYEdit)
-        layout.addRow(QLabel("Tile size"), self.nameTileSizeEdit)
+        layout.addRow(QLabel("Tile width"), self.nameTileSizeXEdit)
+        layout.addRow(QLabel("Tile height"), self.nameTileSizeYEdit)
         layout.addRow(QLabel("Folder"), self.nameDirEdit)
         self.formGroupBox.setLayout(layout)
