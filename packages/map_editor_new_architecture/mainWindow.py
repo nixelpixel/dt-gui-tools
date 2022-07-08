@@ -242,7 +242,7 @@ class DuckWindow(QtWidgets.QMainWindow):
         print('')
 
     #  Create a new map
-    def open_map_triggered(self):
+    def open_map_triggered(self) -> None:
         self.map_api.open_map_triggered(self)
 
     def import_old_format(self):
@@ -252,6 +252,7 @@ class DuckWindow(QtWidgets.QMainWindow):
     def create_map_triggered(self) -> None:
         self.init_info_form.send_info.connect(self.map_api.create_map_triggered)
         self.init_info_form.show()
+        self.map_api.set_move_mode(False)
 
     def create_region(self):
         print('create_region')

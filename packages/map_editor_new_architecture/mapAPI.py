@@ -1,7 +1,6 @@
 import logging
 
 from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QKeyEvent
 from PyQt5.QtWidgets import QMessageBox
 from editorState import EditorState
@@ -41,6 +40,7 @@ class MapAPI:
         path = self._qt_api.get_dir(parent, "open")
         if path:
             self._map_viewer.open_map(Path(path), self._map_storage.map.name)
+        self.set_move_mode(False)
 
     def import_old_format(self):
         print('import old format')
@@ -65,6 +65,7 @@ class MapAPI:
 
     def save_map_as_png(self, parent: QtWidgets.QWidget) -> None:
         path = self._qt_api.create_file_name(parent)
+        self.set_move_mode(False)
         if path:
             self._map_viewer.save_to_png(path)
 
@@ -75,6 +76,7 @@ class MapAPI:
     #  Save map as
     def save_map_as_triggered(self, parent: QtWidgets.QWidget) -> bool:
         path = self._qt_api.get_dir(parent, "save")
+        self.set_move_mode(False)
         if path:
             change_map_directory(self._map_storage.map, path)
             self.save_map_triggered()
@@ -210,11 +212,11 @@ class MapAPI:
 
     def key_press_event(self, event: QKeyEvent) -> None:
         if event.key() == CTRL and not self._editor_state.is_move:
-            self._editor_state.set_move(True)
+            self.set_move_mode(True)
 
     def key_release_event(self, event: QKeyEvent) -> None:
         if event.key() == CTRL:
-            self._editor_state.set_move(False)
+            self.set_move_mode(False)
 
     def rotate_selected_tiles(self) -> None:
         self._map_viewer.rotate_tiles()
@@ -233,3 +235,6 @@ class MapAPI:
 
     def is_move_mode(self) -> bool:
         return self._editor_state.is_move
+
+    def set_move_mode(self, val: bool):
+        self._editor_state.set_move(val)

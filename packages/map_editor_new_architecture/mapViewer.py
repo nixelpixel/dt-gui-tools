@@ -302,7 +302,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                 self.move_map(x, y)
             else:
                 self.select_tiles()
-                self.scene_update()
+        self.scene_update()
         self.set_offset()
         self.mouse_cur_x = x
         self.mouse_cur_y = y
@@ -314,8 +314,8 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             self.set_offset()
             if not self.is_move_mode():
                 self.select_tiles()
-                self.scene_update()
             self.parentWidget().parent().selectionUpdate()
+            self.scene_update()
         else:
             self.rmbPressed = False
 
@@ -327,8 +327,8 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
 
     def update_debug_info(self, pos: tuple) -> None:
         map_pos = (
-            self.coordinates_transformer.get_x_from_view(pos[0]),
-            self.coordinates_transformer.get_y_from_view(pos[1])
+            self.coordinates_transformer.get_x_from_view(pos[0], self.offset_x),
+            self.coordinates_transformer.get_y_from_view(pos[1], self.offset_y)
         )
         self.parentWidget().parent().update_debug_info(
             {"mode": "set_cursor_pos", "pos": pos, "map_pose": map_pos})

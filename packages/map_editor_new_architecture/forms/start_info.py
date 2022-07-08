@@ -19,7 +19,6 @@ class NewMapInfoForm(QDialog):
         self.nameYEdit.setValidator(QIntValidator())
         self.nameTileSizeEdit = QLineEdit(self)
         self.nameTileSizeEdit.setText("0.59")
-        self.nameTileSizeEdit.setValidator(QDoubleValidator())
         self.nameDirEdit = QLineEdit(self)
         self.nameDirEdit.setText("./maps/map1")
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)

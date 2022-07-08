@@ -69,5 +69,4 @@ if __name__ == '__main__':
     layer = tile_layer
 
     # while layer:
-    # layer.handle(RenderCommand())
     print(layer.handle(GetLayerCommand("watchtowers")))
