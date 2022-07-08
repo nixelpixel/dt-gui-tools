@@ -300,6 +300,9 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         if self.lmbPressed:
             if self.is_move_mode():
                 self.move_map(x, y)
+            else:
+                self.select_tiles()
+                self.scene_update()
         self.set_offset()
         self.mouse_cur_x = x
         self.mouse_cur_y = y
@@ -311,7 +314,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             self.set_offset()
             if not self.is_move_mode():
                 self.select_tiles()
-            self.scene_update()
+                self.scene_update()
             self.parentWidget().parent().selectionUpdate()
         else:
             self.rmbPressed = False
