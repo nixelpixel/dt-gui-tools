@@ -1,10 +1,13 @@
 class CoordinatesTransformer:
     """coordinate of mouse, pressevent, moveevent, offset,"""
-    def __init__(self, scale: float, size_map: int, grid_width: float, grid_height: float):
+    def __init__(self, scale: float, size_map: int, grid_width: float, grid_height: float, tile_width: float, tile_height: float, grid_scale: float):
         self.scale: float = scale
         self.size_map: int = size_map
         self.grid_width: float = grid_width
         self.grid_height: float = grid_height
+        self.tile_height: float = tile_height
+        self.tile_width: float = tile_width
+        self.grid_scale: float = grid_scale
 
     def get_x_from_view(self, x_view: float,
                         offset_x: float = 0.0,
@@ -32,3 +35,10 @@ class CoordinatesTransformer:
     def set_grid_size(self, new_grid_size: tuple) -> None:
         self.grid_width = new_grid_size[0]
         self.grid_height = new_grid_size[1]
+
+    def set_tile_size(self, new_tile_size: tuple) -> None:
+        self.tile_width = new_tile_size[0]
+        self.tile_height = new_tile_size[1]
+
+    def set_grid_scale(self, new_scale: float) -> None:
+        self.grid_scale = new_scale

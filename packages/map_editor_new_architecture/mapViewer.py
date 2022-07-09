@@ -32,7 +32,6 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     watchtowers = None
     frames = None
     map_height = 10
-    grid_scale = 100
     objects = {}
     handlers = None
     #citizens = None
@@ -52,8 +51,12 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     offset_y = 0
     lmbClicked = QtCore.pyqtSignal(int, int)  # click coordinates as an index of the clicked tile
     is_to_png = False
-    grid_width: float = 59.0
-    grid_height: float = 59.0
+
+    tile_width: float = 0.585
+    tile_height: float = 0.585
+    grid_scale: float = 100
+    grid_height: float = tile_height * grid_scale
+    grid_width: float = tile_width * grid_scale
 
     def __init__(self):
         QtWidgets.QGraphicsView.__init__(self)
@@ -63,7 +66,10 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.coordinates_transformer = CoordinatesTransformer(self.scale,
                                                               self.map_height,
                                                               self.grid_width,
-                                                              self.grid_height)
+                                                              self.grid_height,
+                                                              self.tile_width,
+                                                              self.tile_height,
+                                                              self.grid_scale)
         self.painter = Painter()
         self.init_handlers()
         self.init_objects()
@@ -388,6 +394,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.scale = 1
         self.coordinates_transformer.set_scale(self.scale)
         self.coordinates_transformer.set_grid_size((self.grid_width, self.grid_height))
+        self.coordinates_transformer.set_tile_size((tile_width, tile_height))
         self.open_map(path, self.map.map.name, True, (width, height))
 
     def create_default_map_content(self, size: tuple) -> None:
@@ -413,3 +420,4 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.change_object_handler(self.scaled_obj, {"scale": self.scale})
         self.set_map_size()
         self.scene_update()
+
