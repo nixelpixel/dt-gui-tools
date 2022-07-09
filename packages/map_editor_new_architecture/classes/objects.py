@@ -62,9 +62,7 @@ class ImageObject(QtWidgets.QLabel):
         self.pos().setY(new_position[1])
 
     def move_in_map(self, new_position: tuple) -> None:
-        self.parentWidget().move_obj_on_map(self.name, new_position,
-                                            self.pixmap.height(),
-                                            self.pixmap.width() / 2.0)
+        self.parentWidget().move_obj_on_map(self.name, new_position)
 
     def rotate_in_map(self, angle_clockwise: float) -> None:
         self.parentWidget().rotate_obj_on_map(self.name, angle_clockwise % 360)
