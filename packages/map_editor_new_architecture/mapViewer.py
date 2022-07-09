@@ -8,7 +8,8 @@ from classes.Commands.DeleteObjCommand import DeleteObjCommand
 from classes.Commands.GetLayerCommand import GetLayerCommand
 from classes.objects import DraggableImage, ImageObject
 from typing import Dict, Any, Optional
-from layers import TileLayerHandler, WatchtowersLayerHandler, FramesLayerHandler
+from layers import TileLayerHandler, WatchtowersLayerHandler, \
+    FramesLayerHandler, TileMapsLayerHandler
 from coordinatesTransformer import CoordinatesTransformer
 from painter import Painter
 from classes.Commands.MoveObjCommand import MoveObjCommand
@@ -56,12 +57,15 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     grid_scale: float = 100
     grid_height: float = tile_height * grid_scale
     grid_width: float = tile_width * grid_scale
+    tile_map: str = "map_1"
 
     def __init__(self):
         QtWidgets.QGraphicsView.__init__(self)
 
         self.setScene(QtWidgets.QGraphicsScene())
         self.map = default_map_storage()
+        self.init_handlers()
+        self.set_map_viewer_sizes()
         self.coordinates_transformer = CoordinatesTransformer(self.scale,
                                                               self.map_height,
                                                               self.grid_width,
@@ -69,7 +73,6 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                                                               self.tile_width,
                                                               self.tile_height)
         self.painter = Painter()
-        self.init_handlers()
         self.init_objects()
         self.set_map_size()
         self.setMouseTracking(True)
@@ -89,16 +92,36 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.tiles = TileLayerHandler()
         self.watchtowers = WatchtowersLayerHandler()
         self.frames = FramesLayerHandler()
+        self.tile_maps = TileMapsLayerHandler()
         # self.citizens = CitizensHandler()
         # self.traffic_signs = TrafficSignsHandler()
         # self.ground_tags = GroundTagsHandler()
         # self.vehicles = VehiclesHandler()
         # self.decorations = DecorationsHandler()
 
-        handlers_list = [self.tiles, self.watchtowers, self.frames]
+        handlers_list = [self.tiles, self.watchtowers, self.frames,
+                         self.tile_maps]
         for i in range(len(handlers_list) - 1):
             handlers_list[i].set_next(handlers_list[i + 1])
         self.handlers = self.tiles
+
+    def set_map_viewer_sizes(self, tile_width: float = 0, tile_height: float = 0) -> None:
+        if not (tile_width and tile_height):
+            try:
+                tile_map_obj = self.handlers.handle(GetLayerCommand("tile_maps"))[self.tile_map]
+                print(tile_map_obj)
+                self.set_tile_size(tile_map_obj["tile_size"]['x'],
+                                   tile_map_obj["tile_size"]['y'])
+            except TypeError:
+                pass        
+        else:
+            self.set_tile_size(tile_width, tile_height)
+        self.grid_width = self.tile_width * self.grid_scale
+        self.grid_height = self.tile_height * self.grid_scale
+
+    def set_tile_map(self):
+        tile_maps = self.handlers.handle(GetLayerCommand("tile_maps"))
+        self.tile_map = [elem for elem in tile_maps][0]
 
     def add_obj(self, layer_name: str, item_type: str) -> None:
         # TODO map_1
@@ -395,10 +418,21 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.coordinates_transformer.set_tile_size((tile_width, tile_height))
         self.open_map(path, self.map.map.name, True, (width, height), (tile_width, tile_height))
 
+    def set_tile_maps_from_map_info(self):
+        pass
+
+    def set_tile_maps_from_data(self):
+        pass
+
+    def set_tile_size(self, tile_width: float, tile_height: float) -> None:
+        self.tile_width, self.tile_height = [tile_width, tile_height]
+
     def create_default_map_content(self, size: tuple, tile_size: tuple) -> None:
         width, height = size
-        self.tile_width, self.tile_height = tile_size
-        self.add_frame_on_map("map_1")
+        self.set_map_viewer_sizes(tile_size[0], tile_size[1])
+        self.tile_map = "map_1"
+        self.add_frame_on_map(self.tile_map)
+        self.add_obj_on_map("tile_maps", self.tile_map)
         for i in range(width):
             for j in range(height):
                 #TODO map_1
@@ -415,6 +449,8 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.init_handlers()
         if is_new_map:
             self.create_default_map_content(size, tile_size)
+        else:
+            self.set_map_viewer_sizes()
         self.init_objects()
         self.change_object_handler(self.scaled_obj, {"scale": self.scale})
         self.set_map_size()

@@ -19,7 +19,6 @@ class AbstractLayer(ABC):
             create_layer(self.dm, self.layer_name(), {})
             self.data = self.dm.layers[self.layer_name()]
 
-
     @abstractmethod
     def layer_name(self) -> str:
         pass

@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+from dt_maps.types.tile_maps import TileSize
 from dt_maps.types.tiles import Tile
 
 from classes.MapDescription import MapDescription
@@ -14,6 +15,7 @@ REGISTER = {
     "frames": Frame,
     "watchtowers": Watchtower,
     "tiles": Tile,
+    "tile_maps": TileSize
 }
 
 
