@@ -124,10 +124,9 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.tile_map = [elem for elem in tile_maps][0]
 
     def add_obj(self, layer_name: str, item_type: str) -> None:
-        # TODO map_1
         i = 1
         while True:
-            object_name: str = f"map_1/{item_type}{i}"
+            object_name: str = f"{self.tile_map}/{item_type}{i}"
             if object_name not in self.objects:
                 self.add_obj_on_map(layer_name, object_name)
                 self.add_obj_image(layer_name, object_name)
@@ -226,8 +225,10 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.rotate_obj_on_map(tile_name, obj.yaw)
 
     def is_selected_tile(self, tile: Tile) -> bool:
-        return self.tile_selection[0] <= tile.i <= self.tile_selection[2] and self.tile_selection[3] <= tile.j <= \
-               self.tile_selection[1]
+        return ((tile.i + 1) * self.tile_width >= self.tile_selection[0] and
+                tile.i * self.tile_width <= self.tile_selection[2] and
+                (tile.j + 1) * self.tile_height >= self.tile_selection[3] and
+                tile.j * self.tile_height <= self.tile_selection[1])
 
     def get_tiles(self) -> Dict[str, Any]:
         return self.handlers.handle(command=GetLayerCommand("tiles"))
@@ -351,8 +352,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             self.rmbPressed = False
 
     def set_offset(self) -> None:
-        # TODO map_1
-        left_upper_tile = self.get_object(f"map_1/tile_0_{self.map_height - 1}")
+        left_upper_tile = self.get_object(f"{self.tile_map}/tile_0_{self.map_height - 1}")
         self.offset_x = left_upper_tile.pos().x()
         self.offset_y = left_upper_tile.pos().y()
 
@@ -388,7 +388,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
 
         if self.get_tiles():
             self.tile_selection = [
-                int(v)  # + (1 if i > 1 else 0)
+                v
                 for i, v in enumerate(raw_selection)
             ]
 
@@ -422,14 +422,8 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.coordinates_transformer.set_scale(self.scale)
         self.coordinates_transformer.set_grid_size(
             (self.grid_width, self.grid_height))
-        self.coordinates_transformer.set_tile_size((self.tile_width, self.tile_height))
-
-
-    def set_tile_maps_from_map_info(self):
-        pass
-
-    def set_tile_maps_from_data(self):
-        pass
+        self.coordinates_transformer.set_tile_size((self.tile_width,
+                                                    self.tile_height))
 
     def set_tile_size(self, tile_width: float, tile_height: float) -> None:
         self.tile_width, self.tile_height = [tile_width, tile_height]
@@ -443,11 +437,12 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.handlers.handle(SetTileSizeCommand(self.tile_map, tile_size))
         for i in range(width):
             for j in range(height):
-                #TODO map_1
-                new_tile_name = f"map_1/tile_{i}_{j}"
+                new_tile_name = f"{self.tile_map}/tile_{i}_{j}"
                 self.add_obj_on_map("tiles", new_tile_name)
                 self.handlers.handle(MoveObjCommand(new_tile_name,
-                                                    (float(i) * self.tile_width, float(j) * self.tile_height)))
+                                                    (float(i) * self.tile_width,
+                                                     float(j) * self.tile_height
+                                                     )))
                 self.handlers.handle(MoveTileCommand(new_tile_name, (i, j)))
         
     def open_map(self, path: Path, map_name: str, is_new_map: bool = False,
