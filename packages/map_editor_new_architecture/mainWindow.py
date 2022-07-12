@@ -393,7 +393,8 @@ class DuckWindow(QtWidgets.QMainWindow):
     def is_move_mode(self) -> bool:
         return self.map_api.is_move_mode()
 
-    def change_obj_info(self, name: str, obj_conf: Dict[str, Any]) -> None:
-        self.change_obj_info_form = EditObject(name, obj_conf)
+    def change_obj_info(self, layer_name: str, name: str,
+                        obj_conf: Dict[str, Any]) -> None:
+        self.change_obj_info_form = EditObject(layer_name, name, obj_conf)
         self.change_obj_info_form.get_info.connect(self.map_api.change_obj_info)
         self.change_obj_info_form.show()

@@ -7,9 +7,12 @@ from PyQt5.QtWidgets import QDialog, QGroupBox, QDialogButtonBox, QFormLayout, Q
 class EditObject(QDialog):
     get_info = QtCore.pyqtSignal(object)
 
-    def __init__(self, name: str, config: Dict[str, Any]):
+    def __init__(self, layer_name: str, name: str, config: Dict[str, Any]):
         super(EditObject, self).__init__()
         self.info = {}
+        self.info_send = {"name": name, "layer_name": layer_name,
+                          "new_config": {}}
+        self.name = name
         self.setWindowTitle("Edit object")
         self.formGroupBox = QGroupBox(f"Object: {name}")
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
@@ -21,14 +24,13 @@ class EditObject(QDialog):
         self.create_form(config)
         self.setLayout(main_layout)
 
-    def send_info(self):
-        send_info = {}
+    def send_info(self) -> None:
         for key in self.info:
-            send_info[key] = self.info[key].text()
-        self.get_info.emit(send_info)
+            self.info_send["new_config"][key] = self.info[key].text()
+        self.get_info.emit(self.info_send)
         self.close()
 
-    def create_form(self, config: Dict[str, Any]):
+    def create_form(self, config: Dict[str, Any]) -> None:
         layout = QFormLayout()
         for key in config:
             edit = QLineEdit(self)

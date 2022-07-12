@@ -8,6 +8,7 @@ from classes.Commands.DeleteObjCommand import DeleteObjCommand
 from classes.Commands.GetLayerCommand import GetLayerCommand
 from classes.Commands.SetTileSizeCommand import SetTileSizeCommand
 from classes.Commands.GetDefaultLayerConf import GetDefaultLayerConf
+from classes.Commands.ChangeObjCommand import ChangeObjCommand
 from classes.objects import DraggableImage, ImageObject
 from typing import Dict, Any, Optional
 from layers import TileLayerHandler, WatchtowersLayerHandler, \
@@ -253,8 +254,13 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                 default_layer_conf[key] = obj[key]
         return default_layer_conf
 
-    def change_obj_info(self, layer_name: str, obj_name: str):
-        self.parentWidget().parent().change_obj_info(obj_name, self.get_object_conf(layer_name, obj_name))
+    def change_obj_info(self, layer_name: str, obj_name: str) -> None:
+        self.parentWidget().parent().change_obj_info(layer_name, obj_name, self.get_object_conf(layer_name, obj_name))
+    
+    def change_obj_from_info(self, conf: Dict[str, Any]) -> None:
+        self.handlers.handle(DeleteObjCommand(conf["layer_name"], conf["name"]))
+        self.handlers.handle(ChangeObjCommand(conf["layer_name"], conf["name"],
+                                              conf["new_config"]))
 
     def delete_object(self, obj: ImageObject) -> None:
         self.delete_obj_on_map(obj)

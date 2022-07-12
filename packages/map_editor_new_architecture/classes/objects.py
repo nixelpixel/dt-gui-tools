@@ -115,8 +115,8 @@ class DraggableImage(ImageObject):
         elif event.button() == QtCore.Qt.RightButton:
             self.change_obj()
             # TODO just for test
-            self.rotate_object(self.yaw + 90)
-            self.rotate_in_map(self.yaw)
+            #self.rotate_object(self.yaw + 90)
+            #self.rotate_in_map(self.yaw)
             #self.delete_from_map()
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:

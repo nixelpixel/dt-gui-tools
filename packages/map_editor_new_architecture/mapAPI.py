@@ -237,9 +237,8 @@ class MapAPI:
     def is_move_mode(self) -> bool:
         return self._editor_state.is_move
 
-    def set_move_mode(self, val: bool):
+    def set_move_mode(self, val: bool) -> None:
         self._editor_state.set_move(val)
 
     def change_obj_info(self, obj_conf: Dict[str, Any]) -> None:
-        print(obj_conf)
-
+        self._map_viewer.change_obj_from_info(obj_conf)
