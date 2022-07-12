@@ -4,6 +4,7 @@ import codecs
 from PyQt5.QtGui import QResizeEvent, QKeyEvent
 
 from forms.start_info import NewMapInfoForm
+from forms.edit_object import EditObject
 from mapAPI import MapAPI
 from mapViewer import MapViewer
 from utils.debug import DebugLine
@@ -28,6 +29,7 @@ class DuckWindow(QtWidgets.QMainWindow):
         self.closeEvent = functools.partial(self.quit_program_event)
 
         self.init_info_form = NewMapInfoForm()
+        self.change_obj_info_form = None
 
         # Load element's info
         self.info_json = json.load(codecs.open(elem_info, "r", "utf-8"))
@@ -390,3 +392,8 @@ class DuckWindow(QtWidgets.QMainWindow):
 
     def is_move_mode(self) -> bool:
         return self.map_api.is_move_mode()
+
+    def change_obj_info(self, name: str, obj_conf: Dict[str, Any]) -> None:
+        self.change_obj_info_form = EditObject(name, obj_conf)
+        self.change_obj_info_form.get_info.connect(self.map_api.change_obj_info)
+        self.change_obj_info_form.show()

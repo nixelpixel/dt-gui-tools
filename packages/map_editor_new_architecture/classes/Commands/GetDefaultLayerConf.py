@@ -1,9 +1,9 @@
-from typing import Optional
+from typing import Dict, Any
 from dt_maps import Map, MapLayer
 from classes.basic.command import Command
 
 
-class GetLayerCommand(Command):
+class GetDefaultLayerConf(Command):
     _layer_name: str = None
 
     def __init__(self, layer_name) -> None:
@@ -12,6 +12,6 @@ class GetLayerCommand(Command):
     def execute(self, dm: Map,
                 layer: MapLayer,
                 layer_name: str,
-                default_conf: dict) -> Optional[MapLayer]:
+                default_conf: dict) -> Dict[str, Any]:
         if layer_name == self._layer_name:
-            return layer
+            return default_conf

@@ -7,6 +7,7 @@ from classes.Commands.AddObjCommand import AddObjCommand
 from classes.Commands.DeleteObjCommand import DeleteObjCommand
 from classes.Commands.GetLayerCommand import GetLayerCommand
 from classes.Commands.SetTileSizeCommand import SetTileSizeCommand
+from classes.Commands.GetDefaultLayerConf import GetDefaultLayerConf
 from classes.objects import DraggableImage, ImageObject
 from typing import Dict, Any, Optional
 from layers import TileLayerHandler, WatchtowersLayerHandler, \
@@ -25,6 +26,8 @@ TILES_DIR_PATH = './img/tiles'
 OBJECT_DIR_PATHS = ['./img/signs',
                     './img/apriltags',
                     './img/objects']
+OBJECTS_TYPES = ["watchtowers"]
+TILES_TYPES = ["tiles"]
 
 
 class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
@@ -81,12 +84,11 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     def init_objects(self) -> None:
         for layer_name in self.map.map.layers:
             layer = self.handlers.handle(GetLayerCommand(layer_name))
-            if not layer_name == "tiles" and not layer_name == "watchtowers" \
-                    or not layer:
+            if layer_name not in TILES_TYPES and \
+            layer_name not in OBJECTS_TYPES or not layer:
                 continue
             for object_name in layer:
                 layer_object = layer[object_name]
-                # TODO refactor on more layers
                 self.add_obj_image(layer_name, object_name, layer_object)
 
     def init_handlers(self) -> None:
@@ -137,11 +139,11 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
 
     def add_obj_image(self, layer_name: str, object_name: str, layer_object=None) -> None:
         new_obj = None
-        if layer_name == "tiles" and layer_object:
+        if layer_name in TILES_TYPES and layer_object:
             new_obj = ImageObject(
                 f"./img/tiles/{layer_object.type.value}.png", self,
                 object_name, layer_name, (self.grid_width, self.grid_height))
-        elif layer_name == "watchtowers":
+        elif layer_name in OBJECTS_TYPES:
             new_obj = DraggableImage(f"./img/objects/{layer_name}.png", self,
                                      object_name, layer_name)
         if new_obj:
@@ -236,6 +238,20 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
 
     def get_object(self, obj_name: str) -> Optional[ImageObject]:
         return self.objects[obj_name]
+
+    def get_default_layer_conf(self, layer_name: str) -> Dict[str, Any]:
+        return self.handlers.handle(GetDefaultLayerConf(layer_name))
+
+    def get_object_conf(self, layer_name: str, name: str) -> Dict[str, Any]:
+        layer = self.handlers.handle(GetLayerCommand(layer_name))
+        obj = layer[name]
+        default_layer_conf = self.get_default_layer_conf(layer_name)
+        for key in default_layer_conf:
+            default_layer_conf[key] = obj[key]
+        return default_layer_conf
+
+    def change_obj_info(self, layer_name: str, obj_name: str):
+        self.parentWidget().parent().change_obj_info(obj_name, self.get_object_conf(layer_name, obj_name))
 
     def delete_object(self, obj: ImageObject) -> None:
         self.delete_obj_on_map(obj)

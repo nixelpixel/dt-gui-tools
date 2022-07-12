@@ -239,3 +239,7 @@ class MapAPI:
 
     def set_move_mode(self, val: bool):
         self._editor_state.set_move(val)
+
+    def change_obj_info(self, obj_conf: Dict[str, Any]) -> None:
+        print(obj_conf)
+
