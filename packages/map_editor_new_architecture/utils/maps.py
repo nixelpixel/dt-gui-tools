@@ -31,9 +31,9 @@ def create_layer(dm: Map, layer_name: str, layer: Dict[str, Any]) -> None:
     register(layer_name, REGISTER[layer_name])
 
 
-def add_new_obj(dm: Map,
-                layer: MapLayer,
-                layer_name: str, obj_name: str, default_conf: dict) -> None:
+def set_obj(dm: Map,
+            layer: MapLayer,
+            layer_name: str, obj_name: str, default_conf: dict) -> None:
     layer[obj_name] = default_conf
     create_layer(dm, layer_name, layer)
 

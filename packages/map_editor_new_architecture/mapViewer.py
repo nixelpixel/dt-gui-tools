@@ -247,7 +247,10 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         obj = layer[name]
         default_layer_conf = self.get_default_layer_conf(layer_name)
         for key in default_layer_conf:
-            default_layer_conf[key] = obj[key]
+            try:
+                default_layer_conf[key] = obj[key].value
+            except AttributeError:
+                default_layer_conf[key] = obj[key]
         return default_layer_conf
 
     def change_obj_info(self, layer_name: str, obj_name: str):
