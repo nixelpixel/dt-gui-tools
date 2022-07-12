@@ -188,8 +188,8 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
 
     def move_obj_on_map(self, frame_name: str,
                         new_pos: tuple,
-                        obj_height: float = 0,
-                        obj_width: float = 0) -> None:
+                        obj_width: float = 0,
+                        obj_height: float = 0) -> None:
         map_x = self.coordinates_transformer.get_x_from_view(new_pos[0], obj_width=obj_width, offset_x=self.offset_x)
         map_y = self.coordinates_transformer.get_y_from_view(new_pos[1], obj_height=obj_height, offset_y=self.offset_y)
         obj = self.get_object(frame_name)
@@ -198,6 +198,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
 
     def rotate_obj(self, obj: ImageObject, new_angle: float) -> None:
         obj.rotate_object(new_angle)
+        self.change_object_handler(self.scaled_obj, {"scale": self.scale})
         self.scene_update()
 
     def rotate_obj_on_map(self, frame_name: str, new_angle: float) -> None:

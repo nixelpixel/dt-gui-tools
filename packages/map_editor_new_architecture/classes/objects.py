@@ -62,7 +62,7 @@ class ImageObject(QtWidgets.QLabel):
         self.pos().setY(new_position[1])
 
     def move_in_map(self, new_position: tuple) -> None:
-        self.parentWidget().move_obj_on_map(self.name, new_position)
+            self.parentWidget().move_obj_on_map(self.name, new_position, obj_height=self.height())
 
     def rotate_in_map(self, angle_clockwise: float) -> None:
         self.parentWidget().rotate_obj_on_map(self.name, angle_clockwise % 360)
@@ -103,15 +103,16 @@ class DraggableImage(ImageObject):
         return True
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
+        #print(self.pos().x(), self.pos().y())
         if event.button() == QtCore.Qt.LeftButton:
             self.setCursor(QtCore.Qt.ClosedHandCursor)
             self.drag_start_pos = event.pos()
             self.raise_()
         elif event.button() == QtCore.Qt.RightButton:
             # TODO just for test
-            #self.rotate_object(self.yaw + 90)
-            #self.rotate_in_map(self.yaw)
-            self.delete_from_map()
+            self.rotate_object(self.yaw + 90)
+            self.rotate_in_map(self.yaw)
+            #self.delete_from_map()
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
         if self.drag_start_pos is not None:
