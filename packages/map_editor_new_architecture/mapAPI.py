@@ -6,6 +6,8 @@ from PyQt5.QtWidgets import QMessageBox
 from editorState import EditorState
 from forms.quit import quit_message_box
 from forms.default_forms import form_yes
+from forms.start_info import NewMapInfoForm
+from forms.edit_object import EditObject
 from utils.maps import change_map_directory
 from utils.qtWindowAPI import QtWindowAPI
 from mapStorage import MapStorage
@@ -35,6 +37,8 @@ class MapAPI:
         self.info_json = info_json
         self._map_viewer = map_viewer
         self._editor_state = EditorState()
+        self.change_obj_info_form = None
+        self.init_info_form = NewMapInfoForm()
 
     def open_map_triggered(self, parent: QtWidgets.QWidget) -> None:
         path = self._qt_api.get_dir(parent, "open")
@@ -44,6 +48,11 @@ class MapAPI:
 
     def import_old_format(self):
         print('import old format')
+
+    def create_map_form(self) -> None:
+        self.init_info_form.send_info.connect(self.create_map_triggered)
+        self.init_info_form.show()
+        self.set_move_mode(False)
 
     #  Open map
     def create_map_triggered(self, info: Dict[str, Any]) -> None:
@@ -171,7 +180,10 @@ class MapAPI:
             try:
                 self._map_viewer.add_obj(item_name, type_of_element)
             except KeyError:
-                form_yes(self._map_viewer, "Info", "Functional not implemented")
+                self.view_info_form("Info", "Functional not implemented")
+
+    def view_info_form(self, header: str, info: str) -> None:
+        form_yes(self._map_viewer, header, info)
 
     #  Reset to default values
     def set_default_fill(self):
@@ -242,3 +254,12 @@ class MapAPI:
 
     def change_obj_info(self, obj_conf: Dict[str, Any]) -> None:
         self._map_viewer.change_obj_from_info(obj_conf)
+
+    def change_obj_form(self, layer_name: str, name: str,
+                        obj_conf: Dict[str, Any], map_pose: tuple,
+                        is_draggable: bool, yaw: int) -> None:
+        self.change_obj_info_form = EditObject(layer_name, name, obj_conf,
+                                               map_pose, is_draggable, yaw)
+        self.change_obj_info_form.get_info.connect(self.change_obj_info)
+        self.change_obj_info_form.show()
+

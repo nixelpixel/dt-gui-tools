@@ -255,12 +255,28 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         return default_layer_conf
 
     def change_obj_info(self, layer_name: str, obj_name: str) -> None:
-        self.parentWidget().parent().change_obj_info(layer_name, obj_name, self.get_object_conf(layer_name, obj_name))
+        obj = self.get_object(obj_name)
+        self.parentWidget().parent().change_obj_info(layer_name, obj_name,
+                                                     self.get_object_conf(layer_name, obj_name),
+                                                     obj.obj_map_pos,
+                                                     obj.is_draggable(),
+                                                     obj.yaw)
     
     def change_obj_from_info(self, conf: Dict[str, Any]) -> None:
-        self.handlers.handle(DeleteObjCommand(conf["layer_name"], conf["name"]))
-        self.handlers.handle(ChangeObjCommand(conf["layer_name"], conf["name"],
-                                              conf["new_config"]))
+        print(conf)
+        if conf["is_valid"]:
+
+            self.handlers.handle(DeleteObjCommand(conf["layer_name"], conf["name"]))
+            self.handlers.handle(ChangeObjCommand(conf["layer_name"], conf["name"],
+                                                  conf["new_config"]))
+            # check correct values
+            # show info about bad values
+            # check tile
+            # move
+            # rotate
+        else:
+            pass
+            #
 
     def delete_object(self, obj: ImageObject) -> None:
         self.delete_obj_on_map(obj)

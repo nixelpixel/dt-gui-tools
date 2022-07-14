@@ -3,8 +3,8 @@ import json
 import codecs
 from PyQt5.QtGui import QResizeEvent, QKeyEvent
 
-from forms.start_info import NewMapInfoForm
-from forms.edit_object import EditObject
+
+
 from mapAPI import MapAPI
 from mapViewer import MapViewer
 from utils.debug import DebugLine
@@ -27,9 +27,6 @@ class DuckWindow(QtWidgets.QMainWindow):
         #  The brush button / override the closeEvent
         self.brush_button = QtWidgets.QToolButton()
         self.closeEvent = functools.partial(self.quit_program_event)
-
-        self.init_info_form = NewMapInfoForm()
-        self.change_obj_info_form = None
 
         # Load element's info
         self.info_json = json.load(codecs.open(elem_info, "r", "utf-8"))
@@ -252,9 +249,7 @@ class DuckWindow(QtWidgets.QMainWindow):
 
     #  Open map
     def create_map_triggered(self) -> None:
-        self.init_info_form.send_info.connect(self.map_api.create_map_triggered)
-        self.init_info_form.show()
-        self.map_api.set_move_mode(False)
+        self.map_api.create_map_form()
 
     def create_region(self):
         print('create_region')
@@ -394,7 +389,10 @@ class DuckWindow(QtWidgets.QMainWindow):
         return self.map_api.is_move_mode()
 
     def change_obj_info(self, layer_name: str, name: str,
-                        obj_conf: Dict[str, Any]) -> None:
-        self.change_obj_info_form = EditObject(layer_name, name, obj_conf)
-        self.change_obj_info_form.get_info.connect(self.map_api.change_obj_info)
-        self.change_obj_info_form.show()
+                        obj_conf: Dict[str, Any], map_pose: tuple,
+                        is_draggable: bool, yaw: int) -> None:
+        self.map_api.change_obj_form(layer_name, name, obj_conf, map_pose,
+                                     is_draggable, yaw)
+
+    def view_info_form(self, header: str, info: str) -> None:
+        self.map_api.view_info_form(header, info)
