@@ -305,7 +305,8 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                     name = obj.name
                     self.objects.__delitem__(obj.name)
                     obj.delete_object()
-                    self.add_obj_image(conf["layer_name"], name, self.get_tiles()[name])
+                    layer = self.handlers.handle(GetLayerCommand(conf["layer_name"]))
+                    self.add_obj_image(conf["layer_name"], name, layer[name])
                 else:
                     self.parentWidget().parent().view_info_form("Error",
                                                                 "Invalid object configuration entered!")
