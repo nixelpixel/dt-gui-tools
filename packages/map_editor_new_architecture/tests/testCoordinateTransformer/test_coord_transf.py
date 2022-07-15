@@ -14,9 +14,12 @@ class MyTestCase(unittest.TestCase):
                 case = self.test_cases[test_name]
                 coord_trans = CoordinatesTransformer(case['scale'],
                                                      case['size_map'],
-                                                     case['grid_size'])
+                                                     case['grid_width'],
+                                                     case['grid_height'],
+                                                     case['tile_width'],
+                                                     case['tile_height'])
                 ret = coord_trans.get_x_to_view(case['x'])
-                self.assertEqual(ret, case['ret'])
+                self.assertLess(abs((ret - case['ret'])), 0.001)
 
     def test_y_to_view(self):
         with open("./tests/testCoordinateTransformer/test_y_to_view.json",
@@ -27,9 +30,12 @@ class MyTestCase(unittest.TestCase):
                 case = self.test_cases[test_name]
                 coord_trans = CoordinatesTransformer(case['scale'],
                                                      case['size_map'],
-                                                     case['grid_size'])
+                                                     case['grid_width'],
+                                                     case['grid_height'],
+                                                     case['tile_width'],
+                                                     case['tile_height'])
                 ret = coord_trans.get_x_to_view(case['y'])
-                self.assertEqual(ret, case['ret'])
+                self.assertLess(abs((ret - case['ret'])), 0.001)
 
     def test_x_from_view(self):
         with open("./tests/testCoordinateTransformer/test_x_from_view.json",
@@ -40,7 +46,10 @@ class MyTestCase(unittest.TestCase):
                 case = self.test_cases[test_name]
                 coord_trans = CoordinatesTransformer(case['scale'],
                                                      case['size_map'],
-                                                     case['grid_size'])
+                                                     case['grid_width'],
+                                                     case['grid_height'],
+                                                     case['tile_width'],
+                                                     case['tile_height'])
                 ret = coord_trans.get_x_from_view(case['x'],
                                                   case['offset_x'],
                                                   case['obj_width'])
@@ -55,7 +64,10 @@ class MyTestCase(unittest.TestCase):
                 case = self.test_cases[test_name]
                 coord_trans = CoordinatesTransformer(case['scale'],
                                                      case['size_map'],
-                                                     case['grid_size'])
+                                                     case['grid_width'],
+                                                     case['grid_height'],
+                                                     case['tile_width'],
+                                                     case['tile_height'])
                 ret = coord_trans.get_y_from_view(case['y'],
                                                   case['offset_y'],
                                                   case['obj_height'])
