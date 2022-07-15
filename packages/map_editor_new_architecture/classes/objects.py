@@ -14,7 +14,7 @@ class ImageObject(QtWidgets.QLabel):
         self.layer_name = layer_name
         self.setParent(parent)
         self.pixmap = None
-        self.change_image(img_path, layer_name)
+        self.change_image(img_path)
         self.setMouseTracking(True)
 
     def is_draggable(self) -> bool:
@@ -30,17 +30,16 @@ class ImageObject(QtWidgets.QLabel):
         self.pixmap = self.pixmap.transformed(new_transform, QtCore.Qt.SmoothTransformation)
         self.setPixmap(self.pixmap)
 
-    def change_image(self, img_path: str, layer_name: str) -> None:
+    def change_image(self, img_path: str) -> None:
         self.yaw = 0
         self.img_path = img_path
-        self.layer_name = layer_name
         self.pixmap = QtGui.QPixmap(img_path)
         self.set_size_object((self.init_size[0] * self.scale, self.init_size[1] * self.scale))
 
     def set_size_object(self, new_size: tuple) -> None:
         resize = QtCore.QSize(new_size[0], new_size[1])
         self.pixmap = self.pixmap.scaled(resize,
-                               transformMode=QtCore.Qt.SmoothTransformation)
+                                         transformMode=QtCore.Qt.SmoothTransformation)
         self.setFixedSize(self.pixmap.width(), self.pixmap.height())
         self.setPixmap(self.pixmap)
         self.show()
@@ -48,10 +47,8 @@ class ImageObject(QtWidgets.QLabel):
     def scale_object(self, scale: float) -> None:
         yaw = self.yaw
         self.scale = scale
-        self.change_image(self.img_path, self.layer_name)
+        self.change_image(self.img_path)
         self.rotate_object(yaw)
-        self.set_size_object((self.init_size[0] * scale,
-                              self.init_size[1] * scale))
 
     def move_object(self, new_position: tuple) -> None:
         self.move(QtCore.QPoint(new_position[0], new_position[1]))
@@ -62,7 +59,7 @@ class ImageObject(QtWidgets.QLabel):
         self.pos().setY(new_position[1])
 
     def move_in_map(self, new_position: tuple) -> None:
-            self.parentWidget().move_obj_on_map(self.name, new_position, obj_height=self.height())
+        self.parentWidget().move_obj_on_map(self.name, new_position, obj_height=self.height())
 
     def rotate_in_map(self, angle_clockwise: float) -> None:
         self.parentWidget().rotate_obj_on_map(self.name, angle_clockwise % 360)
@@ -114,10 +111,6 @@ class DraggableImage(ImageObject):
             self.raise_()
         elif event.button() == QtCore.Qt.RightButton:
             self.change_obj()
-            # TODO just for test
-            #self.rotate_object(self.yaw + 90)
-            #self.rotate_in_map(self.yaw)
-            #self.delete_from_map()
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
         if self.drag_start_pos is not None:

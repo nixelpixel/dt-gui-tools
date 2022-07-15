@@ -255,6 +255,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         return default_layer_conf
 
     def change_obj_info(self, layer_name: str, obj_name: str) -> None:
+        print(layer_name, obj_name)
         obj = self.get_object(obj_name)
         self.parentWidget().parent().change_obj_info(layer_name, obj_name,
                                                      self.get_object_conf(layer_name, obj_name),
@@ -264,19 +265,30 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     
     def change_obj_from_info(self, conf: Dict[str, Any]) -> None:
         print(conf)
+        obj = self.get_object(conf["name"])
         if conf["is_valid"]:
-
-            self.handlers.handle(DeleteObjCommand(conf["layer_name"], conf["name"]))
-            self.handlers.handle(ChangeObjCommand(conf["layer_name"], conf["name"],
-                                                  conf["new_config"]))
+            # move object if draggable
+            if conf["is_draggable"]:
+                pos_x = self.coordinates_transformer.get_x_to_view(
+                    conf["frame"]["pos_x"]) + self.offset_x
+                pos_y = self.coordinates_transformer.get_y_to_view(
+                    conf["frame"]["pos_y"]) + self.offset_y
+                self.move_obj(obj, {"new_coordinates": (pos_x, pos_y)})
+                self.move_obj_on_map(obj.name, (pos_x, pos_y),
+                                     obj_height=obj.height())
+            # rotate object
+            obj.rotate_object(conf["frame"]["yaw"])
+            self.handlers.handle(RotateCommand(conf["name"],
+                                               conf["frame"]["yaw"]))
+            # change info in configuration
+            #self.handlers.handle(DeleteObjCommand(conf["layer_name"], conf["name"]))
+            #self.handlers.handle(ChangeObjCommand(conf["layer_name"], conf["name"],
+            #                                     conf["new_config"]))
             # check correct values
-            # show info about bad values
             # check tile
-            # move
-            # rotate
         else:
-            pass
-            #
+            self.parentWidget().parent().view_info_form("Error",
+                                                        "Invalid values entered!")
 
     def delete_object(self, obj: ImageObject) -> None:
         self.delete_obj_on_map(obj)
@@ -314,7 +326,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         tile_name = args["tile_name"]
         img_path = f"./img/tiles/{new_tile_type}.png"
         mutable_obj = self.get_object(tile_name)
-        mutable_obj.change_image(img_path, new_tile_type)
+        mutable_obj.change_image(img_path)
         self.handlers.handle(command=ChangeTileTypeCommand(tile_name,
                                                            new_tile_type))
         self.rotate_obj_on_map(tile_name, 0)
