@@ -12,6 +12,7 @@ class GetDefaultLayerConf(Command):
     def execute(self, dm: Map,
                 layer: MapLayer,
                 layer_name: str,
-                default_conf: dict) -> Dict[str, Any]:
+                default_conf: dict,
+                *args, **kwargs) -> Dict[str, Any]:
         if layer_name == self._layer_name:
             return default_conf

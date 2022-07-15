@@ -10,7 +10,7 @@ class MoveTileCommand(Command):
         self._tile_name = tile_name
         self._new_position = new_position
 
-    def execute(self, dm: Map, layer: MapLayer, layer_name: str, default_conf: dict) -> None:
+    def execute(self, dm: Map, layer: MapLayer, layer_name: str, *args, **kwargs) -> None:
         if layer_name == "tiles":
             dm.layers[layer_name][self._tile_name].i = self._new_position[0]
             dm.layers[layer_name][self._tile_name].j = self._new_position[1]

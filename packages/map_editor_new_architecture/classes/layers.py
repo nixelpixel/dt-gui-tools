@@ -4,7 +4,8 @@ import logging
 from abc import ABC, abstractmethod
 from dt_maps import MapLayer
 from mapStorage import MapStorage
-from  utils.maps import create_layer
+from utils.maps import create_layer
+from typing import  Dict, Any
 
 
 class AbstractLayer(ABC):
@@ -24,4 +25,11 @@ class AbstractLayer(ABC):
         pass
 
     def render(self) -> None:
+        pass
+
+    @abstractmethod
+    def default_conf(self) -> Dict[str, Any]:
+        pass
+
+    def check_config(self, config: Dict[str, Any]) -> bool:
         pass

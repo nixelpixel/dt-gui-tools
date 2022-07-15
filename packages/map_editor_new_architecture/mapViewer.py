@@ -9,6 +9,7 @@ from classes.Commands.GetLayerCommand import GetLayerCommand
 from classes.Commands.SetTileSizeCommand import SetTileSizeCommand
 from classes.Commands.GetDefaultLayerConf import GetDefaultLayerConf
 from classes.Commands.ChangeObjCommand import ChangeObjCommand
+from classes.Commands.CheckConfigCommand import CheckConfigCommand
 from classes.objects import DraggableImage, ImageObject
 from typing import Dict, Any, Optional
 from layers import TileLayerHandler, WatchtowersLayerHandler, \
@@ -292,17 +293,25 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                         conf["frame"]["pos_y"], obj.height()) + self.offset_y
 
                     self.move_obj(obj, {"new_coordinates": (pos_x, pos_y)})
-                    self.move_obj_on_map(obj.name, (pos_x, pos_y), obj_width=obj.width(),
+                    self.move_obj_on_map(obj.name, (pos_x, pos_y),
+                                         obj_width=obj.width(),
                                          obj_height=obj.height())
-                # change info in configuration
-                #self.handlers.handle(DeleteObjCommand(conf["layer_name"], conf["name"]))
-                #self.handlers.handle(ChangeObjCommand(conf["layer_name"], conf["name"],
-                #                                     conf["new_config"]))
                 # check correct values
-                # check tile
+                if self.handlers.handle(CheckConfigCommand(conf["layer_name"],
+                                                           conf["new_config"])):
+                    self.handlers.handle(ChangeObjCommand(conf["layer_name"],
+                                                          conf["name"],
+                                                          conf["new_config"]))
+                    name = obj.name
+                    self.objects.__delitem__(obj.name)
+                    obj.delete_object()
+                    self.add_obj_image(conf["layer_name"], name, self.get_tiles()[name])
+                else:
+                    self.parentWidget().parent().view_info_form("Error",
+                                                                "Invalid object configuration entered!")
         else:
             self.parentWidget().parent().view_info_form("Error",
-                                                        "Invalid values entered!")
+                                                        "Invalid frame values entered!")
 
     def delete_object(self, obj: ImageObject) -> None:
         self.delete_obj_on_map(obj)

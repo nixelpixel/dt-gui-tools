@@ -12,6 +12,6 @@ class GetLayerCommand(Command):
     def execute(self, dm: Map,
                 layer: MapLayer,
                 layer_name: str,
-                default_conf: dict) -> Optional[MapLayer]:
+                *args, **kwargs) -> Optional[MapLayer]:
         if layer_name == self._layer_name:
             return layer

@@ -8,6 +8,8 @@ from classes.basic.command import Command
 from classes.basic.chain import AbstractHandler
 from classes.MapDescription import MapDescription
 from classes.Commands.GetLayerCommand import GetLayerCommand
+from dt_maps.types.tiles import TileType
+from dt_maps.types.watchtowers import WatchtowerType
 
 
 class TileLayerHandler(AbstractHandler, AbstractLayer):
@@ -15,7 +17,9 @@ class TileLayerHandler(AbstractHandler, AbstractLayer):
         super(TileLayerHandler, self).__init__(*kwargs)
 
     def handle(self, command: Command) -> Any:
-        response = command.execute(self.dm, self.data, self.layer_name(), self.default_conf())
+        response = command.execute(self.dm, self.data, self.layer_name(),
+                                   self.default_conf(),
+                                   check_config=self.check_config)
         if response:
             return response
         return super().handle(command)
@@ -26,13 +30,19 @@ class TileLayerHandler(AbstractHandler, AbstractLayer):
     def default_conf(self) -> Dict[str, Any]:
         return {'i': 0, 'j': 0, 'type': 'floor'}
 
+    def check_config(self, config: Dict[str, Any]) -> bool:
+        return isinstance(config['i'], int) and isinstance(config['j'], int) \
+            and config['type'] in [t.value for t in TileType]
+
 
 class WatchtowersLayerHandler(AbstractHandler, AbstractLayer):
     def __init__(self, *kwargs) -> None:
         super(WatchtowersLayerHandler, self).__init__(*kwargs)
 
     def handle(self, command: Command) -> Any:
-        response = command.execute(self.dm, self.data, self.layer_name(), self.default_conf())
+        response = command.execute(self.dm, self.data, self.layer_name(),
+                                   self.default_conf(),
+                                   check_config=self.check_config)
         if response:
             return response
         return super().handle(command)
@@ -43,13 +53,17 @@ class WatchtowersLayerHandler(AbstractHandler, AbstractLayer):
     def default_conf(self) -> Dict[str, str]:
         return {'configuration': 'WT18'}
 
+    def check_config(self, config: Dict[str, Any]) -> bool:
+        return config["configuration"] in [t.value for t in WatchtowerType]
+
 
 class FramesLayerHandler(AbstractHandler, AbstractLayer):
     def __init__(self, *kwargs) -> None:
         super(FramesLayerHandler, self).__init__(*kwargs)
 
     def handle(self, command: Command) -> Any:
-        response = command.execute(self.dm, self.data, self.layer_name(), self.default_conf())
+        response = command.execute(self.dm, self.data, self.layer_name(),
+                                   self.default_conf())
         if response:
             return response
         return super().handle(command)
@@ -66,7 +80,8 @@ class TileMapsLayerHandler(AbstractHandler, AbstractLayer):
         super(TileMapsLayerHandler, self).__init__(*kwargs)
 
     def handle(self, command: Command) -> Any:
-        response = command.execute(self.dm, self.data, self.layer_name(), self.default_conf())
+        response = command.execute(self.dm, self.data, self.layer_name(),
+                                   self.default_conf())
         if response:
             return response
         return super().handle(command)
