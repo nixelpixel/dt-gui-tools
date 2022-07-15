@@ -151,12 +151,15 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         if new_obj:
             frame_obj = self.handlers.handle(
                 command=GetLayerCommand("frames"))[object_name]
-
+            self.rotate_obj(new_obj, frame_obj.pose.yaw)
+            # FIXME
+            height_scale = 1
+            if new_obj.yaw // 90 % 2 == 1:
+                height_scale = 3
             new_coordinates = (
                 self.coordinates_transformer.get_x_to_view(frame_obj.pose.x, new_obj.width()),
-                self.coordinates_transformer.get_y_to_view(frame_obj.pose.y), new_obj.height())
+                self.coordinates_transformer.get_y_to_view(frame_obj.pose.y), new_obj.height() * height_scale)
             self.set_obj_map_pos(new_obj, (frame_obj.pose.x, frame_obj.pose.y))
-            self.rotate_obj(new_obj, frame_obj.pose.yaw)
             self.move_obj(new_obj, {"new_coordinates": new_coordinates})
             self.objects[object_name] = new_obj
         self.change_object_handler(self.scaled_obj, {"scale": self.scale})
@@ -212,12 +215,16 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     def scaled_obj(self, obj: ImageObject, args: Dict[str, Any]) -> None:
         scale = args["scale"]
         obj.scale_object(scale)
+        # FIXME
+        height_scale = 1
+        if obj.yaw // 90 % 2 == 1:
+            height_scale = 3
         if obj.is_draggable():
             new_coordinates = (
                 self.coordinates_transformer.get_x_to_view(
                     obj.obj_map_pos[0], obj.width()) + self.offset_x,
                 self.coordinates_transformer.get_y_to_view(
-                    obj.obj_map_pos[1], obj.height()) + self.offset_y)
+                    obj.obj_map_pos[1], obj.height() * height_scale) + self.offset_y)
         else:
             new_coordinates = (
                 self.coordinates_transformer.get_x_to_view(
@@ -287,11 +294,14 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                                                    conf["frame"]["yaw"]))
                 # move object if draggable
                 if conf["is_draggable"]:
+                    # FIXME
+                    height_scale = 1
+                    if obj.yaw // 90 % 2 == 1:
+                        height_scale = 3
                     pos_x = self.coordinates_transformer.get_x_to_view(
                         conf["frame"]["pos_x"], obj.width()) + self.offset_x
                     pos_y = self.coordinates_transformer.get_y_to_view(
-                        conf["frame"]["pos_y"], obj.height()) + self.offset_y
-
+                        conf["frame"]["pos_y"], obj.height() * height_scale) + self.offset_y
                     self.move_obj(obj, {"new_coordinates": (pos_x, pos_y)})
                     self.move_obj_on_map(obj.name, (pos_x, pos_y),
                                          obj_width=obj.width(),
