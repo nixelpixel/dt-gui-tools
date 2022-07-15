@@ -265,7 +265,6 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         return default_layer_conf
 
     def change_obj_info(self, layer_name: str, obj_name: str) -> None:
-        print(layer_name, obj_name)
         obj = self.get_object(obj_name)
         self.parentWidget().parent().change_obj_info(layer_name, obj_name,
                                                      self.get_object_conf(layer_name, obj_name),
@@ -277,6 +276,10 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         print(conf)
         obj = self.get_object(conf["name"])
         if conf["is_valid"]:
+            # rotate object
+            obj.rotate_object(conf["frame"]["yaw"])
+            self.handlers.handle(RotateCommand(conf["name"],
+                                               conf["frame"]["yaw"]))
             # move object if draggable
             if conf["is_draggable"]:
                 pos_x = self.coordinates_transformer.get_x_to_view(
@@ -285,12 +288,8 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                     conf["frame"]["pos_y"], obj.height()) + self.offset_y
 
                 self.move_obj(obj, {"new_coordinates": (pos_x, pos_y)})
-                self.move_obj_on_map(obj.name, (pos_x, pos_y),
-                                     obj_height=obj.height(), obj_width=obj.width())
-            # rotate object
-            obj.rotate_object(conf["frame"]["yaw"])
-            self.handlers.handle(RotateCommand(conf["name"],
-                                               conf["frame"]["yaw"]))
+                self.move_obj_on_map(obj.name, (pos_x, pos_y), obj_width=obj.width(),
+                                     obj_height=obj.height())
             # change info in configuration
             #self.handlers.handle(DeleteObjCommand(conf["layer_name"], conf["name"]))
             #self.handlers.handle(ChangeObjCommand(conf["layer_name"], conf["name"],
