@@ -276,26 +276,30 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         print(conf)
         obj = self.get_object(conf["name"])
         if conf["is_valid"]:
-            # rotate object
-            obj.rotate_object(conf["frame"]["yaw"])
-            self.handlers.handle(RotateCommand(conf["name"],
-                                               conf["frame"]["yaw"]))
-            # move object if draggable
-            if conf["is_draggable"]:
-                pos_x = self.coordinates_transformer.get_x_to_view(
-                    conf["frame"]["pos_x"], obj.width()) + self.offset_x
-                pos_y = self.coordinates_transformer.get_y_to_view(
-                    conf["frame"]["pos_y"], obj.height()) + self.offset_y
+            if conf["frame"]["remove"] == "yes":
+                self.delete_object(obj)
+                obj.delete_object()
+            else:
+                # rotate object
+                obj.rotate_object(conf["frame"]["yaw"])
+                self.handlers.handle(RotateCommand(conf["name"],
+                                                   conf["frame"]["yaw"]))
+                # move object if draggable
+                if conf["is_draggable"]:
+                    pos_x = self.coordinates_transformer.get_x_to_view(
+                        conf["frame"]["pos_x"], obj.width()) + self.offset_x
+                    pos_y = self.coordinates_transformer.get_y_to_view(
+                        conf["frame"]["pos_y"], obj.height()) + self.offset_y
 
-                self.move_obj(obj, {"new_coordinates": (pos_x, pos_y)})
-                self.move_obj_on_map(obj.name, (pos_x, pos_y), obj_width=obj.width(),
-                                     obj_height=obj.height())
-            # change info in configuration
-            #self.handlers.handle(DeleteObjCommand(conf["layer_name"], conf["name"]))
-            #self.handlers.handle(ChangeObjCommand(conf["layer_name"], conf["name"],
-            #                                     conf["new_config"]))
-            # check correct values
-            # check tile
+                    self.move_obj(obj, {"new_coordinates": (pos_x, pos_y)})
+                    self.move_obj_on_map(obj.name, (pos_x, pos_y), obj_width=obj.width(),
+                                         obj_height=obj.height())
+                # change info in configuration
+                #self.handlers.handle(DeleteObjCommand(conf["layer_name"], conf["name"]))
+                #self.handlers.handle(ChangeObjCommand(conf["layer_name"], conf["name"],
+                #                                     conf["new_config"]))
+                # check correct values
+                # check tile
         else:
             self.parentWidget().parent().view_info_form("Error",
                                                         "Invalid values entered!")

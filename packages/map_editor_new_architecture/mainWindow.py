@@ -9,7 +9,7 @@ from mapAPI import MapAPI
 from mapViewer import MapViewer
 from utils.debug import DebugLine
 from windowDesign import *
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QEvent
 from typing import Dict, Any
 
 
@@ -322,8 +322,9 @@ class DuckWindow(QtWidgets.QMainWindow):
         print('update_layer_tree')
 
     #  Program exit event
-    def quit_program_event(self, event) -> None:
+    def quit_program_event(self, event: QEvent) -> None:
         self.exit_triggered()
+        event.ignore()
 
     #  Handle a click on an item from a list to a list
     def item_list_clicked(self):

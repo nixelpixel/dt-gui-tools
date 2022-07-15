@@ -13,7 +13,8 @@ class EditObject(QDialog):
         self.info = {"types": {}}
         self.info_send = {"name": name, "layer_name": layer_name,
                           "new_config": {}, "is_draggable": is_draggable,
-                          "frame": {"pos_x": 0.0, "pos_y": 0.0, "yaw": 0},
+                          "frame": {"pos_x": 0.0, "pos_y": 0.0, "yaw": 0,
+                                    "remove": "no"},
                           "is_valid": True
                           }
         self.name = name
@@ -36,7 +37,7 @@ class EditObject(QDialog):
     def send_info(self) -> None:
         try:
             for key in self.info_send["frame"]:
-                if self.is_draggable or key == "yaw":
+                if self.is_draggable or key == "yaw"  or key == "remove":
                     self.info_send["frame"][key] = (self.info["types"][key])(self.info[key].text())
             for key in self.info_send["new_config"]:
                 self.info_send["new_config"][key] = (self.info["types"][key])(self.info[key].text())
@@ -49,7 +50,7 @@ class EditObject(QDialog):
         layout = QFormLayout()
         for key in self.info_send["frame"]:
             self.info["types"][key] = type(self.info_send["frame"][key])
-            if self.is_draggable or key == "yaw":
+            if self.is_draggable or key == "yaw" or key == "remove":
                 edit = QLineEdit(self)
                 self.info[key] = edit
                 edit.setText(str(self.info_send["frame"][key]))
