@@ -158,6 +158,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             self.rotate_obj(new_obj, frame_obj.pose.yaw)
             self.move_obj(new_obj, {"new_coordinates": new_coordinates})
             self.objects[object_name] = new_obj
+        self.change_object_handler(self.scaled_obj, {"scale": self.scale})
 
     def add_obj_on_map(self, layer_name: str, object_name: str) -> None:
         self.add_frame_on_map(object_name)

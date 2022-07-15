@@ -16,14 +16,14 @@ class CoordinatesTransformer:
     def get_y_from_view(self, y_view: float,
                         offset_y: float = 0.0,
                         obj_height: float = 0.0) -> float:
-        return (self.size_map - (y_view + obj_height - offset_y)
+        return (self.size_map - (y_view + obj_height / 2 - offset_y)
                 / self.scale / (self.grid_height + 1)) * self.tile_height
 
     def get_x_to_view(self, x_real: float, obj_width: float = 0.0) -> float:
         return x_real * self.scale * (self.grid_width + 1) / self.tile_width - obj_width / 2
 
     def get_y_to_view(self, y_real: float, obj_height: float = 0.0) -> float:
-        return (self.size_map - y_real / self.tile_height - 1) * self.scale * (self.grid_height + 1)
+        return (self.size_map - y_real / self.tile_height - 1) * self.scale * (self.grid_height + 1) + obj_height / 2
 
     def set_scale(self, new_scale: float) -> None:
         self.scale = new_scale
