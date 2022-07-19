@@ -390,10 +390,10 @@ class DuckWindow(QtWidgets.QMainWindow):
         return self.map_api.is_move_mode()
 
     def change_obj_info(self, layer_name: str, name: str,
-                        obj_conf: Dict[str, Any], map_pose: tuple,
-                        is_draggable: bool, yaw: int) -> None:
-        self.map_api.change_obj_form(layer_name, name, obj_conf, map_pose,
-                                     is_draggable, yaw)
+                        obj_conf: Dict[str, Any], frame: Dict[str, Any],
+                        is_draggable: bool) -> None:
+        self.map_api.change_obj_form(layer_name, name, obj_conf, frame,
+                                     is_draggable)
 
     def view_info_form(self, header: str, info: str) -> None:
         self.map_api.view_info_form(header, info)

@@ -275,37 +275,48 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         obj = self.get_object(obj_name)
         self.parentWidget().parent().change_obj_info(layer_name, obj_name,
                                                      self.get_object_conf(layer_name, obj_name),
-                                                     obj.obj_map_pos,
-                                                     obj.is_draggable(),
-                                                     obj.yaw)
+                                                     self.get_object_conf("frames", obj.name), obj.is_draggable())
     
     def change_obj_from_info(self, conf: Dict[str, Any]) -> None:
         print(conf)
         obj = self.get_object(conf["name"])
         if conf["is_valid"]:
-            if conf["frame"]["remove"] == "yes":
+            if conf["remove"]:
                 self.delete_object(obj)
                 obj.delete_object()
             else:
                 # rotate object
-                obj.rotate_object(conf["frame"]["yaw"])
+                obj.rotate_object(conf["frame"]["pose"]["yaw"])
                 self.handlers.handle(RotateCommand(conf["name"],
-                                                   conf["frame"]["yaw"]))
+                                                   conf["frame"]["pose"]["yaw"]))
                 # move object if draggable
                 if conf["is_draggable"]:
                     # FIXME
                     height_scale = 1
                     if obj.yaw // 90 % 2 == 1:
                         height_scale = 3
-                    print(obj.name, obj.pos(), obj.width(), obj.height())
                     pos_x = self.coordinates_transformer.get_x_to_view(
-                        conf["frame"]["pos_x"], obj.width()) + self.offset_x
+                        conf["frame"]["pose"]["x"], obj.width()) + self.offset_x
                     pos_y = self.coordinates_transformer.get_y_to_view(
-                        conf["frame"]["pos_y"], obj.height() * height_scale) + self.offset_y
+                        conf["frame"]["pose"]["y"], obj.height() * height_scale) + self.offset_y
                     self.move_obj(obj, {"new_coordinates": (pos_x, pos_y)})
                     self.move_obj_on_map(obj.name, (pos_x, pos_y),
                                          obj_width=obj.width(),
                                          obj_height=obj.height())
+                    # check correct values
+                    #TODO
+                    '''
+                    if self.handlers.handle(
+                            CheckConfigCommand("frames",
+                                               conf["frame"])):
+                        self.handlers.handle(
+                            ChangeObjCommand("frames",
+                                             conf["name"],
+                                             conf["frame"]))
+                    else:
+                        self.parentWidget().parent().view_info_form("Error",
+                                                                    "Invalid object frame values entered!")
+                    '''
                 # check correct values
                 if self.handlers.handle(CheckConfigCommand(conf["layer_name"],
                                                            conf["new_config"])):

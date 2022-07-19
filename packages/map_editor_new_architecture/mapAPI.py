@@ -256,10 +256,10 @@ class MapAPI:
         self._map_viewer.change_obj_from_info(obj_conf)
 
     def change_obj_form(self, layer_name: str, name: str,
-                        obj_conf: Dict[str, Any], map_pose: tuple,
-                        is_draggable: bool, yaw: int) -> None:
+                        obj_conf: Dict[str, Any], frame: Dict[str, Any],
+                        is_draggable: bool) -> None:
         self.change_obj_info_form = EditObject(layer_name, name, obj_conf,
-                                               map_pose, is_draggable, yaw)
+                                               frame, is_draggable)
         self.change_obj_info_form.get_info.connect(self.change_obj_info)
         self.change_obj_info_form.show()
 
