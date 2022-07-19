@@ -85,7 +85,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
 
     def init_objects(self) -> None:
         for layer_name in self.map.map.layers:
-            layer = self.handlers.handle(GetLayerCommand(layer_name))
+            layer = self.get_layer(layer_name)
             if layer_name not in TILES_TYPES and \
             layer_name not in OBJECTS_TYPES or not layer:
                 continue
@@ -113,7 +113,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     def set_map_viewer_sizes(self, tile_width: float = 0, tile_height: float = 0) -> None:
         if not (tile_width and tile_height):
             try:
-                tile_map_obj = self.handlers.handle(GetLayerCommand("tile_maps"))[self.tile_map]
+                tile_map_obj = self.get_layer("tile_maps")[self.tile_map]
                 self.set_tile_size(tile_map_obj["tile_size"]['x'],
                                    tile_map_obj["tile_size"]['y'])
             except TypeError:
@@ -124,7 +124,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.grid_height = self.tile_height * self.grid_scale
 
     def set_tile_map(self):
-        tile_maps = self.handlers.handle(GetLayerCommand("tile_maps"))
+        tile_maps = self.get_layer("tile_maps")
         self.tile_map = [elem for elem in tile_maps][0]
 
     def add_obj(self, layer_name: str, item_type: str) -> None:
@@ -149,8 +149,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             new_obj = DraggableImage(f"./img/objects/{layer_name}.png", self,
                                      object_name, layer_name)
         if new_obj:
-            frame_obj = self.handlers.handle(
-                command=GetLayerCommand("frames"))[object_name]
+            frame_obj = self.get_layer("frames")[object_name]
             self.rotate_obj(new_obj, frame_obj.pose.yaw)
             # FIXME
             height_scale = 1
@@ -167,7 +166,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     def add_obj_on_map(self, layer_name: str, object_name: str) -> None:
         self.add_frame_on_map(object_name)
         self.handlers.handle(command=AddObjCommand(layer_name, object_name))
-        
+
     def add_frame_on_map(self, frame_name: str):
         self.handlers.handle(command=AddObjCommand("frames", frame_name))
 
@@ -235,7 +234,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
 
     def set_map_size(self, height: int = 0) -> None:
         if not height:
-            self.map_height = get_map_height(self.get_tiles())
+            self.map_height = get_map_height(self.get_layer("tiles"))
         else:
             self.map_height = height
         self.coordinates_transformer.set_size_map(self.map_height)
@@ -252,8 +251,8 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                 (tile.j + 1) * self.tile_height >= self.tile_selection[3] and
                 tile.j * self.tile_height <= self.tile_selection[1])
 
-    def get_tiles(self) -> Dict[str, Any]:
-        return self.handlers.handle(command=GetLayerCommand("tiles"))
+    def get_layer(self, layer_name: str) -> Dict[str, Any]:
+        return self.handlers.handle(command=GetLayerCommand(layer_name))
 
     def get_object(self, obj_name: str) -> Optional[ImageObject]:
         return self.objects[obj_name]
@@ -262,7 +261,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         return self.handlers.handle(GetDefaultLayerConf(layer_name))
 
     def get_object_conf(self, layer_name: str, name: str) -> Dict[str, Any]:
-        layer = self.handlers.handle(GetLayerCommand(layer_name))
+        layer = self.get_layer(layer_name)
         obj = layer[name]
         default_layer_conf = self.get_default_layer_conf(layer_name)
         for key in default_layer_conf:
@@ -298,6 +297,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                     height_scale = 1
                     if obj.yaw // 90 % 2 == 1:
                         height_scale = 3
+                    print(obj.name, obj.pos(), obj.width(), obj.height())
                     pos_x = self.coordinates_transformer.get_x_to_view(
                         conf["frame"]["pos_x"], obj.width()) + self.offset_x
                     pos_y = self.coordinates_transformer.get_y_to_view(
@@ -315,7 +315,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                     name = obj.name
                     self.objects.__delitem__(obj.name)
                     obj.delete_object()
-                    layer = self.handlers.handle(GetLayerCommand(conf["layer_name"]))
+                    layer = self.get_layer(conf["layer_name"])
                     self.add_obj_image(conf["layer_name"], name, layer[name])
                 else:
                     self.parentWidget().parent().view_info_form("Error",
@@ -329,7 +329,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.objects.__delitem__(obj.name)
 
     def change_tiles_handler(self, handler_func, args: Dict[str, Any]) -> None:
-        tiles = self.get_tiles()
+        tiles = self.get_layer("tiles")
         for tile_name in tiles:
             tile = tiles[tile_name]
             if self.is_selected_tile(tile):
@@ -474,7 +474,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                 max(self.mouse_start_y, self.mouse_cur_y), self.offset_y),
         ]
 
-        if self.get_tiles():
+        if self.get_layer("tiles"):
             self.tile_selection = [
                 v
                 for i, v in enumerate(raw_selection)
@@ -486,8 +486,8 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.is_to_png = True
         self.scene_update()
         pixmap = self.grab(QRect(QPoint(self.offset_x, self.offset_y),
-                                 QPoint((self.grid_width + 1) * get_map_width(self.get_tiles()) + self.offset_x,
-                                        (self.grid_height + 1) * get_map_height(self.get_tiles()) + self.offset_y)))
+                                 QPoint((self.grid_width + 1) * get_map_width(self.get_layer("tiles")) + self.offset_x,
+                                        (self.grid_height + 1) * get_map_height(self.get_layer("tiles")) + self.offset_y)))
         pixmap.save(f"{file_name}.png")
         self.is_to_png = False
         self.coordinates_transformer.set_scale(self.scale)
