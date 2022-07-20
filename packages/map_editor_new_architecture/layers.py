@@ -28,10 +28,11 @@ class TileLayerHandler(AbstractHandler, AbstractLayer):
         return "tiles"
 
     def default_conf(self) -> Dict[str, Any]:
-        return {'i': 0, 'j': 0, 'type': 'floor'}
+        return {'i': 0, 'j': 0, 'k': 0, 'type': 'floor'}
 
     def check_config(self, config: Dict[str, Any]) -> bool:
         return isinstance(config['i'], int) and isinstance(config['j'], int) \
+            and isinstance(config['k'], int) \
             and config['type'] in [t.value for t in TileType]
 
 
@@ -51,10 +52,11 @@ class WatchtowersLayerHandler(AbstractHandler, AbstractLayer):
         return "watchtowers"
 
     def default_conf(self) -> Dict[str, str]:
-        return {'configuration': 'WT18'}
+        return {'configuration': 'WT18', 'id': ""}
 
     def check_config(self, config: Dict[str, Any]) -> bool:
-        return config["configuration"] in [t.value for t in WatchtowerType]
+        return config["configuration"] in [t.value for t in WatchtowerType] \
+            and isinstance(config["id"], str)
 
 
 class FramesLayerHandler(AbstractHandler, AbstractLayer):
@@ -63,7 +65,8 @@ class FramesLayerHandler(AbstractHandler, AbstractLayer):
 
     def handle(self, command: Command) -> Any:
         response = command.execute(self.dm, self.data, self.layer_name(),
-                                   self.default_conf())
+                                   self.default_conf(),
+                                   check_config=self.check_config)
         if response:
             return response
         return super().handle(command)
@@ -72,7 +75,17 @@ class FramesLayerHandler(AbstractHandler, AbstractLayer):
         return "frames"
 
     def default_conf(self) -> Dict[str, Any]:
-        return {'pose': {'x': 1, 'y': 1, 'yaw': 0}}
+        return {'pose': {'x': 1.0, 'y': 1.0, 'z': 0.0, 'yaw': 0.0, 'roll': 0.0,
+                         'pitch': 0.0}, 'relative_to': ""}
+
+    def check_config(self, config: Dict[str, Any]) -> bool:
+        return isinstance(config['pose']['x'], float) and \
+                isinstance(config['pose']['y'], float) and \
+                isinstance(config['pose']['z'], float) and \
+                isinstance(config['pose']['yaw'], float) and \
+                isinstance(config['pose']['roll'], float) and \
+                isinstance(config['pose']['pitch'], float) and \
+                isinstance(config['relative_to'], str)
 
 
 class TileMapsLayerHandler(AbstractHandler, AbstractLayer):

@@ -304,25 +304,20 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                                          obj_width=obj.width(),
                                          obj_height=obj.height())
                     # check correct values
-                    #TODO
-                    '''
-                    if self.handlers.handle(
-                            CheckConfigCommand("frames",
-                                               conf["frame"])):
-                        self.handlers.handle(
-                            ChangeObjCommand("frames",
-                                             conf["name"],
-                                             conf["frame"]))
+                    if self.check_layer_config("frames",
+                                               conf["frame"]):
+                        self.change_obj_from_config("frames",
+                                                    conf["name"],
+                                                    conf["frame"])
                     else:
                         self.parentWidget().parent().view_info_form("Error",
                                                                     "Invalid object frame values entered!")
-                    '''
+
                 # check correct values
-                if self.handlers.handle(CheckConfigCommand(conf["layer_name"],
-                                                           conf["new_config"])):
-                    self.handlers.handle(ChangeObjCommand(conf["layer_name"],
-                                                          conf["name"],
-                                                          conf["new_config"]))
+                if self.check_layer_config(conf["layer_name"], conf["new_config"]):
+                    self.change_obj_from_config(conf["layer_name"],
+                                                conf["name"],
+                                                conf["new_config"])
                     name = obj.name
                     self.objects.__delitem__(obj.name)
                     obj.delete_object()
@@ -333,7 +328,15 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                                                                 "Invalid object configuration entered!")
         else:
             self.parentWidget().parent().view_info_form("Error",
-                                                        "Invalid frame values entered!")
+                                                        "Invalid values entered!")
+
+    def check_layer_config(self, layer_name: str, new_config: Dict[str, Any]):
+        return self.handlers.handle(CheckConfigCommand(layer_name, new_config))
+
+    def change_obj_from_config(self, layer_name: str, obj_name: str,
+                               new_config: Dict[str, Any]):
+        self.handlers.handle(ChangeObjCommand(layer_name, obj_name,
+                                              new_config))
 
     def delete_object(self, obj: ImageObject) -> None:
         self.delete_obj_on_map(obj)
