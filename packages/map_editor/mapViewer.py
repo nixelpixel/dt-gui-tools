@@ -3,6 +3,7 @@ from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtCore import QRect, QPoint
 from PyQt5.QtGui import QKeyEvent
 from dt_maps.types.tiles import Tile
+from dt_maps import MapLayer
 from classes.Commands.AddObjCommand import AddObjCommand
 from classes.Commands.DeleteObjCommand import DeleteObjCommand
 from classes.Commands.GetLayerCommand import GetLayerCommand
@@ -11,7 +12,7 @@ from classes.Commands.GetDefaultLayerConf import GetDefaultLayerConf
 from classes.Commands.ChangeObjCommand import ChangeObjCommand
 from classes.Commands.CheckConfigCommand import CheckConfigCommand
 from classes.objects import DraggableImage, ImageObject
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Union, Tuple
 from layers import TileLayerHandler, WatchtowersLayerHandler, \
     FramesLayerHandler, TileMapsLayerHandler
 from coordinatesTransformer import CoordinatesTransformer
@@ -21,15 +22,10 @@ from classes.Commands.RotateObjCommand import RotateCommand
 from classes.Commands.ChangeTileTypeCommand import ChangeTileTypeCommand
 from classes.Commands.MoveTileCommand import MoveTileCommand
 from utils.maps import default_map_storage, get_map_height, get_map_width
+from utils.constants import TILES_TYPES, OBJECTS_TYPES, FRAMES, FRAME, TILES,\
+    TILE_MAPS, TILE_SIZE
 from classes.MapDescription import MapDescription
 from pathlib import Path
-
-TILES_DIR_PATH = './img/tiles'
-OBJECT_DIR_PATHS = ['./img/signs',
-                    './img/apriltags',
-                    './img/objects']
-OBJECTS_TYPES = ["watchtowers"]
-TILES_TYPES = ["tiles"]
 
 
 class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
@@ -113,9 +109,9 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     def set_map_viewer_sizes(self, tile_width: float = 0, tile_height: float = 0) -> None:
         if not (tile_width and tile_height):
             try:
-                tile_map_obj = self.get_layer("tile_maps")[self.tile_map]
-                self.set_tile_size(tile_map_obj["tile_size"]['x'],
-                                   tile_map_obj["tile_size"]['y'])
+                tile_map_obj = self.get_layer(TILE_MAPS)[self.tile_map]
+                self.set_tile_size(tile_map_obj[TILE_SIZE]['x'],
+                                   tile_map_obj[TILE_SIZE]['y'])
             except TypeError:
                 pass
         else:
@@ -124,7 +120,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.grid_height = self.tile_height * self.grid_scale
 
     def set_tile_map(self):
-        tile_maps = self.get_layer("tile_maps")
+        tile_maps = self.get_layer(TILE_MAPS)
         self.tile_map = [elem for elem in tile_maps][0]
 
     def add_obj(self, layer_name: str, item_type: str) -> None:
@@ -149,15 +145,16 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             new_obj = DraggableImage(f"./img/objects/{layer_name}.png", self,
                                      object_name, layer_name)
         if new_obj:
-            frame_obj = self.get_layer("frames")[object_name]
+            frame_obj = self.get_layer(FRAMES)[object_name]
             self.rotate_obj(new_obj, frame_obj.pose.yaw)
             # FIXME
             height_scale = 1
             if new_obj.yaw // 90 % 2 == 1:
                 height_scale = 3
             new_coordinates = (
-                self.coordinates_transformer.get_x_to_view(frame_obj.pose.x, new_obj.width()),
-                self.coordinates_transformer.get_y_to_view(frame_obj.pose.y), new_obj.height() * height_scale)
+                self.get_x_to_view(frame_obj.pose.x, new_obj.width()),
+                self.get_y_to_view(frame_obj.pose.y), new_obj.height() * height_scale
+            )
             self.set_obj_map_pos(new_obj, (frame_obj.pose.x, frame_obj.pose.y))
             self.move_obj(new_obj, {"new_coordinates": new_coordinates})
             self.objects[object_name] = new_obj
@@ -167,13 +164,20 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.add_frame_on_map(object_name)
         self.handlers.handle(command=AddObjCommand(layer_name, object_name))
 
-    def add_frame_on_map(self, frame_name: str):
-        self.handlers.handle(command=AddObjCommand("frames", frame_name))
+    def add_frame_on_map(self, frame_name: str) -> None:
+        self.handlers.handle(command=AddObjCommand(FRAMES, frame_name))
 
     def delete_obj_on_map(self, obj: ImageObject) -> None:
-        self.handlers.handle(command=DeleteObjCommand("frames", obj.name))
+        self.handlers.handle(command=DeleteObjCommand(FRAMES, obj.name))
         self.handlers.handle(command=DeleteObjCommand(obj.layer_name,
                                                       obj.name))
+
+    def move_tile(self, tile_name: str, tile_id: Tuple[int, int]) -> None:
+        self.handlers.handle(MoveTileCommand(tile_name, tile_id))
+
+    def set_tile_size_command(self, tile_map: str,
+                      tile_size: Tuple[float, float]) -> None:
+        self.handlers.handle(SetTileSizeCommand(tile_map, tile_size))
 
     def delete_objects(self):
         for obj_name in self.objects:
@@ -190,18 +194,24 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             obj.move_object((obj.pos().x() + delta_coord[0],
                              obj.pos().y() + delta_coord[1]))
 
-    def set_obj_map_pos(self, obj: ImageObject, new_pos: tuple) -> None:
+    def set_obj_map_pos(self, obj: ImageObject, new_pos: Tuple[float, float]) -> None:
         obj.set_obj_map_pos(new_pos)
 
     def move_obj_on_map(self, frame_name: str,
-                        new_pos: tuple,
+                        new_pos: Tuple[float, float],
                         obj_width: float = 0,
                         obj_height: float = 0) -> None:
-        map_x = self.coordinates_transformer.get_x_from_view(new_pos[0], obj_width=obj_width, offset_x=self.offset_x)
-        map_y = self.coordinates_transformer.get_y_from_view(new_pos[1], obj_height=obj_height, offset_y=self.offset_y)
+        map_x = self.get_x_from_view(new_pos[0], obj_width=obj_width,
+                                     offset=self.offset_x)
+        map_y = self.get_y_from_view(new_pos[1], obj_height=obj_height,
+                                     offset=self.offset_y)
         obj = self.get_object(frame_name)
         self.set_obj_map_pos(obj, (map_x, map_y))
-        self.handlers.handle(command=MoveObjCommand(frame_name, (map_x, map_y)))
+        self.move_obj_command(frame_name, (map_x, map_y))
+
+    def move_obj_command(self, frame_name: str,
+                         new_coord: Tuple[float, float]) -> None:
+        self.handlers.handle(command=MoveObjCommand(frame_name, new_coord))
 
     def rotate_obj(self, obj: ImageObject, new_angle: float) -> None:
         obj.rotate_object(new_angle)
@@ -220,21 +230,21 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             height_scale = 3
         if obj.is_draggable():
             new_coordinates = (
-                self.coordinates_transformer.get_x_to_view(
+                self.get_x_to_view(
                     obj.obj_map_pos[0], obj.width()) + self.offset_x,
-                self.coordinates_transformer.get_y_to_view(
+                self.get_y_to_view(
                     obj.obj_map_pos[1], obj.height() * height_scale) + self.offset_y)
         else:
             new_coordinates = (
-                self.coordinates_transformer.get_x_to_view(
+                self.get_x_to_view(
                     obj.obj_map_pos[0]) + self.offset_x,
-                self.coordinates_transformer.get_y_to_view(
+                self.get_y_to_view(
                     obj.obj_map_pos[1]) + self.offset_y)
         self.move_obj(obj, {"new_coordinates": new_coordinates})
 
     def set_map_size(self, height: int = 0) -> None:
         if not height:
-            self.map_height = get_map_height(self.get_layer("tiles"))
+            self.map_height = get_map_height(self.get_layer(TILES))
         else:
             self.map_height = height
         self.coordinates_transformer.set_size_map(self.map_height)
@@ -251,7 +261,23 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                 (tile.j + 1) * self.tile_height >= self.tile_selection[3] and
                 tile.j * self.tile_height <= self.tile_selection[1])
 
-    def get_layer(self, layer_name: str) -> Dict[str, Any]:
+    def get_x_to_view(self, x: float, obj_width: float = 0):
+        return self.coordinates_transformer.get_x_to_view(x, obj_width)
+
+    def get_y_to_view(self, y: float, obj_height: float = 0):
+        return self.coordinates_transformer.get_y_to_view(y, obj_height)
+
+    def get_x_from_view(self, x: float, obj_width: float = 0, offset: float = 0):
+        return self.coordinates_transformer.get_x_from_view(x,
+                                                            obj_width=obj_width,
+                                                            offset_x=offset)
+
+    def get_y_from_view(self, y: float, obj_height: float = 0, offset: float = 0):
+        return self.coordinates_transformer.get_y_from_view(y,
+                                                            obj_height=obj_height,
+                                                            offset_y=offset)
+
+    def get_layer(self, layer_name: str) -> Optional[MapLayer]:
         return self.handlers.handle(command=GetLayerCommand(layer_name))
 
     def get_object(self, obj_name: str) -> Optional[ImageObject]:
@@ -275,7 +301,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         obj = self.get_object(obj_name)
         self.parentWidget().parent().change_obj_info(layer_name, obj_name,
                                                      self.get_object_conf(layer_name, obj_name),
-                                                     self.get_object_conf("frames", obj.name), obj.is_draggable())
+                                                     self.get_object_conf(FRAMES, obj.name), obj.is_draggable())
     
     def change_obj_from_info(self, conf: Dict[str, Any]) -> None:
         print(conf)
@@ -285,15 +311,15 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                 self.delete_object(obj)
                 obj.delete_object()
             else:
-                if self.check_layer_config("frames",
-                                           conf["frame"]):
-                    self.change_obj_from_config("frames",
+                if self.check_layer_config(FRAMES,
+                                           conf[FRAME]):
+                    self.change_obj_from_config(FRAMES,
                                                 conf["name"],
-                                                conf["frame"])
+                                                conf[FRAME])
                     # rotate object
-                    obj.rotate_object(conf["frame"]["pose"]["yaw"])
+                    obj.rotate_object(conf[FRAME]["pose"]["yaw"])
                     self.handlers.handle(RotateCommand(conf["name"],
-                                                       conf["frame"]["pose"][
+                                                       conf[FRAME]["pose"][
                                                            "yaw"]))
                     # move object if draggable
                     if conf["is_draggable"]:
@@ -302,11 +328,11 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                         height_scale = 1
                         if obj.yaw // 90 % 2 == 1:
                             height_scale = 3
-                        pos_x = self.coordinates_transformer.get_x_to_view(
-                            conf["frame"]["pose"]["x"],
+                        pos_x = self.get_x_to_view(
+                            conf[FRAME]["pose"]["x"],
                             obj.width()) + self.offset_x
-                        pos_y = self.coordinates_transformer.get_y_to_view(
-                            conf["frame"]["pose"]["y"],
+                        pos_y = self.get_y_to_view(
+                            conf[FRAME]["pose"]["y"],
                             obj.height() * height_scale) + self.offset_y
                         self.move_obj(obj, {"new_coordinates": (pos_x, pos_y)})
                         self.move_obj_on_map(obj.name, (pos_x, pos_y),
@@ -345,7 +371,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.objects.__delitem__(obj.name)
 
     def change_tiles_handler(self, handler_func, args: Dict[str, Any]) -> None:
-        tiles = self.get_layer("tiles")
+        tiles = self.get_layer(TILES)
         for tile_name in tiles:
             tile = tiles[tile_name]
             if self.is_selected_tile(tile):
@@ -411,7 +437,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.change_object_handler(self.move_obj,
                                    {"delta_coordinates": delta_pos})
 
-    def get_event_coordinates(self, event: Any) -> \
+    def get_event_coordinates(self, event: Union[Tuple[float, float], QtGui.QMouseEvent]) -> \
             [float, float, QtGui.QMouseEvent]:
         if isinstance(event, tuple):
             start_pos = event[1]
@@ -421,7 +447,8 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             x, y = event.x(), event.y()
         return x, y, event
 
-    def mousePressEvent(self, event: Any) -> None:
+    def mousePressEvent(self, event: Union[Tuple[float, float],
+                                           QtGui.QMouseEvent]) -> None:
         # cursor on object
         x, y, event = self.get_event_coordinates(event)
         if event.buttons() == QtCore.Qt.LeftButton:
@@ -430,7 +457,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             self.mouse_cur_x = self.mouse_start_x = x
             self.mouse_cur_y = self.mouse_start_y = y
 
-    def mouseMoveEvent(self, event: Any) -> None:
+    def mouseMoveEvent(self, event: Union[Tuple[float, float], QtGui.QMouseEvent]) -> None:
         # cursor on object
         x, y, event = self.get_event_coordinates(event)
         if self.lmbPressed:
@@ -460,10 +487,10 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.offset_x = left_upper_tile.pos().x()
         self.offset_y = left_upper_tile.pos().y()
 
-    def update_debug_info(self, pos: tuple) -> None:
+    def update_debug_info(self, pos: Tuple[float, float]) -> None:
         map_pos = (
-            self.coordinates_transformer.get_x_from_view(pos[0], self.offset_x),
-            self.coordinates_transformer.get_y_from_view(pos[1], self.offset_y)
+            self.get_x_from_view(pos[0], offset=self.offset_x),
+            self.get_y_from_view(pos[1], offset=self.offset_y)
         )
         self.parentWidget().parent().update_debug_info(
             {"mode": "set_cursor_pos", "pos": pos, "map_pose": map_pos})
@@ -480,17 +507,17 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
 
     def select_tiles(self) -> None:
         raw_selection = [
-            self.coordinates_transformer.get_x_from_view(
-                min(self.mouse_start_x, self.mouse_cur_x), self.offset_x),
-            self.coordinates_transformer.get_y_from_view(
-                min(self.mouse_start_y, self.mouse_cur_y), self.offset_y),
-            self.coordinates_transformer.get_x_from_view(
-                max(self.mouse_start_x, self.mouse_cur_x), self.offset_x),
-            self.coordinates_transformer.get_y_from_view(
-                max(self.mouse_start_y, self.mouse_cur_y), self.offset_y),
+            self.get_x_from_view(
+                min(self.mouse_start_x, self.mouse_cur_x), offset=self.offset_x),
+            self.get_y_from_view(
+                min(self.mouse_start_y, self.mouse_cur_y), offset=self.offset_y),
+            self.get_x_from_view(
+                max(self.mouse_start_x, self.mouse_cur_x), offset=self.offset_x),
+            self.get_y_from_view(
+                max(self.mouse_start_y, self.mouse_cur_y), offset=self.offset_y),
         ]
 
-        if self.get_layer("tiles"):
+        if self.get_layer(TILES):
             self.tile_selection = [
                 v
                 for i, v in enumerate(raw_selection)
@@ -502,8 +529,8 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.is_to_png = True
         self.scene_update()
         pixmap = self.grab(QRect(QPoint(self.offset_x, self.offset_y),
-                                 QPoint((self.grid_width + 1) * get_map_width(self.get_layer("tiles")) + self.offset_x,
-                                        (self.grid_height + 1) * get_map_height(self.get_layer("tiles")) + self.offset_y)))
+                                 QPoint((self.grid_width + 1) * get_map_width(self.get_layer(TILES)) + self.offset_x,
+                                        (self.grid_height + 1) * get_map_height(self.get_layer(TILES)) + self.offset_y)))
         pixmap.save(f"{file_name}.png")
         self.is_to_png = False
         self.coordinates_transformer.set_scale(self.scale)
@@ -532,25 +559,26 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     def set_tile_size(self, tile_width: float, tile_height: float) -> None:
         self.tile_width, self.tile_height = [tile_width, tile_height]
 
-    def create_default_map_content(self, size: tuple, tile_size: tuple) -> None:
+    def create_default_map_content(self, size: Tuple[int, int],
+                                   tile_size: Tuple[float, float]) -> None:
         width, height = size
         self.set_map_viewer_sizes(tile_size[0], tile_size[1])
         self.tile_map = "map_1"
         self.add_frame_on_map(self.tile_map)
-        self.add_obj_on_map("tile_maps", self.tile_map)
-        self.handlers.handle(SetTileSizeCommand(self.tile_map, tile_size))
+        self.add_obj_on_map(TILE_MAPS, self.tile_map)
+        self.set_tile_size_command(self.tile_map, tile_size)
         for i in range(width):
             for j in range(height):
                 new_tile_name = f"{self.tile_map}/tile_{i}_{j}"
-                self.add_obj_on_map("tiles", new_tile_name)
-                self.handlers.handle(MoveObjCommand(new_tile_name,
-                                                    (float(i) * self.tile_width,
-                                                     float(j) * self.tile_height
-                                                     )))
-                self.handlers.handle(MoveTileCommand(new_tile_name, (i, j)))
+                self.add_obj_on_map(TILES, new_tile_name)
+                self.move_obj_command(new_tile_name,
+                                      (float(i) * self.tile_width,
+                                       float(j) * self.tile_height))
+                self.move_tile(new_tile_name, (i, j))
         
     def open_map(self, path: Path, map_name: str, is_new_map: bool = False,
-                 size: tuple = (0, 0), tile_size: tuple = (0, 0)) -> None:
+                 size: Tuple[int, int] = (0, 0),
+                 tile_size: Tuple[float, float] = (0, 0)) -> None:
         self.delete_objects()
         self.map.load_map(MapDescription(path, map_name))
         self.set_tile_map()

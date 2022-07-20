@@ -1,5 +1,4 @@
 import logging
-
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtGui import QKeyEvent
 from PyQt5.QtWidgets import QMessageBox

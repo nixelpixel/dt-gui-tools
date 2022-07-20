@@ -1,7 +1,7 @@
 from __future__ import annotations
 from pathlib import Path
 from typing import Any, Dict
-
+from utils.constants import TILES, TILE_SIZE, TILE_MAPS
 from mapStorage import MapStorage
 from classes.layers import AbstractLayer
 from classes.basic.command import Command
@@ -25,7 +25,7 @@ class TileLayerHandler(AbstractHandler, AbstractLayer):
         return super().handle(command)
 
     def layer_name(self) -> str:
-        return "tiles"
+        return TILES
 
     def default_conf(self) -> Dict[str, Any]:
         return {'i': 0, 'j': 0, 'k': 0, 'type': 'floor'}
@@ -100,10 +100,10 @@ class TileMapsLayerHandler(AbstractHandler, AbstractLayer):
         return super().handle(command)
 
     def layer_name(self) -> str:
-        return "tile_maps"
+        return TILE_MAPS
 
     def default_conf(self) -> Dict[str, Any]:
-        return {'tile_size': {'x': 0.585, 'y': 0.585}}
+        return {TILE_SIZE: {'x': 0.585, 'y': 0.585}}
 
 
 if __name__ == '__main__':

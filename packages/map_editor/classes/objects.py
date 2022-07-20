@@ -30,7 +30,6 @@ class ImageObject(QtWidgets.QLabel):
         self.pixmap = self.pixmap.transformed(new_transform, QtCore.Qt.SmoothTransformation)
         self.setPixmap(self.pixmap)
 
-
     def change_image(self, img_path: str) -> None:
         self.yaw = 0
         self.img_path = img_path
