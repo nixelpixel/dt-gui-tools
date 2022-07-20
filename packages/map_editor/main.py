@@ -2,10 +2,10 @@
 import sys
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QTranslator
-from mainwindow import duck_window
+from mainWindow import DuckWindow
 from argparse import ArgumentParser
-from logger import init_logger
-from utils import get_available_translations
+from trash.logger import init_logger
+from utils.window import get_available_translations
 
 logger = init_logger()
 
@@ -18,14 +18,14 @@ def init_translator(app, path):
     app.installTranslator(translator)
 
 
-def main(app_args):
+def main(args):
     app = QtWidgets.QApplication(sys.argv)
 
     # Install translator
     init_translator(app, args.locale_path)
 
     # Create main window
-    window = duck_window(args)
+    window = DuckWindow(args)
 
     window.show()
     app.exec_()
