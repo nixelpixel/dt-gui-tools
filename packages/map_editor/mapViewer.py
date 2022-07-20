@@ -285,34 +285,36 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                 self.delete_object(obj)
                 obj.delete_object()
             else:
-                # rotate object
-                obj.rotate_object(conf["frame"]["pose"]["yaw"])
-                self.handlers.handle(RotateCommand(conf["name"],
-                                                   conf["frame"]["pose"]["yaw"]))
-                # move object if draggable
-                if conf["is_draggable"]:
-                    # FIXME
-                    height_scale = 1
-                    if obj.yaw // 90 % 2 == 1:
-                        height_scale = 3
-                    pos_x = self.coordinates_transformer.get_x_to_view(
-                        conf["frame"]["pose"]["x"], obj.width()) + self.offset_x
-                    pos_y = self.coordinates_transformer.get_y_to_view(
-                        conf["frame"]["pose"]["y"], obj.height() * height_scale) + self.offset_y
-                    self.move_obj(obj, {"new_coordinates": (pos_x, pos_y)})
-                    self.move_obj_on_map(obj.name, (pos_x, pos_y),
-                                         obj_width=obj.width(),
-                                         obj_height=obj.height())
-                    # check correct values
-                    if self.check_layer_config("frames",
-                                               conf["frame"]):
-                        self.change_obj_from_config("frames",
-                                                    conf["name"],
-                                                    conf["frame"])
-                    else:
-                        self.parentWidget().parent().view_info_form("Error",
-                                                                    "Invalid object frame values entered!")
-
+                if self.check_layer_config("frames",
+                                           conf["frame"]):
+                    self.change_obj_from_config("frames",
+                                                conf["name"],
+                                                conf["frame"])
+                    # rotate object
+                    obj.rotate_object(conf["frame"]["pose"]["yaw"])
+                    self.handlers.handle(RotateCommand(conf["name"],
+                                                       conf["frame"]["pose"][
+                                                           "yaw"]))
+                    # move object if draggable
+                    if conf["is_draggable"]:
+                        # check correct values
+                        # FIXME
+                        height_scale = 1
+                        if obj.yaw // 90 % 2 == 1:
+                            height_scale = 3
+                        pos_x = self.coordinates_transformer.get_x_to_view(
+                            conf["frame"]["pose"]["x"],
+                            obj.width()) + self.offset_x
+                        pos_y = self.coordinates_transformer.get_y_to_view(
+                            conf["frame"]["pose"]["y"],
+                            obj.height() * height_scale) + self.offset_y
+                        self.move_obj(obj, {"new_coordinates": (pos_x, pos_y)})
+                        self.move_obj_on_map(obj.name, (pos_x, pos_y),
+                                             obj_width=obj.width(),
+                                             obj_height=obj.height())
+                else:
+                    self.parentWidget().parent().view_info_form("Error",
+                                                                "Invalid object frame values entered!")
                 # check correct values
                 if self.check_layer_config(conf["layer_name"], conf["new_config"]):
                     self.change_obj_from_config(conf["layer_name"],
