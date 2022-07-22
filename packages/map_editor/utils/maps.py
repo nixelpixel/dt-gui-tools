@@ -31,17 +31,12 @@ def create_layer(dm: Map, layer_name: str, layer: Dict[str, Any]) -> None:
     register(layer_name, REGISTER[layer_name])
 
 
-def set_obj(dm: Map,
-            layer: MapLayer,
-            layer_name: str, obj_name: str, default_conf: dict) -> None:
+def set_obj(layer: MapLayer, obj_name: str, default_conf: dict) -> None:
     layer[obj_name] = default_conf
-    create_layer(dm, layer_name, layer)
 
 
-def delete_obj(dm: Map, layer: MapLayer,
-               layer_name: str, obj_name: str) -> None:
+def delete_obj(layer: MapLayer, obj_name: str) -> None:
     layer.__delitem__(obj_name)
-    create_layer(dm, layer_name, layer)
 
 
 def change_map_directory(dm: Map, new_dir: str) -> None:
