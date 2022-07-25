@@ -22,7 +22,7 @@ from classes.Commands.RotateObjCommand import RotateCommand
 from classes.Commands.ChangeTileTypeCommand import ChangeTileTypeCommand
 from classes.Commands.MoveTileCommand import MoveTileCommand
 from utils.maps import default_map_storage, get_map_height, get_map_width
-from utils.constants import TILES_TYPES, OBJECTS_TYPES, FRAMES, FRAME, TILES,\
+from utils.constants import LAYERS_WITH_TYPES, OBJECTS_TYPES, FRAMES, FRAME, TILES,\
     TILE_MAPS, TILE_SIZE
 from classes.MapDescription import MapDescription
 from pathlib import Path
@@ -82,7 +82,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     def init_objects(self) -> None:
         for layer_name in self.map.map.layers:
             layer = self.get_layer(layer_name)
-            if layer_name not in TILES_TYPES and \
+            if layer_name not in LAYERS_WITH_TYPES and \
             layer_name not in OBJECTS_TYPES or not layer:
                 continue
             for object_name in layer:
@@ -137,9 +137,9 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
 
     def add_obj_image(self, layer_name: str, object_name: str, layer_object=None) -> None:
         new_obj = None
-        if layer_name in TILES_TYPES and layer_object:
+        if layer_name in LAYERS_WITH_TYPES and layer_object:
             new_obj = ImageObject(
-                f"./img/tiles/{layer_object.type.value}.png", self,
+                f"./img/{layer_name}/{layer_object.type.value}.png", self,
                 object_name, layer_name, (self.grid_width, self.grid_height))
         elif layer_name in OBJECTS_TYPES:
             new_obj = DraggableImage(f"./img/objects/{layer_name}.png", self,

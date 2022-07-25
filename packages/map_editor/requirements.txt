@@ -2,4 +2,5 @@ numpy==1.18.5
 PyQt5==5.14.0
 pyinstaller==4.0
 PyYAML==5.3.1
-git+https://github.com/duckietown/lib-dt-maps.git@ente
+wheel
+git+https://github.com/OSLL/lib-dt-maps.git@new_layer
