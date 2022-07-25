@@ -176,8 +176,8 @@ class MapAPI:
             window.set_default_fill(item_name)
         else:
             type_of_element = self.info_json['info'][item_name]['type']
-            try:
-                self._map_viewer.add_obj(item_name, type_of_element)
+            try:    
+                self._map_viewer.add_obj(type_of_element, item_name)
             except KeyError:
                 self.view_info_form("Info", "Functional not implemented")
 

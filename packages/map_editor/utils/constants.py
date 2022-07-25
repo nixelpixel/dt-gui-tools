@@ -1,5 +1,6 @@
-OBJECTS_TYPES = ["watchtowers"]
-LAYERS_WITH_TYPES = ["tiles", "traffic_signs"]
+OBJECTS_TYPES = ["watchtowers", "citizens", "vehicles", "ground_tags"]
+NOT_DRAGGABLE = ["tiles"]
+LAYERS_WITH_TYPES = ["traffic_signs", "tiles"]
 TILES = "tiles"
 FRAMES = "frames"
 FRAME = "frame"
