@@ -22,7 +22,8 @@ from classes.Commands.MoveObjCommand import MoveObjCommand
 from classes.Commands.RotateObjCommand import RotateCommand
 from classes.Commands.ChangeTypeCommand import ChangeTypeCommand
 from classes.Commands.MoveTileCommand import MoveTileCommand
-from utils.maps import default_map_storage, get_map_height, get_map_width
+from utils.maps import default_map_storage, get_map_height, get_map_width, \
+    REGISTER
 from utils.constants import LAYERS_WITH_TYPES, OBJECTS_TYPES, FRAMES, FRAME, \
     TILES, \
     TILE_MAPS, TILE_SIZE, NOT_DRAGGABLE
@@ -83,7 +84,7 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.setMouseTracking(True)
 
     def init_objects(self) -> None:
-        for layer_name in self.map.map.layers:
+        for layer_name in REGISTER:
             layer = self.get_layer(layer_name)
             if layer_name not in LAYERS_WITH_TYPES and \
             layer_name not in OBJECTS_TYPES or not layer:
@@ -158,7 +159,6 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         elif layer_name in OBJECTS_TYPES:
             new_obj = DraggableImage(f"./img/objects/{img_name}.png", self,
                                      object_name, layer_name)
-
         if new_obj:
             frame_obj = self.get_layer(FRAMES)[object_name]
             self.rotate_obj(new_obj, frame_obj.pose.yaw)

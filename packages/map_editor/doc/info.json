@@ -133,9 +133,9 @@
                     "name": "Apriltags"
                 }
             },
-            "id": "apriltag",
+            "id": "ground_tags",
             "elements": [
-                "apriltag"
+                "ground_tags"
             ]
         }
     ],
@@ -630,8 +630,8 @@
             },
             "icon": "img/objects/watchtowers.png"
         },
-        "apriltag": {
-            "type": "apriltag",
+        "ground_tags": {
+            "type": "ground_tag",
             "lang": {
                 "ru": {
                     "name": "Apriltag",
@@ -642,7 +642,7 @@
                     "info": "Apriltag_en"
                 }
             },
-            "icon": "img/apriltags/apriltag.png"
+            "icon": "img/objects/ground_tags.png"
         }
     }
 }

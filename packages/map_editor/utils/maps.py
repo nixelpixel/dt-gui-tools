@@ -18,9 +18,9 @@ from utils.constants import FRAMES, WATCHTOWERS, TILES, TILE_MAPS, VEHICLES, \
 
 REGISTER = {
     FRAMES: Frame,
-    WATCHTOWERS: Watchtower,
     TILES: Tile,
     TILE_MAPS: TileSize,
+    WATCHTOWERS: Watchtower,
     VEHICLES: Vehicle,
     CITIZENS: Citizen,
     TRAFFIC_SIGNS: TrafficSign,
