@@ -162,13 +162,9 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         if new_obj:
             frame_obj = self.get_layer(FRAMES)[object_name]
             self.rotate_obj(new_obj, frame_obj.pose.yaw)
-            # FIXME
-            height_scale = 1
-            if new_obj.yaw // 90 % 2 == 1:
-                height_scale = 3
             new_coordinates = (
                 self.get_x_to_view(frame_obj.pose.x, new_obj.width()),
-                self.get_y_to_view(frame_obj.pose.y), new_obj.height() * height_scale
+                self.get_y_to_view(frame_obj.pose.y), new_obj.height()
             )
             self.set_obj_map_pos(new_obj, (frame_obj.pose.x, frame_obj.pose.y))
             self.move_obj(new_obj, {"new_coordinates": new_coordinates})
@@ -241,16 +237,12 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     def scaled_obj(self, obj: ImageObject, args: Dict[str, Any]) -> None:
         scale = args["scale"]
         obj.scale_object(scale)
-        # FIXME
-        height_scale = 1
-        if obj.yaw // 90 % 2 == 1:
-            height_scale = 3
         if obj.is_draggable():
             new_coordinates = (
                 self.get_x_to_view(
                     obj.obj_map_pos[0], obj.width()) + self.offset_x,
                 self.get_y_to_view(
-                    obj.obj_map_pos[1], obj.height() * height_scale) + self.offset_y)
+                    obj.obj_map_pos[1], obj.height()) + self.offset_y)
         else:
             new_coordinates = (
                 self.get_x_to_view(
@@ -341,16 +333,12 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                     # move object if draggable
                     if conf["is_draggable"]:
                         # check correct values
-                        # FIXME
-                        height_scale = 1
-                        if obj.yaw // 90 % 2 == 1:
-                            height_scale = 3
                         pos_x = self.get_x_to_view(
                             conf[FRAME]["pose"]["x"],
                             obj.width()) + self.offset_x
                         pos_y = self.get_y_to_view(
                             conf[FRAME]["pose"]["y"],
-                            obj.height() * height_scale) + self.offset_y
+                            obj.height()) + self.offset_y
                         self.move_obj(obj, {"new_coordinates": (pos_x, pos_y)})
                         self.move_obj_on_map(obj.name, (pos_x, pos_y),
                                              obj_width=obj.width(),
