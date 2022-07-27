@@ -35,17 +35,9 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
     map = None
     tile_sprites: Dict[str, QtGui.QImage] = {'empty': QtGui.QImage()}
     tiles = None
-    watchtowers = None
-    frames = None
     map_height = 10
     objects = {}
     handlers = None
-    tile_maps = None
-    citizens = None
-    traffic_signs = None
-    ground_tags = None
-    vehicles = None
-    #decorations = None
 
     scale = 1
     tile_selection = [0] * 4
@@ -95,18 +87,18 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
 
     def init_handlers(self) -> None:
         self.tiles = TileLayerHandler()
-        self.watchtowers = WatchtowersLayerHandler()
-        self.frames = FramesLayerHandler()
-        self.tile_maps = TileMapsLayerHandler()
-        self.citizens = CitizensHandler()
-        self.traffic_signs = TrafficSignsHandler()
-        self.ground_tags = GroundTagsHandler()
-        self.vehicles = VehiclesHandler()
+        watchtowers = WatchtowersLayerHandler()
+        frames = FramesLayerHandler()
+        tile_maps = TileMapsLayerHandler()
+        citizens = CitizensHandler()
+        traffic_signs = TrafficSignsHandler()
+        ground_tags = GroundTagsHandler()
+        vehicles = VehiclesHandler()
         # self.decorations = DecorationsHandler()
 
-        handlers_list = [self.tiles, self.watchtowers, self.frames,
-                         self.tile_maps, self.citizens, self.traffic_signs,
-                         self.vehicles, self.ground_tags]
+        handlers_list = [self.tiles, watchtowers, frames,
+                         tile_maps, citizens, traffic_signs,
+                         vehicles, ground_tags]
         for i in range(len(handlers_list) - 1):
             handlers_list[i].set_next(handlers_list[i + 1])
         self.handlers = self.tiles
