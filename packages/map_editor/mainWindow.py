@@ -2,9 +2,6 @@ import functools
 import json
 import codecs
 from PyQt5.QtGui import QResizeEvent, QKeyEvent
-
-
-
 from mapAPI import MapAPI
 from mapViewer import MapViewer
 from utils.debug import DebugLine

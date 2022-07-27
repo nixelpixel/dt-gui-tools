@@ -3,7 +3,7 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 
 class ImageObject(QtWidgets.QLabel):
     """Base object class"""
-    def __init__(self, img_path: str, parent: QtWidgets.QWidget, object_name: str, layer_name: str, size: tuple = (30, 60)):
+    def __init__(self, img_path: str, parent: QtWidgets.QWidget, object_name: str, layer_name: str, size: tuple = (20, 20)):
         super(ImageObject, self).__init__()
         self.init_size = size
         self.scale = 1
@@ -29,7 +29,6 @@ class ImageObject(QtWidgets.QLabel):
         new_transform.rotate(rotate_angle)
         self.pixmap = self.pixmap.transformed(new_transform, QtCore.Qt.SmoothTransformation)
         self.setPixmap(self.pixmap)
-
 
     def change_image(self, img_path: str) -> None:
         self.yaw = 0
@@ -100,7 +99,7 @@ class DraggableImage(ImageObject):
         working with Qt coordinates
     """
 
-    def __init__(self, img_path: str, parent: QtWidgets.QWidget, object_name: str, layer_name: str, size: tuple = (30, 60)):
+    def __init__(self, img_path: str, parent: QtWidgets.QWidget, object_name: str, layer_name: str, size: tuple = (20, 20)):
         super(DraggableImage, self).__init__(img_path, parent, object_name, layer_name, size)
         self.drag_start_pos = None
 

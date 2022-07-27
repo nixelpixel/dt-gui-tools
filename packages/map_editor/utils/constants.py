@@ -1,0 +1,13 @@
+OBJECTS_TYPES = ["watchtowers", "citizens", "vehicles", "ground_tags"]
+NOT_DRAGGABLE = ["tiles"]
+LAYERS_WITH_TYPES = ["traffic_signs", "tiles"]
+TILES = "tiles"
+FRAMES = "frames"
+FRAME = "frame"
+TILE_MAPS = "tile_maps"
+TILE_SIZE = "tile_size"
+WATCHTOWERS = "watchtowers"
+TRAFFIC_SIGNS = "traffic_signs"
+GROUND_TAGS = "ground_tags"
+VEHICLES = "vehicles"
+CITIZENS = "citizens"
