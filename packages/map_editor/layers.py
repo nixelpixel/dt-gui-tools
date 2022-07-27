@@ -1,9 +1,6 @@
 from __future__ import annotations
 from pathlib import Path
 from typing import Any, Dict
-
-from dt_maps.types.vehicles import VehicleType, ColorType
-
 from utils.constants import TILES, TILE_SIZE, TILE_MAPS, WATCHTOWERS, \
     FRAMES, TRAFFIC_SIGNS, GROUND_TAGS, VEHICLES, CITIZENS
 from mapStorage import MapStorage
@@ -16,6 +13,7 @@ from dt_maps.types.watchtowers import WatchtowerType
 from dt_maps.types.tiles import TileType
 from dt_maps.types.traffic_signs import TrafficSignType
 from dt_maps.types.citizens import CitizenType
+from dt_maps.types.vehicles import VehicleType, ColorType
 
 
 class TileLayerHandler(AbstractHandler, AbstractLayer):
@@ -37,7 +35,7 @@ class TileLayerHandler(AbstractHandler, AbstractLayer):
         return {'i': 0, 'j': 0, 'k': 0, 'type': 'floor'}
 
     def check_config(self, config: Dict[str, Any]) -> bool:
-        return super().check_config(config) and config["type"] \
+        return super().check_config(config) and config.get("type") \
                in [t.value for t in TileType]
 
 
@@ -60,7 +58,7 @@ class WatchtowersLayerHandler(AbstractHandler, AbstractLayer):
         return {'configuration': 'WT18', 'id': ""}
 
     def check_config(self, config: Dict[str, Any]) -> bool:
-        return super().check_config(config) and config["configuration"] \
+        return super().check_config(config) and config.get("configuration") \
                in [t.value for t in WatchtowerType]
 
 
@@ -118,11 +116,11 @@ class TrafficSignsHandler(AbstractHandler, AbstractLayer):
         return TRAFFIC_SIGNS
 
     def default_conf(self) -> Dict[str, Any]:
-        return {"type": "stop", "id": 1, "family": "36h11"}
+        return {"type": "stop", "id": 0, "family": "36h11"}
 
     def check_config(self, config: Dict[str, Any]) -> bool:
         return super().check_config(config) and \
-               config["type"] in [t.value for t in TrafficSignType]
+               config.get("type") in [t.value for t in TrafficSignType]
 
 
 class GroundTagsHandler(AbstractHandler, AbstractLayer):
@@ -141,7 +139,7 @@ class GroundTagsHandler(AbstractHandler, AbstractLayer):
         return GROUND_TAGS
 
     def default_conf(self) -> Dict[str, Any]:
-        return {"size": 0.15, "id": 1, "family": "36h11"}
+        return {"size": 0.15, "id": 0, "family": "36h11"}
 
 
 class CitizensHandler(AbstractHandler, AbstractLayer):
@@ -164,7 +162,7 @@ class CitizensHandler(AbstractHandler, AbstractLayer):
 
     def check_config(self, config: Dict[str, Any]) -> bool:
         return super().check_config(config) and \
-               config["color"] in [t.value for t in CitizenType]
+               config.get("color") in [t.value for t in CitizenType]
 
 
 class VehiclesHandler(AbstractHandler, AbstractLayer):
@@ -183,12 +181,12 @@ class VehiclesHandler(AbstractHandler, AbstractLayer):
         return VEHICLES
 
     def default_conf(self) -> Dict[str, Any]:
-        return {"color": "blue", "configuration": "DB18", "id": 1}
+        return {"color": "blue", "configuration": "DB18", "id": 0}
 
     def check_config(self, config: Dict[str, Any]) -> bool:
         return super().check_config(config) and \
-               config["configuration"] in [t.value for t in VehicleType] and \
-               config["color"] in [t.value for t in ColorType]
+               config.get("configuration") in [t.value for t in VehicleType] and \
+               config.get("color") in [t.value for t in ColorType]
 
 
 if __name__ == '__main__':

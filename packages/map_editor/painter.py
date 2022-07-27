@@ -10,7 +10,8 @@ class Painter(QtWidgets.QGraphicsView):
         self.map = MapStorage()
         super(Painter, self).__init__()
         
-    def fill_background(self, painter: QtGui.QColor, color: str, width: float, height: float):
+    def fill_background(self, painter: QtGui.QColor, color: str, width: float,
+                        height: float):
         painter.resetTransform()
         painter.fillRect(0, 0, width, height,
                          QtGui.QColor(color))
