@@ -44,8 +44,6 @@ class DuckWindow(QtWidgets.QMainWindow):
             self.ui.horizontalLayout.addWidget(self.debug_line, Qt.AlignBottom)
             self.map_api.set_debug_mode(self.debug_line)
 
-        self.update_layer_tree()
-
     def get_translation(self, elem):
         """Gets info about the element based on self.locale
         If local doesn't exist, return locale='en'
@@ -193,7 +191,7 @@ class DuckWindow(QtWidgets.QMainWindow):
 
         #  Customize the Blocks menu
         block_list_widget = self.ui.block_list
-        block_list_widget.itemClicked.connect(self.item_list_clicked)
+        #block_list_widget.itemClicked.connect(self.item_list_clicked)
         block_list_widget.itemDoubleClicked.connect(self.item_list_double_clicked)
 
         #  Customize the Map Editor menu
@@ -315,17 +313,10 @@ class DuckWindow(QtWidgets.QMainWindow):
     def layer_tree_double_clicked(self):
         print('layer_tree_double_clicked')
 
-    def update_layer_tree(self):
-        print('update_layer_tree')
-
     #  Program exit event
     def quit_program_event(self, event: QEvent) -> None:
         self.exit_triggered()
         event.ignore()
-
-    #  Handle a click on an item from a list to a list
-    def item_list_clicked(self):
-        print('item_list_clicked')
 
     #  Double click initiates as single click action
     def item_list_double_clicked(self) -> None:

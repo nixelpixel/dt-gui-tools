@@ -305,7 +305,6 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                                                      self.get_object_conf(FRAMES, obj.name), obj.is_draggable())
     
     def change_obj_from_info(self, conf: Dict[str, Any]) -> None:
-        print(conf)
         obj = self.get_object(conf["name"])
         if conf["is_valid"]:
             if conf["remove"]:
