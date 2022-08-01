@@ -16,7 +16,9 @@ from typing import Dict, Any
 from pathlib import Path
 import os
 import shutil
+from utils.logger import init_logger
 
+logger = init_logger()
 
 TILE_TYPES = ('block', 'road')
 CTRL = 16777249
@@ -43,10 +45,8 @@ class MapAPI:
         path = self._qt_api.get_dir(parent, "open")
         if path:
             self._map_viewer.open_map(Path(path), self._map_storage.map.name)
+            logger.info(f"Open map from path: {path}")
         self.set_move_mode(False)
-
-    def import_old_format(self):
-        print('import old format')
 
     def create_map_form(self) -> None:
         self.init_info_form.send_info.connect(self.create_map_triggered)
@@ -62,8 +62,9 @@ class MapAPI:
                     shutil.rmtree(path)
                 os.makedirs(path)
                 self._map_viewer.create_new_map(info, path)
+                logger.info(f"Create new map with path: {path} and params {info}")
             except OSError:
-                logging.error(f"Cannot create path {path} for new map")
+                logger.error(f"Cannot create path {path} for new map")
 
     def create_region(self):
         print('create_region')
@@ -76,10 +77,12 @@ class MapAPI:
         self.set_move_mode(False)
         if path:
             self._map_viewer.save_to_png(path)
+            logger.info(f"Save map as png to path: {path}")
 
     #  Save map
     def save_map_triggered(self) -> None:
         self._map_storage.map.to_disk()
+        logger.info("Save map")
 
     #  Save map as
     def save_map_as_triggered(self, parent: QtWidgets.QWidget) -> bool:
@@ -88,6 +91,7 @@ class MapAPI:
         if path:
             change_map_directory(self._map_storage.map, path)
             self.save_map_triggered()
+            logger.info(f"Save map to path: {path}")
             return True
         return False
 
@@ -103,6 +107,7 @@ class MapAPI:
     def exit_triggered(self, _translate, window: QtWidgets.QMainWindow) -> None:
         if self.save_before_exit(_translate, window):
             QtCore.QCoreApplication.instance().quit()
+            logger.info("Exit from map editor")
 
     # Save map before exit
     def save_before_exit(self, _translate,
@@ -156,15 +161,8 @@ class MapAPI:
     def layer_tree_double_clicked(self):
         pass
 
-    def update_layer_tree(self):
-        pass
-
     #  Program exit event
     def quit_program_event(self, event):
-        pass
-
-    #  Handle a click on an item from a list to a list
-    def item_list_clicked(self):
         pass
 
     #  Double click initiates as single click action
@@ -173,11 +171,12 @@ class MapAPI:
         if item_name == "separator":
             pass
         elif item_type in TILE_TYPES:
-            window.set_default_fill(item_name)
+            self.set_default_fill(window, item_name)
         else:
             type_of_element = self.info_json['info'][item_name]['type']
             try:    
                 self._map_viewer.add_obj(type_of_element, item_name)
+                logger.info(f"Add new obj on map with type {item_name}")
             except KeyError:
                 self.view_info_form("Info", "Functional not implemented")
 
@@ -185,8 +184,9 @@ class MapAPI:
         form_yes(self._map_viewer, header, info)
 
     #  Reset to default values
-    def set_default_fill(self):
-        pass
+    def set_default_fill(self, window: QtWidgets.QMainWindow, item_name: str):
+        window.set_default_fill(item_name)
+        logger.info(f"Set default fill for tiles: {item_name}")
 
     #  Copy
     def copy_button_clicked(self):
@@ -212,8 +212,10 @@ class MapAPI:
     def brush_mode(self, brush_button_is_checked: bool) -> None:
         if brush_button_is_checked:
             self._editor_state.drawState = 'brush'
+            logger.debug(f"Activate brush mode")
         else:
             self._editor_state.drawState = ''
+            logger.debug(f"Deactivate brush mode")
 
     def trimClicked(self):
         pass
@@ -232,10 +234,13 @@ class MapAPI:
 
     def rotate_selected_tiles(self) -> None:
         self._map_viewer.rotate_tiles()
+        logger.debug(f"Rotate selected tiles")
 
     def set_debug_mode(self, debug_line: DebugLine) -> None:
         self._editor_state.debug_mode = True
         self._debug_line = debug_line
+        logger.setLevel(logging.DEBUG)
+        logger.debug("Debug mode is ON")
 
     def update_debug_info(self, event: Dict[str, Any]) -> None:
         if self._editor_state.debug_mode:
@@ -253,6 +258,8 @@ class MapAPI:
 
     def change_obj_info(self, obj_conf: Dict[str, Any]) -> None:
         self._map_viewer.change_obj_from_info(obj_conf)
+        name = obj_conf["name"]
+        logger.info(f"Change obj {name} with config {obj_conf}")
 
     def change_obj_form(self, layer_name: str, name: str,
                         obj_conf: Dict[str, Any], frame: Dict[str, Any],
@@ -261,4 +268,3 @@ class MapAPI:
                                                frame, is_draggable)
         self.change_obj_info_form.get_info.connect(self.change_obj_info)
         self.change_obj_info_form.show()
-

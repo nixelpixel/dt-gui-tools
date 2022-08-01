@@ -4,10 +4,7 @@ from PyQt5 import QtWidgets
 from PyQt5.QtCore import QTranslator
 from mainWindow import DuckWindow
 from argparse import ArgumentParser
-from trash.logger import init_logger
 from utils.window import get_available_translations
-
-logger = init_logger()
 
 LANG_DIR = './resources/lang/qm'
 
