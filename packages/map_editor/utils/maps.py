@@ -3,19 +3,28 @@ from pathlib import Path
 
 from dt_maps.types.tile_maps import TileSize
 from dt_maps.types.tiles import Tile
-
+from dt_maps.types.traffic_signs import TrafficSign
+from dt_maps.types.vehicles import Vehicle
+from dt_maps.types.citizens import Citizen
+from dt_maps.types.ground_tags import GroundTag
 from classes.MapDescription import MapDescription
 from mapStorage import MapStorage
 from dt_maps import Map, MapLayer
 from dt_maps.types.frames import Frame
 from dt_maps.types.watchtowers import Watchtower
 from typing import Dict, Any
+from utils.constants import FRAMES, WATCHTOWERS, TILES, TILE_MAPS, VEHICLES, \
+    CITIZENS, TRAFFIC_SIGNS, GROUND_TAGS
 
 REGISTER = {
-    "frames": Frame,
-    "watchtowers": Watchtower,
-    "tiles": Tile,
-    "tile_maps": TileSize
+    FRAMES: Frame,
+    TILES: Tile,
+    TILE_MAPS: TileSize,
+    WATCHTOWERS: Watchtower,
+    VEHICLES: Vehicle,
+    CITIZENS: Citizen,
+    TRAFFIC_SIGNS: TrafficSign,
+    GROUND_TAGS: GroundTag
 }
 
 
@@ -31,17 +40,12 @@ def create_layer(dm: Map, layer_name: str, layer: Dict[str, Any]) -> None:
     register(layer_name, REGISTER[layer_name])
 
 
-def set_obj(dm: Map,
-            layer: MapLayer,
-            layer_name: str, obj_name: str, default_conf: dict) -> None:
+def set_obj(layer: MapLayer, obj_name: str, default_conf: dict) -> None:
     layer[obj_name] = default_conf
-    create_layer(dm, layer_name, layer)
 
 
-def delete_obj(dm: Map, layer: MapLayer,
-               layer_name: str, obj_name: str) -> None:
+def delete_obj(layer: MapLayer, obj_name: str) -> None:
     layer.__delitem__(obj_name)
-    create_layer(dm, layer_name, layer)
 
 
 def change_map_directory(dm: Map, new_dir: str) -> None:

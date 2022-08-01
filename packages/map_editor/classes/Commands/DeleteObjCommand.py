@@ -13,4 +13,4 @@ class DeleteObjCommand(Command):
 
     def execute(self, dm: Map, layer: MapLayer, layer_name: str, *args, **kwargs) -> None:
         if layer_name == self._layer_name:
-            delete_obj(dm, layer, layer_name, self._object_name)
+            delete_obj(layer, self._object_name)

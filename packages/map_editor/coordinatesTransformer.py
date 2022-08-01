@@ -23,7 +23,7 @@ class CoordinatesTransformer:
         return x_real * self.scale * (self.grid_width + 1) / self.tile_width - obj_width / 2
 
     def get_y_to_view(self, y_real: float, obj_height: float = 0.0) -> float:
-        return (self.size_map - y_real / self.tile_height - 1) * self.scale * (self.grid_height + 1) + obj_height / 2
+        return (self.size_map - y_real / self.tile_height - 1) * self.scale * (self.grid_height + 1) + 2.5 * obj_height
 
     def set_scale(self, new_scale: float) -> None:
         self.scale = new_scale

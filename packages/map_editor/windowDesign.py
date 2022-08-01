@@ -389,7 +389,7 @@ class Ui_MainWindow(object):
         self.menuDbl.setTitle(_translate("MainWindow", "View"))
         '''
         self.tool_bar.setWindowTitle(_translate("MainWindow", "toolBar"))
-        self.block_widget.setWindowTitle(_translate("MainWindow", "Maps, signs, and objects"))
+        self.block_widget.setWindowTitle(_translate("MainWindow", "Maps, traffic_signs, and objects"))
         #self.info_widget.setWindowTitle(_translate("MainWindow", "Description"))
         #self.layer_info_widget.setWindowTitle(_translate("MainWindow", "Layers"))
         #self.map_info_widget.setWindowTitle(_translate("MainWindow", "Map editor"))

@@ -1,3 +1,4 @@
+from typing import Tuple
 from PyQt5 import QtGui, QtCore, QtWidgets
 from mapStorage import MapStorage
 
@@ -9,12 +10,13 @@ class Painter(QtWidgets.QGraphicsView):
         self.map = MapStorage()
         super(Painter, self).__init__()
         
-    def fill_background(self, painter: QtGui.QColor, color: str, width: float, height: float):
+    def fill_background(self, painter: QtGui.QColor, color: str, width: float,
+                        height: float):
         painter.resetTransform()
         painter.fillRect(0, 0, width, height,
                          QtGui.QColor(color))
 
-    def draw_rect(self, start_pos: tuple,
+    def draw_rect(self, start_pos: Tuple[float, float],
                   scale: float,
                   painter: QtGui.QPainter,
                   grid_width: float,

@@ -16,4 +16,4 @@ class ChangeObjCommand(Command):
 
     def execute(self, dm: Map, layer: MapLayer, layer_name: str, *args, **kwargs) -> None:
         if layer_name == self._layer_name:
-            set_obj(dm, layer, layer_name, self._object_name, self._new_config)
+            set_obj(layer, self._object_name, self._new_config)

@@ -46,9 +46,9 @@
             "elements": [
                 "stop",
                 "yield",
-                "no-right-turn",
-                "no-left-turn",
-                "do-not-enter"
+                "no_right_turn",
+                "no_left_turn",
+                "do_not_enter"
             ]
         },
         {
@@ -62,12 +62,12 @@
             },
             "id": "info",
             "elements": [
-                "oneway-right",
-                "oneway-left",
-                "4-way-intersect",
-                "right-T-intersect",
-                "left-T-intersect",
-                "T-intersection"
+                "oneway_right",
+                "oneway_left",
+                "four_way_intersect",
+                "right_t_intersect",
+                "left_t_intersect",
+                "t_intersection"
             ]
         },
         {
@@ -82,8 +82,8 @@
             "id": "spec",
             "elements": [
                 "pedestrian",
-                "t-light-ahead",
-                "duck-crossing",
+                "t_light_ahead",
+                "duck_crossing",
                 "parking"
             ]
         },
@@ -101,8 +101,8 @@
                 "trafficlight",
                 "barrier",
                 "cone",
-                "duckie",
-                "duckiebot",
+                "citizens",
+                "vehicles",
                 "tree",
                 "house",
                 "truck",
@@ -133,15 +133,15 @@
                     "name": "Apriltags"
                 }
             },
-            "id": "apriltag",
+            "id": "ground_tags",
             "elements": [
-                "apriltag"
+                "ground_tags"
             ]
         }
     ],
     "info": {
-        "duck-crossing": {
-            "type": "sign",
+        "duck_crossing": {
+            "type": "traffic_sign",
             "lang": {
                 "ru": {
                     "name": "Осторожно, уточки",
@@ -152,7 +152,7 @@
                     "info": "Special sign. Indicates the place where ducks cross the road."
                 }
             },
-            "icon": "img/signs/duck-crossing.png"
+            "icon": "img/traffic_signs/duck_crossing.png"
         },
         "barrier": {
             "type": "object",
@@ -201,7 +201,7 @@
             "icon": "img/objects/house.png"
         },
         "stop": {
-            "type": "sign",
+            "type": "traffic_sign",
             "lang": {
                 "ru": {
                     "name": "Стоп",
@@ -212,7 +212,7 @@
                     "info": "Regulatory sign. It obliges to stop in front of it."
                 }
             },
-            "icon": "img/signs/stop.png"
+            "icon": "img/traffic_signs/stop.png"
         },
         "curve": {
             "lang": {
@@ -232,8 +232,8 @@
             "icon": "img/tiles/curve.png",
             "white": 110
         },
-        "duckiebot": {
-            "type": "object",
+        "vehicles": {
+            "type": "vehicle",
             "lang": {
                 "ru": {
                     "name": "Дакибот",
@@ -244,7 +244,7 @@
                     "info": "City object. A cute terminator duck."
                 }
             },
-            "icon": "img/objects/duckiebot.png"
+            "icon": "img/objects/vehicles.png"
         },
         "floor": {
             "lang": {
@@ -279,7 +279,7 @@
             "icon": "img/objects/tree.png"
         },
         "yield": {
-            "type": "sign",
+            "type": "traffic_sign",
             "lang": {
                 "ru": {
                     "name": "Уступи дорогу",
@@ -290,7 +290,7 @@
                     "info": "Regulatory sign. Demands to give way at an intersection."
                 }
             },
-            "icon": "img/signs/yield.png"
+            "icon": "img/traffic_signs/yield.png"
         },
         "grass": {
             "lang": {
@@ -328,8 +328,8 @@
             "icon": "img/tiles/3way.png",
             "white": 81
         },
-        "right-T-intersect": {
-            "type": "sign",
+        "right_t_intersect": {
+            "type": "traffic_sign",
             "lang": {
                 "ru": {
                     "name": "T-образный правый перекрёсток",
@@ -340,10 +340,10 @@
                     "info": "Information sign. Means there is a right T-junction ahead."
                 }
             },
-            "icon": "img/signs/right-T-intersect.png"
+            "icon": "img/traffic_signs/right_t_intersect.png"
         },
-        "duckie": {
-            "type": "object",
+        "citizens": {
+            "type": "citizen",
             "lang": {
                 "ru": {
                     "name": "Уточка",
@@ -354,10 +354,10 @@
                     "info": "City object. A cute duck."
                 }
             },
-            "icon": "img/objects/duckie.png"
+            "icon": "img/objects/citizens.png"
         },
-        "T-intersection": {
-            "type": "sign",
+        "t_intersection": {
+            "type": "traffic_sign",
             "lang": {
                 "ru": {
                     "name": "T-образный перекрёсток",
@@ -368,10 +368,10 @@
                     "info": "Information sign. Means there is a T-junction ahead."
                 }
             },
-            "icon": "img/signs/T-intersection.png"
+            "icon": "img/traffic_signs/t_intersection.png"
         },
-        "4-way-intersect": {
-            "type": "sign",
+        "four_way_intersect": {
+            "type": "traffic_sign",
             "lang": {
                 "ru": {
                     "name": "Перекресток",
@@ -382,7 +382,7 @@
                     "info": "Information sign. Means that there is a 4-way intersection ahead."
                 }
             },
-            "icon": "img/signs/4-way-intersect.png"
+            "icon": "img/traffic_signs/four_way_intersect.png"
         },
         "cone": {
             "type": "object",
@@ -398,8 +398,8 @@
             },
             "icon": "img/objects/cone.png"
         },
-        "left-T-intersect": {
-            "type": "sign",
+        "left_t_intersect": {
+            "type": "traffic_sign",
             "lang": {
                 "ru": {
                     "name": "T-образный левый перекрёсток",
@@ -407,10 +407,10 @@
                 },
                 "en": {
                     "name": "T-shaped left crossroads",
-                    "info": "Information sign. Means there is a left T-intersection ahead."
+                    "info": "Information sign. Means there is a left t_intersection ahead."
                 }
             },
-            "icon": "img/signs/left-T-intersect.png"
+            "icon": "img/traffic_signs/left_t_intersect.png"
         },
         "4way": {
             "lang": {
@@ -430,8 +430,8 @@
             "icon": "img/tiles/4way.png",
             "white": 40
         },
-        "no-left-turn": {
-            "type": "sign",
+        "no_left_turn": {
+            "type": "traffic_sign",
             "lang": {
                 "ru": {
                     "name": "Поворот налево запрещен",
@@ -442,10 +442,10 @@
                     "info": "Regulatory sign. Prohibits left turn and U-turn."
                 }
             },
-            "icon": "img/signs/no-left-turn.png"
+            "icon": "img/traffic_signs/no_left_turn.png"
         },
-        "do-not-enter": {
-            "type": "sign",
+        "do_not_enter": {
+            "type": "traffic_sign",
             "lang": {
                 "ru": {
                     "name": "Кирпич",
@@ -456,7 +456,7 @@
                     "info": "Regulatory sign. Prohibits passage under the sign."
                 }
             },
-            "icon": "img/signs/do-not-enter.png"
+            "icon": "img/traffic_signs/do_not_enter.png"
         },
         "bus": {
             "type": "object",
@@ -472,8 +472,8 @@
             },
             "icon": "img/objects/bus.png"
         },
-        "t-light-ahead": {
-            "type": "sign",
+        "t_light_ahead": {
+            "type": "traffic_sign",
             "lang": {
                 "ru": {
                     "name": "Светофор",
@@ -484,7 +484,7 @@
                     "info": "Special sign. Indicates the presence of traffic light."
                 }
             },
-            "icon": "img/signs/t-light-ahead.png"
+            "icon": "img/traffic_signs/t_light_ahead.png"
         },
         "building": {
             "type": "object",
@@ -500,8 +500,8 @@
             },
             "icon": "img/objects/building.png"
         },
-        "no-right-turn": {
-            "type": "sign",
+        "no_right_turn": {
+            "type": "traffic_sign",
             "lang": {
                 "ru": {
                     "name": "Поворот направо запрещен",
@@ -512,7 +512,7 @@
                     "info": "Regulatory sign. Prohibits right turn."
                 }
             },
-            "icon": "img/signs/no-right-turn.png"
+            "icon": "img/traffic_signs/no_right_turn.png"
         },
         "trafficlight": {
             "type": "object",
@@ -547,7 +547,7 @@
             "white": 0
         },
         "parking": {
-            "type": "sign",
+            "type": "traffic_sign",
             "lang": {
                 "ru": {
                     "name": "Парковка",
@@ -558,10 +558,10 @@
                     "info": "Special sign. Indicates a parking spot."
                 }
             },
-            "icon": "img/signs/parking.png"
+            "icon": "img/traffic_signs/parking.png"
         },
-        "oneway-right": {
-            "type": "sign",
+        "oneway_right": {
+            "type": "traffic_sign",
             "lang": {
                 "ru": {
                     "name": "Односторонее движение направо",
@@ -572,10 +572,10 @@
                     "info": "Information sign. Means that one-way traffic starts from left to right."
                 }
             },
-            "icon": "img/signs/oneway-right.png"
+            "icon": "img/traffic_signs/oneway_right.png"
         },
         "pedestrian": {
-            "type": "sign",
+            "type": "traffic_sign",
             "lang": {
                 "ru": {
                     "name": "Пешеходный переход",
@@ -586,7 +586,7 @@
                     "info": "Special sign. Indicates a pedestrian crossing."
                 }
             },
-            "icon": "img/signs/pedestrian.png"
+            "icon": "img/traffic_signs/pedestrian.png"
         },
         "truck": {
             "type": "object",
@@ -602,8 +602,8 @@
             },
             "icon": "img/objects/truck.png"
         },
-        "oneway-left": {
-            "type": "sign",
+        "oneway_left": {
+            "type": "traffic_sign",
             "lang": {
                 "ru": {
                     "name": "Односторонее движение налево",
@@ -614,7 +614,7 @@
                     "info": "Information sign. Says that one-way traffic starts from right to left."
                 }
             },
-            "icon": "img/signs/oneway-left.png"
+            "icon": "img/traffic_signs/oneway_left.png"
         },
         "watchtowers": {
             "type": "watchtower",
@@ -630,8 +630,8 @@
             },
             "icon": "img/objects/watchtowers.png"
         },
-        "apriltag": {
-            "type": "apriltag",
+        "ground_tags": {
+            "type": "ground_tag",
             "lang": {
                 "ru": {
                     "name": "Apriltag",
@@ -642,7 +642,7 @@
                     "info": "Apriltag_en"
                 }
             },
-            "icon": "img/apriltags/apriltag.png"
+            "icon": "img/objects/ground_tags.png"
         }
     }
 }
