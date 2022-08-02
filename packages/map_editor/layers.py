@@ -181,7 +181,7 @@ class VehiclesHandler(AbstractHandler, AbstractLayer):
         return VEHICLES
 
     def default_conf(self) -> Dict[str, Any]:
-        return {"color": "blue", "configuration": "DB18", "id": 0}
+        return {"color": "blue", "configuration": "DB18", "id": ""}
 
     def check_config(self, config: Dict[str, Any]) -> bool:
         return super().check_config(config) and \
