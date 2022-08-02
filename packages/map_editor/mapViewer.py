@@ -305,15 +305,14 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                                                      self.get_object_conf(FRAMES, obj.name), obj.is_draggable())
     
     def change_obj_from_info(self, conf: Dict[str, Any]) -> None:
-
         if conf["is_valid"]:
             if conf["remove"]:
                 obj = self.get_object(conf["name"])
                 self.delete_object(obj)
             else:
-                self.change_obj_name(conf)
-                self.change_obj_frame(conf)
-                self.change_obj_conf(conf)
+                if self.change_obj_name(conf):
+                    self.change_obj_frame(conf)
+                    self.change_obj_conf(conf)
         else:
             self.parentWidget().parent().view_info_form("Error",
                                                         "Invalid values entered!")
@@ -362,20 +361,24 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             self.parentWidget().parent().view_info_form("Error",
                                                         "Invalid object configuration entered!")
 
-    def change_obj_name(self, conf: Dict[str, Any]) -> None:
-        layer = self.get_layer(conf["layer_name"])
+    def change_obj_name(self, conf: Dict[str, Any]) -> bool:
+        layer_name = conf["layer_name"]
+        layer = self.get_layer(layer_name)
         new_name = conf["new_name"]
         if conf["name"] != conf["new_name"]:
             if new_name not in self.objects:
-                self.change_obj_from_config(conf["layer_name"],
+                self.change_obj_from_config(layer_name,
                                             new_name,
                                             conf["new_config"])
-                self.add_obj_on_map(conf["layer_name"], new_name)
-                self.add_obj_image(conf["layer_name"], new_name, layer[conf["new_name"]])
+                self.add_obj_on_map(layer_name, new_name)
+                self.add_obj_image(layer_name, new_name, layer[conf["new_name"]])
                 self.delete_object(self.get_object(conf["name"]))
+                return True
             else:
                 self.parentWidget().parent().view_info_form("Error",
                                                             f"Object with name {new_name} already exist!")
+                return False
+        return True
 
     def check_layer_config(self, layer_name: str, new_config: Dict[str, Any]) -> bool:
         return self.handlers.handle(CheckConfigCommand(layer_name, new_config))
