@@ -317,16 +317,17 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             self.parentWidget().parent().view_info_form("Error",
                                                         "Invalid values entered!")
 
-    def change_obj_frame(self, conf: Dict[str, Any]):
-        obj = self.get_object(conf["new_name"])
+    def change_obj_frame(self, conf: Dict[str, Any]) -> None:
+        new_name = conf['new_name']
+        obj = self.get_object(new_name)
         if self.check_layer_config(FRAMES,
                                    conf[FRAME]):
             self.change_obj_from_config(FRAMES,
-                                        conf["new_name"],
+                                        new_name,
                                         conf[FRAME])
             # rotate object
             obj.rotate_object(conf[FRAME]["pose"]["yaw"])
-            self.handlers.handle(RotateCommand(conf["new_name"],
+            self.handlers.handle(RotateCommand(new_name,
                                                conf[FRAME]["pose"][
                                                    "yaw"]))
             # move object if draggable
@@ -346,17 +347,18 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
             self.parentWidget().parent().view_info_form("Error",
                                                         "Invalid object frame values entered!")
 
-    def change_obj_conf(self, conf: Dict[str, Any]):
+    def change_obj_conf(self, conf: Dict[str, Any]) -> None:
+        layer_name = conf["layer_name"]
+        new_name = conf['new_name']
         # check correct values
-        if self.check_layer_config(conf["layer_name"], conf["new_config"]):
-            self.change_obj_from_config(conf["layer_name"],
-                                        conf["new_name"],
+        if self.check_layer_config(layer_name, conf["new_config"]):
+            self.change_obj_from_config(layer_name,
+                                        new_name,
                                         conf["new_config"])
-            obj = self.get_object(conf["new_name"])
-            name = obj.name
+            obj = self.get_object(new_name)
             self.delete_obj_from_map_viewer(obj)
-            layer = self.get_layer(conf["layer_name"])
-            self.add_obj_image(conf["layer_name"], name, layer[name])
+            layer = self.get_layer(layer_name)
+            self.add_obj_image(layer_name, new_name, layer[new_name])
         else:
             self.parentWidget().parent().view_info_form("Error",
                                                         "Invalid object configuration entered!")
@@ -365,14 +367,15 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         layer_name = conf["layer_name"]
         layer = self.get_layer(layer_name)
         new_name = conf["new_name"]
-        if conf["name"] != conf["new_name"]:
+        old_name = conf["name"]
+        if old_name != new_name:
             if new_name not in self.objects:
                 self.change_obj_from_config(layer_name,
                                             new_name,
                                             conf["new_config"])
                 self.add_obj_on_map(layer_name, new_name)
-                self.add_obj_image(layer_name, new_name, layer[conf["new_name"]])
-                self.delete_object(self.get_object(conf["name"]))
+                self.add_obj_image(layer_name, new_name, layer[new_name])
+                self.delete_object(self.get_object(old_name))
                 return True
             else:
                 self.parentWidget().parent().view_info_form("Error",
@@ -618,4 +621,3 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
         self.change_object_handler(self.scaled_obj, {"scale": self.scale})
         self.set_map_size()
         self.scene_update()
-
