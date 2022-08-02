@@ -305,65 +305,92 @@ class MapViewer(QtWidgets.QGraphicsView, QtWidgets.QWidget):
                                                      self.get_object_conf(FRAMES, obj.name), obj.is_draggable())
     
     def change_obj_from_info(self, conf: Dict[str, Any]) -> None:
-        obj = self.get_object(conf["name"])
+
         if conf["is_valid"]:
             if conf["remove"]:
+                obj = self.get_object(conf["name"])
                 self.delete_object(obj)
-                obj.delete_object()
             else:
-                if self.check_layer_config(FRAMES,
-                                           conf[FRAME]):
-                    self.change_obj_from_config(FRAMES,
-                                                conf["name"],
-                                                conf[FRAME])
-                    # rotate object
-                    obj.rotate_object(conf[FRAME]["pose"]["yaw"])
-                    self.handlers.handle(RotateCommand(conf["name"],
-                                                       conf[FRAME]["pose"][
-                                                           "yaw"]))
-                    # move object if draggable
-                    if conf["is_draggable"]:
-                        # check correct values
-                        pos_x = self.get_x_to_view(
-                            conf[FRAME]["pose"]["x"],
-                            obj.width()) + self.offset_x
-                        pos_y = self.get_y_to_view(
-                            conf[FRAME]["pose"]["y"],
-                            obj.height()) + self.offset_y
-                        self.move_obj(obj, {"new_coordinates": (pos_x, pos_y)})
-                        self.move_obj_on_map(obj.name, (pos_x, pos_y),
-                                             obj_width=obj.width(),
-                                             obj_height=obj.height())
-                else:
-                    self.parentWidget().parent().view_info_form("Error",
-                                                                "Invalid object frame values entered!")
-                # check correct values
-                if self.check_layer_config(conf["layer_name"], conf["new_config"]):
-                    self.change_obj_from_config(conf["layer_name"],
-                                                conf["name"],
-                                                conf["new_config"])
-                    name = obj.name
-                    self.objects.__delitem__(obj.name)
-                    obj.delete_object()
-                    layer = self.get_layer(conf["layer_name"])
-                    self.add_obj_image(conf["layer_name"], name, layer[name])
-                else:
-                    self.parentWidget().parent().view_info_form("Error",
-                                                                "Invalid object configuration entered!")
+                self.change_obj_name(conf)
+                self.change_obj_frame(conf)
+                self.change_obj_conf(conf)
         else:
             self.parentWidget().parent().view_info_form("Error",
                                                         "Invalid values entered!")
 
-    def check_layer_config(self, layer_name: str, new_config: Dict[str, Any]):
+    def change_obj_frame(self, conf: Dict[str, Any]):
+        obj = self.get_object(conf["new_name"])
+        if self.check_layer_config(FRAMES,
+                                   conf[FRAME]):
+            self.change_obj_from_config(FRAMES,
+                                        conf["new_name"],
+                                        conf[FRAME])
+            # rotate object
+            obj.rotate_object(conf[FRAME]["pose"]["yaw"])
+            self.handlers.handle(RotateCommand(conf["new_name"],
+                                               conf[FRAME]["pose"][
+                                                   "yaw"]))
+            # move object if draggable
+            if conf["is_draggable"]:
+                # check correct values
+                pos_x = self.get_x_to_view(
+                    conf[FRAME]["pose"]["x"],
+                    obj.width()) + self.offset_x
+                pos_y = self.get_y_to_view(
+                    conf[FRAME]["pose"]["y"],
+                    obj.height()) + self.offset_y
+                self.move_obj(obj, {"new_coordinates": (pos_x, pos_y)})
+                self.move_obj_on_map(obj.name, (pos_x, pos_y),
+                                     obj_width=obj.width(),
+                                     obj_height=obj.height())
+        else:
+            self.parentWidget().parent().view_info_form("Error",
+                                                        "Invalid object frame values entered!")
+
+    def change_obj_conf(self, conf: Dict[str, Any]):
+        # check correct values
+        if self.check_layer_config(conf["layer_name"], conf["new_config"]):
+            self.change_obj_from_config(conf["layer_name"],
+                                        conf["new_name"],
+                                        conf["new_config"])
+            obj = self.get_object(conf["new_name"])
+            name = obj.name
+            self.delete_obj_from_map_viewer(obj)
+            layer = self.get_layer(conf["layer_name"])
+            self.add_obj_image(conf["layer_name"], name, layer[name])
+        else:
+            self.parentWidget().parent().view_info_form("Error",
+                                                        "Invalid object configuration entered!")
+
+    def change_obj_name(self, conf: Dict[str, Any]) -> None:
+        layer = self.get_layer(conf["layer_name"])
+        new_name = conf["new_name"]
+        if conf["name"] != conf["new_name"]:
+            if new_name not in self.objects:
+                self.change_obj_from_config(conf["layer_name"],
+                                            new_name,
+                                            conf["new_config"])
+                self.add_obj_on_map(conf["layer_name"], new_name)
+                self.add_obj_image(conf["layer_name"], new_name, layer[conf["new_name"]])
+                self.delete_object(self.get_object(conf["name"]))
+            else:
+                self.parentWidget().parent().view_info_form("Error",
+                                                            f"Object with name {new_name} already exist!")
+
+    def check_layer_config(self, layer_name: str, new_config: Dict[str, Any]) -> bool:
         return self.handlers.handle(CheckConfigCommand(layer_name, new_config))
 
     def change_obj_from_config(self, layer_name: str, obj_name: str,
-                               new_config: Dict[str, Any]):
+                               new_config: Dict[str, Any]) -> None:
         self.handlers.handle(ChangeObjCommand(layer_name, obj_name,
                                               new_config))
 
     def delete_object(self, obj: ImageObject) -> None:
         self.delete_obj_on_map(obj)
+        self.delete_obj_from_map_viewer(obj)
+
+    def delete_obj_from_map_viewer(self, obj: ImageObject) -> None:
+        obj.delete_object()
         self.objects.__delitem__(obj.name)
 
     def change_tiles_handler(self, handler_func, args: Dict[str, Any]) -> None:

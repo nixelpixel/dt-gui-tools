@@ -11,7 +11,7 @@ class EditObject(QDialog):
                  frame: Dict[str, Any], is_draggable: bool):
         super(EditObject, self).__init__()
         self.info = {"types": {}}
-        self.info_send = {"name": name, "layer_name": layer_name,
+        self.info_send = {"name": name, "new_name": name, "layer_name": layer_name,
                           "new_config": {}, "is_draggable": is_draggable,
                           "frame": {},
                           "is_valid": True,
@@ -55,6 +55,9 @@ class EditObject(QDialog):
                             self.info[frame_key].text())
             for key in self.info_send["new_config"]:
                 self.info_send["new_config"][key] = (self.info["types"][key])(self.info[key].text())
+            # new name
+            self.info_send["new_name"] = (self.info["types"]["new_name"])(
+                self.info["new_name"].text())
         except ValueError:
             self.info_send["is_valid"] = False
         self.get_info.emit(self.info_send)
@@ -62,6 +65,14 @@ class EditObject(QDialog):
 
     def create_form(self, config: Dict[str, Any], frame: Dict[str, Any]) -> None:
         layout = QFormLayout()
+        # new object name
+        key = "new_name"
+        edit = QLineEdit(self)
+        self.info[key] = edit
+        self.info["types"][key] = type(self.info_send[key])
+        edit.setText(str(self.info_send[key]))
+        layout.addRow(QLabel(key), edit)
+
         for key in config:
             # tree level
             edit = QLineEdit(self)
