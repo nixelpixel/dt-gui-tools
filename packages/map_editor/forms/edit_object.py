@@ -72,7 +72,7 @@ class EditObject(QDialog):
         self.info["types"][key] = type(self.info_send[key])
         edit.setText(str(self.info_send[key]))
         layout.addRow(QLabel(key), edit)
-
+        layout.addWidget(QHLine())
         for key in config:
             # tree level
             edit = QLineEdit(self)
