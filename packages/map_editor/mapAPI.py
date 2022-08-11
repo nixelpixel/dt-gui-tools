@@ -16,7 +16,6 @@ from utils.debug import DebugLine
 from typing import Dict, Any
 from pathlib import Path
 from forms.collect_info import Collect_Info
-from forms.info_generate import CollectInfoGenerate
 from dt_map_generator.duckietown_map import DuckietownMap
 from dt_map_generator.generator import Generator
 
