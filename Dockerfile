@@ -11,8 +11,8 @@ ARG WEBSOCKIFY_VERSION="3646575"
 
 # ==================================================>
 # ==> Do not change the code below this line
-ARG ARCH=arm32v7
-ARG DISTRO=daffy
+ARG ARCH=arm64v8
+ARG DISTRO=ente
 ARG BASE_TAG=${DISTRO}-${ARCH}
 ARG BASE_IMAGE=dt-core
 ARG LAUNCHER=default

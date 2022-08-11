@@ -1,0 +1,9 @@
+traffic_signs:
+  map_1/traffic_signs0:
+    family: 36h11
+    id: 1
+    type: stop
+  map_1/traffic_signs1:
+    family: 36h11
+    id: 1
+    type: stop

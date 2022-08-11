@@ -1,0 +1,17 @@
+tiles:
+  map_1/tile_0_0:
+    i: 0
+    j: 0
+    type: floor
+  map_1/tile_0_1:
+    i: 0
+    j: 1
+    type: floor
+  map_1/tile_0_2:
+    i: 0
+    j: 2
+    type: floor
+  map_1/tile_0_3:
+    i: 0
+    j: 3
+    type: floor

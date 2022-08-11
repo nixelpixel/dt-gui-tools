@@ -1,0 +1,3 @@
+watchtowers:
+  map_1/watchtower1:
+    configuration: WT18

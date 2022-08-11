@@ -4,11 +4,11 @@ from PyQt5.QtWidgets import QDialog, QGroupBox, QDialogButtonBox, QFormLayout, Q
     QLineEdit, QLabel
 
 
-class StartInfoForm(QDialog):
+class NewMapInfoForm(QDialog):
     send_info = QtCore.pyqtSignal(object)
 
     def __init__(self):
-        super(StartInfoForm, self).__init__()
+        super(NewMapInfoForm, self).__init__()
         self.setWindowTitle("Info for initialization of map")
         self.formGroupBox = QGroupBox("Init info")
         self.nameXEdit = QLineEdit(self)
@@ -17,8 +17,12 @@ class StartInfoForm(QDialog):
         self.nameYEdit = QLineEdit(self)
         self.nameYEdit.setText("5")
         self.nameYEdit.setValidator(QIntValidator())
-        self.nameTileSizeEdit = QLineEdit(self)
-        self.nameTileSizeEdit.setText("0.585")
+        self.nameTileSizeXEdit = QLineEdit(self)
+        self.nameTileSizeXEdit.setText("0.585")
+        self.nameTileSizeYEdit = QLineEdit(self)
+        self.nameTileSizeYEdit.setText("0.585")
+        self.nameDirEdit = QLineEdit(self)
+        self.nameDirEdit.setText("./maps/map1")
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         self.buttonBox.accepted.connect(self.get_info)
         self.buttonBox.rejected.connect(self.reject)
@@ -32,7 +36,9 @@ class StartInfoForm(QDialog):
         info = {
             'x': self.nameXEdit.text(),
             'y': self.nameYEdit.text(),
-            'tile_size': self.nameTileSizeEdit.text()
+            'tile_width': self.nameTileSizeXEdit.text(),
+            'tile_height': self.nameTileSizeYEdit.text(),
+            'dir_name': self.nameDirEdit.text()
         }
         self.send_info.emit(info)
         self.close()
@@ -41,5 +47,7 @@ class StartInfoForm(QDialog):
         layout = QFormLayout()
         layout.addRow(QLabel("Width"), self.nameXEdit)
         layout.addRow(QLabel("Height"), self.nameYEdit)
-        layout.addRow(QLabel("Tile size"), self.nameTileSizeEdit)
+        layout.addRow(QLabel("Tile width"), self.nameTileSizeXEdit)
+        layout.addRow(QLabel("Tile height"), self.nameTileSizeYEdit)
+        layout.addRow(QLabel("Folder"), self.nameDirEdit)
         self.formGroupBox.setLayout(layout)

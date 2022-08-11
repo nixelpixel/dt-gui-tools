@@ -1,3 +1,5 @@
 citizens:
-  map_1/duckie1:
+  duckie0:
+    color: yellow
+  duckie1:
     color: yellow

@@ -1,0 +1,9 @@
+vehicles:
+  map_1/vehicle0:
+    color: blue
+    configuration: DB19
+    id: 1
+  map_1/vehicle1:
+    color: blue
+    configuration: DB19
+    id: 1
